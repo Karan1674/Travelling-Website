@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+
+    <!-- start Container Wrapper -->
+    <div id="container-wrapper">
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box user-form-wrap">
+                            <h4>User Edit Details</h4>
+                            <form class="form-horizontal" method="post" action="/edit-user/<%= editUser._id %>" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>First name</label>
+                                            <input name="firstName" class="form-control" value="<%= editUser.firstName || '' %>" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Last name</label>
+                                            <input name="lastName" class="form-control" value="<%= editUser.lastName || '' %>" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input name="email" class="form-control" value="<%= editUser.email || '' %>" type="email">
+                                        </div>  
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label>Date of Birth</label>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <div class="form-group">
+                                                    <select name="day">
+                                                        <option value="">Day</option>
+                                                        <% for (let i = 1; i <= 31; i++) { %>
+                                                            <option value="<%= i %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getDate() === i ? 'selected' : '' %>><%= i %></option>
+                                                        <% } %>
+                                                    
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <div class="form-group">
+                                                    <select name="month">
+                                                        <option value="">Month</option>
+                                                        <% const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; %>
+                                                        <% months.forEach((month, index) => { %>
+                                                            <option value="<%= month %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getMonth() === index ? 'selected' : '' %>><%= month %></option>
+                                                        <% }); %>
+                                                      
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <div class="form-group">
+                                                    <select name="year">
+                                                        <option value="">Year</option>
+                                                        <% for (let i = 2025; i >= 1900; i--) { %>
+                                                            <option value="<%= i %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getFullYear() === i ? 'selected' : '' %>><%= i %></option>
+                                                        <% } %>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>  
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Country Code</label>
+                                            <select name="countryCode">
+                                                <option value="">Select Country Code</option>
+                                                <option value="+91" <%= editUser.countryCode === '+91' ? 'selected' : '' %>>+91</option>
+                                                <option value="+977" <%= editUser.countryCode === '+977' ? 'selected' : '' %>>+977</option>
+                                                <option value="+1" <%= editUser.countryCode === '+1' ? 'selected' : '' %>>+1</option>
+                                                <option value="+44" <%= editUser.countryCode === '+44' ? 'selected' : '' %>>+44</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Phone Number</label>
+                                            <input name="phone" id="input-phone" class="form-control" value="<%= editUser.phone || '' %>" placeholder="" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <h4>Contact Details</h4>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Country</label>
+                                            <select name="country">
+                                                <option value="">Select Country</option>
+                                                <option value="India" <%= editUser.country === 'India' ? 'selected' : '' %>>India</option>
+                                                <option value="Italy" <%= editUser.country === 'Italy' ? 'selected' : '' %>>Italy</option>
+                                                <option value="Japan" <%= editUser.country === 'Japan' ? 'selected' : '' %>>Japan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>State</label>
+                                            <select name="state">
+                                                <option value="">Select State</option>
+                                                <option value="Punjab" <%= editUser.state === 'Punjab' ? 'selected' : '' %>>Punjab</option>
+                                                <option value="New York" <%= editUser.state === 'New York' ? 'selected' : '' %>>New York</option>
+                                                <option value="Mexico" <%= editUser.state === 'Mexico' ? 'selected' : '' %>>Mexico</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>City</label>
+                                            <select name="city">
+                                                <option value="">Select City</option>
+                                                <option value="Nawashahar" <%= editUser.city === 'Nawashahar' ? 'selected' : '' %>>Nawashahar</option>
+                                                <option value="Tokyo" <%= editUser.city === 'Tokyo' ? 'selected' : '' %>>Tokyo</option>
+                                                <option value="Paris" <%= editUser.city === 'Paris' ? 'selected' : '' %>>Paris</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Address</label>
+                                            <input name="address" class="form-control" type="text" value="<%= editUser.address || '' %>">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <h4>Upload Profile Photo</h4>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="upload-input">
+                                            <div class="form-group">
+                                              <span class="upload-btn block mb-2">Upload an image</span>
+                                              <input type="file" name="profilePic">
+                                            </div>
+                                          
+                                            <% if (editUser.profilePic) { %>
+                                              <div class="current-img">
+                                                <p class="mb-1">Current Image</p>
+                                                <img src="/uploads/<%= editUser.profilePic %>" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
+                                              </div>
+                                            <% } %>
+                                          </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <h4>Describe Yourself</h4>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Please Tell Us About You</label>
+                                            <textarea class="form-control" id="message" name="description" placeholder=""><%= editUser.description || '' %></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="button-primary">Upload Setting</button>
+                            </form>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+            <!-- Content / End -->
+            <!-- Copyrights -->
+          <%- include('../partials/Footer') %>
+        </div>
+        <!-- Dashboard / End -->
+    </div>
+    <!-- end Container Wrapper -->
+    <!-- *Scripts* -->
+    <script src="admin/assets/js/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="admin/assets/js/bootstrap.min.js"></script>
+    <script src="admin/assets/js/canvasjs.min.js"></script>
+    <script src="admin/assets/js/counterup.min.js"></script>
+    <script src="admin/assets/js/jquery.slicknav.js"></script>
+    <script src="admin/assets/js/dashboard-custom.js"></script>
+</body>
+</html>

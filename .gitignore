@@ -2,3 +2,5 @@
 
 /uploads
 .DS_Store
+
+.env
