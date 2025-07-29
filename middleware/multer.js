@@ -1,14 +1,47 @@
-import multer from "multer";
 
+import multer from 'multer';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "uploads");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Profile picture upload (single file)
+const profilePicStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/profiles'));
     },
-    filename: function (req, file, cb) {
-      // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-      cb(null, Date.now() + "-" + file.originalname);
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
     },
-  });
-  
- export const upload = multer({ storage: storage });
+});
+
+export const uploadProfilePic = multer({
+    storage: profilePicStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed'), false);
+        }
+        cb(null, true);
+    },
+});
+
+// Gallery upload (multiple files, max 8)
+const galleryStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/gallery'));
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+export const uploadGallery = multer({
+    storage: galleryStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed'), false);
+        }
+        cb(null, true);
+    },
+    // limits: { files: 8 }, // Restrict to 8 files for gallery
+});

@@ -2,11 +2,15 @@ import adminModel from '../models/adminModel.js';
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+
 import userModel from '../models/userModel.js';
 
 import { promises as fs } from 'fs'
  import { dirname, join } from 'path'
  import { fileURLToPath } from 'url';
+import { uploadGallery } from '../middleware/multer.js';
+import packageModel from '../models/packageModel.js';
 
  const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -301,7 +305,6 @@ export const editUserPage=async(req,res)=>{
 
 
 
-
 export const editUserPost = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
@@ -368,10 +371,6 @@ export const editUserPost = async (req, res) => {
     }
 };
 
-
-
-
-
 export const deleteUser = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
@@ -390,7 +389,7 @@ export const deleteUser = async (req, res) => {
         }
 
         if (user.profilePic) {
-            const filePath = join(__dirname, '../Uploads', user.profilePic);
+            const filePath = join(__dirname, '../Uploads/profiles', user.profilePic);
             try {
                 await fs.unlink(filePath);
                 console.log(`Profile picture deleted: ${filePath}`);
@@ -409,3 +408,388 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ error: "Failed to delete user" });
     }
 };
+
+
+export const forgetPasswordPage = async (req, res) => {
+    try {
+        res.render('admin/layout/forget');
+    } catch (error) {
+        console.error('Error rendering forget password page:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+export const forgetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Validate email
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        // Check both User and Admin models
+        let user = await userModel.findOne({ email });
+        let userType = 'User';
+        if (!user) {
+            user = await adminModel.findOne({ email });
+            userType = 'Admin';
+        }
+        if (!user) {
+            return res.status(404).json({ error: 'No user found with this email' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour expiry
+
+        // Save token and expiry
+        user.resetPasswordToken = resetTokenHash;
+        user.resetPasswordExpires = resetTokenExpiry;
+        await user.save();
+
+        // Create reset URL with query parameters
+        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}&type=${userType}`;
+        console.log(`Reset URL for ${email} (${userType}): ${resetUrl}`); // Log for debugging
+
+        // Render confirmation page with reset URL
+        res.render('admin/layout/forget-confirmation', { resetUrl, email });
+    } catch (error) {
+        console.error('Error in forgetPassword:', error);
+        res.status(500).json({ error: 'Failed to process password reset request' });
+    }
+};
+
+export const resetPasswordPage = async (req, res) => {
+    try {
+        const { token, type } = req.query; // Get token and type from query parameters
+
+        // Validate query parameters
+        if (!token || !type || !['User', 'Admin'].includes(type)) {
+            return res.status(400).send('Invalid or missing reset token or user type');
+        }
+
+        // Verify token
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        let user;
+        if (type === 'Admin') {
+            user = await adminModel.findOne({
+                resetPasswordToken: hashedToken,
+                resetPasswordExpires: { $gt: Date.now() },
+            });
+        } else {
+            user = await userModel.findOne({
+                resetPasswordToken: hashedToken,
+                resetPasswordExpires: { $gt: Date.now() },
+            });
+        }
+
+        if (!user) {
+            return res.status(400).send('Invalid or expired reset token');
+        }
+
+        res.render('admin/layout/reset-password', { token, userType: type });
+    } catch (error) {
+        console.error('Error rendering reset password page:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, type } = req.query; // Get token and type from query parameters
+        const { password, confirmPassword } = req.body;
+
+        // Validate input
+        if (!token || !type || !['User', 'Admin'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid or missing reset token or user type' });
+        }
+        if (!password || !confirmPassword) {
+            return res.status(400).json({ error: 'Both password fields are required' });
+        }
+        if (password !== confirmPassword) {
+            return res.status(400).json({ error: 'Passwords do not match' });
+        }
+
+        // Verify token
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        let user;
+        if (type === 'Admin') {
+            user = await adminModel.findOne({
+                resetPasswordToken: hashedToken,
+                resetPasswordExpires: { $gt: Date.now() },
+            });
+        } else {
+            user = await userModel.findOne({
+                resetPasswordToken: hashedToken,
+                resetPasswordExpires: { $gt: Date.now() },
+            });
+        }
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        // Update password
+        user.password = await bcrypt.hash(password, 10);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        console.log(`Password reset successfully for ${user.email} (${type})`);
+        res.redirect('/loginPage');
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
+    }
+};
+
+
+
+
+
+
+
+
+
+export const addPackagePage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if(!userId){
+            return res.send('User Id not available')
+        }
+
+        let userData = await adminModel.findById( userId );
+    
+        if (!userData) {
+            userData = await userModel.findById( userId );
+        }
+        
+
+        if (!userData) {
+            return res.status(400).redirect('/loginPage');
+        }
+    
+        res.render('admin/layout/addPackages',{
+            isAdmin,
+            user:userData
+
+        });
+    } catch (error) {
+        console.error('Error rendering add package page:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+export const addPackage = async (req, res) => {
+  
+        try {
+            const { title, description, groupSize, days, nights, category, salePrice, regularPrice, discount, itineraryDescription, itineraryDays, status, keywords, additionalCategories, additionalCategoriesInput, mapType, apiKey, departureLocation, departureDateTime } = req.body;
+            let adminId;
+            if(req.isAdmin){
+                
+             adminId = req.id; // Assume auth middleware sets req.user
+            }
+            else{
+                const userData = await userModel.findById(req.id);
+                if(userData){
+                    adminId = userData.admin
+                }
+            }
+
+            if (!title || !description || !groupSize || !days || !nights || !category || !regularPrice || !departureLocation || !departureDateTime) {
+                return res.status(400).json({ error: 'Missing required fields' });
+            }
+
+            let parsedItineraryDays = [];
+            if (itineraryDays) {
+                parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
+                parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
+                    dayNumber: index + 1,
+                    title: day.title,
+                    description: day.description,
+                }));
+            }
+
+            // Combine checkbox and custom input categories
+            let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
+            if (additionalCategoriesInput) {
+                allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+            }
+
+            const totalDays = Number(days) + Number(nights);
+
+            const packageData = {
+                title,
+                description,
+                groupSize: Number(groupSize),
+                tripDuration: {
+                    days: Number(days),
+                    nights: Number(nights),
+                },
+                category,
+                salePrice,
+                regularPrice,
+                discount,
+                gallery: req.files && req.files['gallery'] ? req.files['gallery'].map(file => file.filename) : [],
+                featuredImage: req.files && req.files['featuredImage'] ? req.files['featuredImage'][0].filename : null,
+                map: {
+                    type: mapType || 'Google Map',
+                    apiKey,
+                },
+                keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+                additionalCategories: allCategories,
+                departure: {
+                    location: departureLocation,
+                    dateTime: new Date(departureDateTime),
+                },
+                itinerary: {
+                    title: 'Program',
+                    duration: `${totalDays} days`,
+                    description: itineraryDescription,
+                    days: parsedItineraryDays,
+                },
+                adminId,
+                // createdId: adminId,
+                status
+            };
+
+            const packagePacket = new packageModel(packageData);
+            await packagePacket.save();
+
+    
+            res.redirect('/db-all-packages');
+        } catch (error) {
+            console.error('Error adding package:', error);
+            res.status(500).json({ error: 'Failed to add package' });
+        }
+   
+};
+
+
+export const allPackages = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        let createdId=req.id
+        if (!userId) {
+            return res.send('User Id not available');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await userModel.findById(userId);
+            createdId = userData.admin
+        }
+
+        if (!userData) {
+            return res.status(400).redirect('/loginPage');
+        }
+
+        const allPackages = await packageModel.find({ adminId: createdId }).lean();
+        console.log()
+        res.render('admin/layout/allPackages', { allPackages,isAdmin, user:userData });
+    } catch (error) {
+        console.error('Error fetching all packages:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+export const editPackagePage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if(!userId){
+            return res.send('User Id not available')
+        }
+
+        let userData = await adminModel.findById( userId );
+    
+
+        if (!userData) {
+            userData = await userModel.findById( userId );
+        }
+
+
+        if (!userData) {
+            return res.status(400).redirect('/loginPage');
+        }
+
+        const packagePacket = await packageModel.findById(req.params.id);
+        if (!packagePacket) {
+            return res.status(404).send('Package not found');
+        }
+        res.render('admin/layout/edit-package', { packagePacket, isAdmin, user:userData });
+    } catch (error) {
+        console.error('Error rendering edit package page:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+
+export const editPackage = async (req, res) => {
+  
+        try {
+            const { title, description, groupSize, days, nights, category, salePrice, regularPrice, discount, itineraryDescription, itineraryDays, status, keywords, additionalCategories, additionalCategoriesInput, mapType, apiKey, departureLocation, departureDateTime } = req.body;
+            const packagePacket = await packageModel.findById(req.params.id);
+            if (!packagePacket) {
+                return res.status(404).json({ error: 'Package not found' });
+            }
+
+            let parsedItineraryDays = [];
+            if (itineraryDays) {
+                parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
+                parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
+                    dayNumber: index + 1,
+                    title: day.title,
+                    description: day.description,
+                }));
+            }
+
+            let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
+            if (additionalCategoriesInput) {
+                allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+            }
+
+            const totalDays = Number(days) + Number(nights);
+
+            packagePacket.title = title;
+            packagePacket.description = description;
+            packagePacket.groupSize = Number(groupSize);
+            packagePacket.tripDuration = { days: Number(days), nights: Number(nights) };
+            packagePacket.category = category;
+            packagePacket.salePrice = salePrice;
+            packagePacket.regularPrice = regularPrice;
+            packagePacket.discount = discount;
+            packagePacket.gallery = req.files && req.files['gallery'] ? req.files['gallery'].map(file => file.filename) : packagePacket.gallery;
+            packagePacket.featuredImage = req.files && req.files['featuredImage'] ? req.files['featuredImage'][0].filename : packagePacket.featuredImage;
+            packagePacket.map = { type: mapType || 'Google Map', apiKey };
+            packagePacket.keywords = keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : packagePacket.keywords;
+            packagePacket.additionalCategories = allCategories;
+            packagePacket.departure = {
+                location: departureLocation,
+                dateTime: new Date(departureDateTime),
+            };
+            packagePacket.itinerary = {
+                title: 'Program',
+                duration: `${totalDays} days`,
+                description: itineraryDescription,
+                days: parsedItineraryDays,
+            };
+            packagePacket.status = status 
+
+            await packagePacket.save();
+
+            console.log(`Package ${title} updated by admin ${req.user._id} with status ${packagePacket.status}`);
+            res.redirect('/db-all-package');
+        } catch (error) {
+            console.error('Error updating package:', error);
+            res.status(500).json({ error: 'Failed to update package' });
+        }
+
+};
+
+
+

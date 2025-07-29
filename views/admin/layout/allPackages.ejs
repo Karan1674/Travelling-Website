@@ -1,0 +1,73 @@
+
+<!doctype html>
+<html lang="en">
+ <%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap db-package-wrap">
+                <div class="dashboard-box table-opp-color-box">
+                    <h4>Packages List</h4>
+                    <p>Nonummy hac atque adipisicing donec placeat pariatur quia ornare nisl.</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Departure Date</th>
+                                    <th>Destination</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (allPackages && allPackages.length > 0) { %>
+                                    <% allPackages.forEach(package => { %>
+                                        <tr>
+                                            <td><span class="package-name"><%= package.title %></span></td>
+                                            <td><%= package.departure.dateTime.toLocaleDateString() %></td>
+                                            <td><%= package.departure.location %></td>
+                                            <td><span class="badge badge-<%= package.status === 'Active' ? 'success' : 'warning' %>"><%= package.status === 'Active' ? 'Active' : 'Draft' %></span></td>
+
+                                            <td>
+                                                <span class="badge badge-success" onclick="window.location.href='/edit-package/<%= package._id %>'"><i class="far fa-edit"></i></span>
+                                                <span class="badge badge-danger" onclick="window.location.href='/delete-package/<%= package._id %>'"><i class="far fa-trash-alt"></i></span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5">No packages found.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="pagination-wrap">
+                    <nav class="pagination-inner">
+                        <ul class="pagination disabled">
+                            <li class="page-item"><span class="page-link"><i class="fas fa-chevron-left"></i></span></li>
+                            <li class="page-item"><a href="#" class="page-link active">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="copyrights">
+                Copyright © 2021 Travele. All rights reserved.
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/canvasjs.min.js"></script>
+    <script src="assets/js/counterup.min.js"></script>
+    <script src="assets/js/jquery.slicknav.js"></script>
+    <script src="assets/js/dashboard-custom.js"></script>
+</body>
+</html>

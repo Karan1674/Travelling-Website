@@ -7,10 +7,9 @@ const AdminSchema = new mongoose.Schema({
     password: { type: String, required: true },
     phone: { type: String, required: true },
     profilePic: { type: String },
-    isAdmin: {
-        type: String,
-        default: true
-    }
+    isAdmin: { type: String, default: true },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Admin', AdminSchema);

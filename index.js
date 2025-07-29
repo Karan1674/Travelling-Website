@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const connectDB = require('./config/db');
 const app = express();
-const port = 3000;
+const port = 8000;
 const dotenv = require('dotenv')
 const cookieParser = require("cookie-parser");
 dotenv.config();
@@ -22,8 +22,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(cors()); 
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
 app.use("/uploads", express.static("uploads"));
+
+app.use(express.static('public'))
 
 connectDB()
 

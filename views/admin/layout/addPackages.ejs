@@ -1,0 +1,325 @@
+
+<!doctype html>
+<html lang="en">
+    <%- include('../partials/Header') %>
+
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+           <%- include('../partials/Navbar')%>
+
+           <%- include('../partials/Sidebar')%>
+
+            <div class="db-info-wrap db-add-tour-wrap">
+                <form id="add-package-form" action="/add-package" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-8 col-xl-9">
+                            <div class="dashboard-box">
+                                <div class="custom-field-wrap">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea name="description" required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <div class="custom-field-wrap">
+                                    <h4>Dates and Prices</h4>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Group Size</label>
+                                                <input type="number" name="groupSize" placeholder="No of Pax" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label>Trip Duration</label>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <input type="number" name="days" id="days" placeholder="Days" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <input type="number" name="nights" id="nights" placeholder="Nights" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <label>Category</label>
+                                                <select name="category" required>
+                                                    <option value="Adult">Adult</option>
+                                                    <option value="Child">Child</option>
+                                                    <option value="Couple">Couple</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <div class="form-group">
+                                                <label>Sale Price</label>
+                                                <input type="text" name="salePrice" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <div class="form-group">
+                                                <label>Regular Price</label>
+                                                <input type="text" name="regularPrice" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <div class="form-group">
+                                                <label>Discount</label>
+                                                <input type="text" name="discount">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <div class="custom-field-wrap">
+                                    <h4>Departure</h4>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Departure Location</label>
+                                                <input type="text" name="departureLocation" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Departure Date and Time</label>
+                                                <input type="datetime-local" name="departureDateTime" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <h4>Program (<span id="total-days">0</span> days)</h4>
+                                <div class="custom-field-wrap">
+                                    <div class="form-group">
+                                        <label>Itinerary Description</label>
+                                        <textarea name="itineraryDescription"></textarea>
+                                    </div>
+                                    <div id="itinerary-days"></div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <h4>Gallery (Max 8 Images)</h4>
+                                <div class="custom-field-wrap">
+                                    <div class="dragable-field">
+                                        <div class="dragable-field-inner">
+                                            <p class="drag-drop-info">Drop Files To Upload (Max 8)</p>
+                                            <p>or</p>
+                                            <div class="upload-input">
+                                                <div class="form-group">
+                                                    <span class="upload-btn">Upload images</span>
+                                                    <input type="file" id="gallery-input" name="gallery" multiple accept="image/*">
+                                                </div>
+                                            </div>
+                                            <p id="gallery-error" style="color: red; display: none;">Maximum 8 images allowed.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <h4>Location</h4>
+                                <div class="custom-field-wrap">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Select Map</label>
+                                                <select name="mapType">
+                                                    <option value="Google Map">Google Map</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>API Key</label>
+                                                <input type="text" name="apiKey">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-xl-3">
+                            <div class="dashboard-box">
+                                <div class="custom-field-wrap">
+                                    <h4>Publish</h4>
+                                    <div class="publish-btn">
+                                        <div class="form-group">
+                                            <input onclick="setStatus('Pending')" type="submit" name="draft" value="Save Draft">
+                                        </div>
+                                        <div class="form-group">
+                                            <input onclick="setStatus('Active')" type="submit" name="publish" value="Publish">
+                                        </div>
+                                    </div>
+                                    <div class="publish-status">
+                                        <span><strong>Status:</strong> Draft</span>
+                                        <input type="hidden" id="status" name="status" value="Pending">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-box">
+                                <div class="custom-field-wrap db-cat-field-wrap">
+                                    <h4>Additional Categories</h4>
+                                    <div id="category-list">
+                                        <div class="form-group">
+                                            <label class="custom-input">
+                                                <input type="checkbox" name="additionalCategories[]" value="Hotel">
+                                                <span class="custom-input-field"></span>
+                                                Hotel
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="custom-input">
+                                                <input type="checkbox" name="additionalCategories[]" value="Walking">
+                                                <span class="custom-input-field"></span>
+                                                Walking
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="add-btn">
+                                        <a href="#" id="add-category-btn">Add category</a>
+                                    </div>
+                                    <div id="new-category-input" style="display: none;">
+                                        <div class="form-group">
+                                            <input type="text" id="new-category" placeholder="New category">
+                                            <button type="button" id="add-category-submit">Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="custom-field-wrap db-pop-field-wrap">
+                                    <h4>Keywords</h4>
+                                    <div class="form-group">
+                                        <input type="text" name="keywords" placeholder="Comma-separated keywords">
+                                    </div>
+                                </div>
+                                <div class="custom-field-wrap db-media-field-wrap">
+                                    <h4>Add Featured Image</h4>
+                                    <div class="upload-input">
+                                        <div class="form-group">
+                                            <span class="upload-btn">Upload a featured image</span>
+                                            <input type="file" name="featuredImage" accept="image/*">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="copyrights">
+                Copyright © 2021 Travele. All rights reserved.
+            </div>
+        </div>
+    </div>
+    <script src="admin/assets/js/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="admin/assets/js/bootstrap.min.js"></script>
+    <script src="admin/assets/js/canvasjs.min.js"></script>
+    <script src="admin/assets/js/counterup.min.js"></script>
+    <script src="admin/assets/js/jquery.slicknav.js"></script>
+    <script src="admin/assets/js/dashboard-custom.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const daysInput = document.getElementById('days');
+            const nightsInput = document.getElementById('nights');
+            const totalDaysSpan = document.getElementById('total-days');
+            const itineraryDays = document.getElementById('itinerary-days');
+            const addCategoryBtn = document.getElementById('add-category-btn');
+            const newCategoryInput = document.getElementById('new-category-input');
+            const newCategoryField = document.getElementById('new-category');
+            const addCategorySubmit = document.getElementById('add-category-submit');
+            const categoryList = document.getElementById('category-list');
+            const galleryInput = document.getElementById('gallery-input');
+            const galleryError = document.getElementById('gallery-error');
+            const form = document.getElementById('add-package-form');
+
+            // Update total days and itinerary inputs
+            const updateItinerary = () => {
+                const days = parseInt(daysInput.value) || 0;
+                const nights = parseInt(nightsInput.value) || 0;
+                const totalDays = days + nights;
+                totalDaysSpan.textContent = totalDays;
+
+                itineraryDays.innerHTML = ''; // Clear existing inputs
+                for (let i = 1; i <= totalDays; i++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'form-group itinerary-content';
+                    dayDiv.innerHTML = `
+                        <h5>Day ${i}</h5>
+                        <label>Title</label>
+                        <input type="text" name="itineraryDays[${i-1}][title]">
+                        <label>Description</label>
+                        <textarea name="itineraryDays[${i-1}][description]"></textarea>
+                    `;
+                    itineraryDays.appendChild(dayDiv);
+                }
+            };
+
+            // Update itinerary on input change
+            daysInput.addEventListener('input', updateItinerary);
+            nightsInput.addEventListener('input', updateItinerary);
+
+            // Show/hide new category input
+            addCategoryBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                newCategoryInput.style.display = 'block';
+            });
+
+            // Add new category to checkbox list
+            addCategorySubmit.addEventListener('click', () => {
+                const newCategory = newCategoryField.value.trim();
+                if (newCategory) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'form-group';
+                    categoryDiv.innerHTML = `
+                        <label class="custom-input">
+                            <input type="checkbox" name="additionalCategories[]" value="${newCategory}" checked>
+                            <span class="custom-input-field"></span>
+                            ${newCategory}
+                        </label>
+                    `;
+                    categoryList.appendChild(categoryDiv);
+                    newCategoryField.value = ''; // Clear input
+                    newCategoryInput.style.display = 'none'; // Hide input
+                }
+            });
+
+            // Validate gallery images
+            galleryInput.addEventListener('change', () => {
+                if (galleryInput.files.length > 8) {
+                    galleryError.style.display = 'block';
+                    galleryInput.value = ''; // Clear invalid selection
+                } else {
+                    galleryError.style.display = 'none';
+                }
+            });
+
+            // Log form data before submission
+            form.addEventListener('submit', (e) => {
+                const formData = new FormData(form);
+                console.log('Form Data:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+            });
+        });
+
+        function setStatus(status) {
+            document.getElementById('status').value = status;
+        }
+
+    </script>
+</body>
+</html>
