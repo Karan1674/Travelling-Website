@@ -159,28 +159,60 @@ export const dashboard = async (req, res) => {
 
 
 
-
 export const getAllUsers = async (req, res) => {
     try {
+        const { page = 1, search = '' } = req.query;
+        const limit = 10; // Users per page
+        const pageNum = Math.max(1, Number(page)); // Ensure page is at least 1
+        const skip = (pageNum - 1) * limit; // Calculate skip, never negative
         const adminId = req.id;
+        const isAdmin = req.isAdmin;
 
-        const isAdmin = req.isAdmin
         if (!adminId) {
-            return res.status(401).send("Unauthorized: Admin ID missing");
+            return res.status(401).redirect('/loginPage');
         }
 
-        const userData = await adminModel.findById(req.id);
-        const users = await userModel.find({ admin: adminId});
+        const userData = await adminModel.findById(adminId);
+        if (!userData) {
+            return res.status(401).redirect('/loginPage');
+        }
 
+        let query = { admin: adminId };
+     
+        // Add search filter
+        if (search) {
+            query.$or = [
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } }
+            ]; // Case-insensitive search on firstName or lastName
+        }
+
+        // Get total count for pagination
+        const totalUsers = await userModel.countDocuments(query);
+        const totalPages = Math.ceil(totalUsers / limit) || 1; // Ensure at least 1 page
+
+        // Fetch paginated users
+        const users = await userModel
+            .find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.render('admin/layout/user', {
             allUsers: users,
+            search,
+            currentPage: pageNum,
+            totalPages,
             isAdmin,
             user: userData
         });
     } catch (error) {
-        console.error("Error fetching users:", error);
-        res.status(500).send("Internal Server Error");
+        console.error('Error fetching users:', error);
+        if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
+            return res.status(500).json({ error: 'Failed to fetch users' });
+        }
+        res.status(500).redirect('/loginPage');
     }
 };
 
@@ -261,7 +293,7 @@ export const newUser = async (req, res) => {
 
         await user.save();
         console.log("User registered successfully.");
-        return res.redirect('/users?success=User created');
+        return res.redirect('/db-admin-created-users?success=User created');
     } catch (error) {
         console.log("User registration error:", error.message);
         return res.redirect('/new-user?error=Internal server error');
@@ -350,7 +382,22 @@ export const editUserPost = async (req, res) => {
  
         if (req.file) {
             editUser.profilePic = req.file.filename;
+            const user = await userModel.findById(editUserId);
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+    
+            if (user.profilePic) {
+                const filePath = join(__dirname, '../Uploads/profiles', user.profilePic);
+                try {
+                    await fs.unlink(filePath);
+                    console.log(`Profile picture deleted: ${filePath}`);
+                } catch (fileError) {
+                    console.error(`Error deleting profile picture: ${fileError.message}`);
+                }
+            }
         }
+
 
 
         const updatedUser = await userModel.findByIdAndUpdate(
@@ -364,7 +411,7 @@ export const editUserPost = async (req, res) => {
         }
 
         console.log("User updated successfully");
-        res.redirect('/users');
+        res.redirect('/db-admin-created-users');
     } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).json({ error: "Failed to update user" });
@@ -402,7 +449,7 @@ export const deleteUser = async (req, res) => {
         await userModel.findByIdAndDelete(userId);
 
         console.log("User deleted successfully");
-        res.redirect('/users');
+        res.redirect('/db-admin-created-users');
     } catch (error) {
         console.error("Error deleting user:", error);
         res.status(500).json({ error: "Failed to delete user" });
@@ -574,7 +621,8 @@ export const addPackagePage = async (req, res) => {
     
         res.render('admin/layout/addPackages',{
             isAdmin,
-            user:userData
+            user:userData,
+            OPENCAGE_API_KEY : process.env.OPENCAGE_API_KEY
 
         });
     } catch (error) {
@@ -584,118 +632,163 @@ export const addPackagePage = async (req, res) => {
 };
 
 export const addPackage = async (req, res) => {
-  
-        try {
-            const { title, description, groupSize, days, nights, category, salePrice, regularPrice, discount, itineraryDescription, itineraryDays, status, keywords, additionalCategories, additionalCategoriesInput, mapType, apiKey, departureLocation, departureDateTime } = req.body;
-            let adminId;
-            if(req.isAdmin){
-                
-             adminId = req.id; // Assume auth middleware sets req.user
+    try {
+        const {
+            title, description, groupSize, days, nights, category, salePrice, regularPrice,
+            discount, itineraryDescription, itineraryDays, status, keywords,
+            additionalCategories, additionalCategoriesInput, departureLocation,
+            departureDateTime, latitude, longitude, address
+        } = req.body;
+
+        let adminId;
+        if (req.isAdmin) {
+            adminId = req.id; // Assume auth middleware sets req.id
+        } else {
+            const userData = await userModel.findById(req.id);
+            if (userData) {
+                adminId = userData.admin;
             }
-            else{
-                const userData = await userModel.findById(req.id);
-                if(userData){
-                    adminId = userData.admin
-                }
-            }
-
-            if (!title || !description || !groupSize || !days || !nights || !category || !regularPrice || !departureLocation || !departureDateTime) {
-                return res.status(400).json({ error: 'Missing required fields' });
-            }
-
-            let parsedItineraryDays = [];
-            if (itineraryDays) {
-                parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
-                parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
-                    dayNumber: index + 1,
-                    title: day.title,
-                    description: day.description,
-                }));
-            }
-
-            // Combine checkbox and custom input categories
-            let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
-            if (additionalCategoriesInput) {
-                allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
-            }
-
-            const totalDays = Number(days) + Number(nights);
-
-            const packageData = {
-                title,
-                description,
-                groupSize: Number(groupSize),
-                tripDuration: {
-                    days: Number(days),
-                    nights: Number(nights),
-                },
-                category,
-                salePrice,
-                regularPrice,
-                discount,
-                gallery: req.files && req.files['gallery'] ? req.files['gallery'].map(file => file.filename) : [],
-                featuredImage: req.files && req.files['featuredImage'] ? req.files['featuredImage'][0].filename : null,
-                map: {
-                    type: mapType || 'Google Map',
-                    apiKey,
-                },
-                keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : [],
-                additionalCategories: allCategories,
-                departure: {
-                    location: departureLocation,
-                    dateTime: new Date(departureDateTime),
-                },
-                itinerary: {
-                    title: 'Program',
-                    duration: `${totalDays} days`,
-                    description: itineraryDescription,
-                    days: parsedItineraryDays,
-                },
-                adminId,
-                // createdId: adminId,
-                status
-            };
-
-            const packagePacket = new packageModel(packageData);
-            await packagePacket.save();
-
-    
-            res.redirect('/db-all-packages');
-        } catch (error) {
-            console.error('Error adding package:', error);
-            res.status(500).json({ error: 'Failed to add package' });
         }
-   
+
+        // Determine required fields based on status
+        const isPublish = status === 'Active';
+        const requiredFields = isPublish
+            ? ['title', 'description', 'groupSize', 'days', 'nights', 'category', 'regularPrice', 'departureLocation', 'departureDateTime']
+            : ['title'];
+
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+        if (missingFields.length > 0) {
+            return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
+        }
+
+        let parsedItineraryDays = [];
+        if (itineraryDays) {
+            parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
+            parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
+                dayNumber: index + 1,
+                title: day.title,
+                description: day.description,
+            }));
+        }
+
+        // Combine checkbox and custom input categories
+        let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
+        if (additionalCategoriesInput) {
+            allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+        }
+
+        const totalDays = Number(days);
+
+        const packageData = {
+            title,
+            description,
+            groupSize: Number(groupSize),
+            tripDuration: {
+                days: Number(days),
+                nights: Number(nights),
+            },
+            category,
+            salePrice,
+            regularPrice,
+            discount,
+            gallery: req.files && req.files['gallery'] ? req.files['gallery'].map(file => file.filename) : [],
+            featuredImage: req.files && req.files['featuredImage'] ? req.files['featuredImage'][0].filename : null,
+            location: {
+                latitude: latitude ? parseFloat(latitude) : undefined,
+                longitude: longitude ? parseFloat(longitude) : undefined,
+                address: address || undefined
+            },
+            keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+            additionalCategories: allCategories,
+            departure: {
+                location: departureLocation,
+                dateTime: new Date(departureDateTime),
+            },
+            itinerary: {
+                title: 'Program',
+                duration: `${totalDays} days`,
+                description: itineraryDescription,
+                days: parsedItineraryDays,
+            },
+            adminId,
+            status,
+        };
+
+        const packagePacket = new packageModel(packageData);
+        await packagePacket.save();
+
+
+        
+      return  res.status(200).json({
+            message:"saved"
+        });
+    } catch (error) {
+        console.error('Error adding package:', error);
+        res.status(500).json({ error: 'Failed to add package' });
+    }
 };
 
 
-export const allPackages = async (req, res) => {
+export const getAllPackages = async (req, res) => {
     try {
+        const { page = 1, search = '' } = req.query;
+        const limit = 5; // Packages per page
+        const pageNum = Math.max(1, Number(page)); // Ensure page is at least 1
+        const skip = (pageNum - 1) * limit; // Calculate skip, never negative
         const userId = req.id;
         const isAdmin = req.isAdmin;
-        let createdId=req.id
+
         if (!userId) {
-            return res.send('User Id not available');
+            return res.status(401).redirect('/loginPage');
         }
 
         let userData = await adminModel.findById(userId);
+        let createdId = userId;
         if (!userData) {
             userData = await userModel.findById(userId);
-            createdId = userData.admin
+            if (!userData) {
+                return res.status(401).redirect('/loginPage');
+            }
+            createdId = userData.admin;
         }
 
-        if (!userData) {
-            return res.status(400).redirect('/loginPage');
+        let query = {adminId: createdId };
+      
+
+        // Add search filter
+        if (search) {
+            query.title = { $regex: search, $options: 'i' }; // Case-insensitive search
         }
 
-        const allPackages = await packageModel.find({ adminId: createdId }).lean();
-        console.log()
-        res.render('admin/layout/allPackages', { allPackages,isAdmin, user:userData });
+        // Get total count for pagination
+        const totalPackages = await packageModel.countDocuments(query);
+        const totalPages = Math.ceil(totalPackages / limit) || 1; // Ensure at least 1 page
+
+        // Fetch paginated packages
+        const allPackages = await packageModel
+            .find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.render('admin/layout/allPackages', {
+            allPackages,
+            search,
+            currentPage: pageNum,
+            totalPages,
+            isAdmin,
+            user: userData,
+            opencageApiKey: process.env.OPENCAGE_API_KEY
+        });
     } catch (error) {
-        console.error('Error fetching all packages:', error);
-        res.status(500).send('Server error');
+        console.error('Error fetching packages:', error);
+     
+        res.status(500).redirect('/loginPage');
     }
 };
+
+
 
 export const editPackagePage = async (req, res) => {
     try {
@@ -721,7 +814,7 @@ export const editPackagePage = async (req, res) => {
         if (!packagePacket) {
             return res.status(404).send('Package not found');
         }
-        res.render('admin/layout/edit-package', { packagePacket, isAdmin, user:userData });
+        res.render('admin/layout/editPackage', { package: packagePacket, isAdmin, user:userData,opencageApiKey: process.env.OPENCAGE_API_KEY });
     } catch (error) {
         console.error('Error rendering edit package page:', error);
         res.status(500).send('Server error');
@@ -730,66 +823,339 @@ export const editPackagePage = async (req, res) => {
 
 
 export const editPackage = async (req, res) => {
-  
-        try {
-            const { title, description, groupSize, days, nights, category, salePrice, regularPrice, discount, itineraryDescription, itineraryDays, status, keywords, additionalCategories, additionalCategoriesInput, mapType, apiKey, departureLocation, departureDateTime } = req.body;
-            const packagePacket = await packageModel.findById(req.params.id);
-            if (!packagePacket) {
-                return res.status(404).json({ error: 'Package not found' });
+    try {
+        const { id } = req.params;
+        const {
+            title, description, groupSize, days, nights, category, salePrice, regularPrice,
+            discount, itineraryDescription, itineraryDays, status, keywords,
+            additionalCategories, additionalCategoriesInput, departureLocation,
+            departureDateTime, latitude, longitude, address, deletedImages
+        } = req.body;
+
+        let adminId;
+        if (req.isAdmin) {
+            adminId = req.id; // Assume auth middleware sets req.id
+        } else {
+            const userData = await userModel.findById(req.id);
+            if (userData) {
+                adminId = userData.admin;
             }
+        }
 
-            let parsedItineraryDays = [];
-            if (itineraryDays) {
-                parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
-                parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
-                    dayNumber: index + 1,
-                    title: day.title,
-                    description: day.description,
-                }));
+        // Determine required fields based on status
+        const isPublish = status === 'Active';
+        const requiredFields = isPublish
+            ? ['title', 'description', 'groupSize', 'days', 'nights', 'category', 'regularPrice', 'departureLocation', 'departureDateTime']
+            : ['title'];
+
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+        if (missingFields.length > 0) {
+            return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
+        }
+
+        let parsedItineraryDays = [];
+        if (itineraryDays) {
+            parsedItineraryDays = Array.isArray(itineraryDays) ? itineraryDays : JSON.parse(itineraryDays || '[]');
+            parsedItineraryDays = parsedItineraryDays.map((day, index) => ({
+                dayNumber: index + 1,
+                title: day.title,
+                description: day.description,
+            }));
+        }
+
+        // Combine checkbox and custom input categories
+        let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
+        if (additionalCategoriesInput) {
+            allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+        }
+
+        // Fetch existing package
+        const existingPackage = await packageModel.findById(id);
+        if (!existingPackage) {
+            return res.status(404).json({ error: 'Package not found' });
+        }
+
+        // Handle gallery updates
+        let gallery = existingPackage.gallery || [];
+        const uploadsDir =join(__dirname, '../uploads/gallery'); // Adjust to your uploads folder
+
+        // Remove images marked for deletion
+        if (deletedImages) {
+            const imagesToDelete = Array.isArray(deletedImages) ? deletedImages : deletedImages.split(',').map(img => img.trim());
+            for (const image of imagesToDelete) {
+                if (gallery.includes(image)) {
+                    try {
+                        await fs.unlink(join(uploadsDir, image));
+                    } catch (err) {
+                        console.error(`Failed to delete image ${image}:`, err);
+                    }
+                }
             }
+            gallery = gallery.filter(image => !imagesToDelete.includes(image));
+        }
 
-            let allCategories = Array.isArray(additionalCategories) ? additionalCategories : additionalCategories ? [additionalCategories] : [];
-            if (additionalCategoriesInput) {
-                allCategories.push(...additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+        // Replace gallery if new images are uploaded
+        if (req.files && req.files['gallery']) {
+            // Delete all existing images
+            for (const image of gallery) {
+                try {
+                    await fs.unlink(join(uploadsDir, image));
+                } catch (err) {
+                    console.error(`Failed to delete image ${image}:`, err);
+                }
             }
+            // Replace with new images
+            gallery = req.files['gallery'].map(file => file.filename);
+        }
 
-            const totalDays = Number(days) + Number(nights);
+        // Handle featured image
+        let featuredImage = existingPackage.featuredImage;
+        if (req.files && req.files['featuredImage']) {
+            if (featuredImage) {
+                try {
+                    await fs.unlink(join(uploadsDir, featuredImage));
+                } catch (err) {
+                    console.error(`Failed to delete featured image ${featuredImage}:`, err);
+                }
+            }
+            featuredImage = req.files['featuredImage'][0].filename;
+        }
 
-            packagePacket.title = title;
-            packagePacket.description = description;
-            packagePacket.groupSize = Number(groupSize);
-            packagePacket.tripDuration = { days: Number(days), nights: Number(nights) };
-            packagePacket.category = category;
-            packagePacket.salePrice = salePrice;
-            packagePacket.regularPrice = regularPrice;
-            packagePacket.discount = discount;
-            packagePacket.gallery = req.files && req.files['gallery'] ? req.files['gallery'].map(file => file.filename) : packagePacket.gallery;
-            packagePacket.featuredImage = req.files && req.files['featuredImage'] ? req.files['featuredImage'][0].filename : packagePacket.featuredImage;
-            packagePacket.map = { type: mapType || 'Google Map', apiKey };
-            packagePacket.keywords = keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : packagePacket.keywords;
-            packagePacket.additionalCategories = allCategories;
-            packagePacket.departure = {
+        const totalDays = Number(days);
+
+        const packageData = {
+            title,
+            description,
+            groupSize: Number(groupSize),
+            tripDuration: {
+                days: Number(days),
+                nights: Number(nights),
+            },
+            category,
+            salePrice,
+            regularPrice,
+            discount,
+            gallery,
+            featuredImage,
+            location: {
+                latitude: latitude ? parseFloat(latitude) : undefined,
+                longitude: longitude ? parseFloat(longitude) : undefined,
+                address: address || undefined
+            },
+            keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+            additionalCategories: allCategories,
+            departure: {
                 location: departureLocation,
                 dateTime: new Date(departureDateTime),
-            };
-            packagePacket.itinerary = {
+            },
+            itinerary: {
                 title: 'Program',
                 duration: `${totalDays} days`,
                 description: itineraryDescription,
                 days: parsedItineraryDays,
-            };
-            packagePacket.status = status 
+            },
+            adminId,
+            status,
+        };
 
-            await packagePacket.save();
 
-            console.log(`Package ${title} updated by admin ${req.user._id} with status ${packagePacket.status}`);
-            res.redirect('/db-all-package');
-        } catch (error) {
-            console.error('Error updating package:', error);
-            res.status(500).json({ error: 'Failed to update package' });
+        Object.keys(packageData).forEach(key => packageData[key] === undefined && delete packageData[key]);
+
+        const updatedPackage = await packageModel.findByIdAndUpdate(id, packageData, { new: true });
+        if (!updatedPackage) {
+            return res.status(404).json({ error: 'Package not found' });
         }
 
+        return  res.status(200).json({
+            message:"update"
+        });
+    } catch (error) {
+        console.error('Error updating package:', error);
+        res.status(500).json({ error: 'Failed to update package' });
+    }
+};
+
+
+export const deletePackage = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+    
+        let adminId;
+        if (req.isAdmin) {
+            adminId = req.id;
+        } else {
+            const userData = await userModel.findById(req.id);
+            if (!userData) {
+                return res.status(401).json({ error: 'Unauthorized: User not found' });
+            }
+            adminId = userData.admin;
+        }
+
+        // Fetch package to verify ownership and get images
+        const packagePacket = await packageModel.findById(id);
+        if (!packagePacket) {
+            return res.status(404).json({ error: 'Package not found' });
+        }
+
+     
+
+        // Delete associated images from file system
+        const uploadsDir = join(__dirname, '../Uploads/gallery'); 
+
+        // Delete gallery images
+        if (packagePacket.gallery && packagePacket.gallery.length > 0) {
+            for (const image of packagePacket.gallery) {
+                try {
+                    await fs.unlink(join(uploadsDir, image));
+                } catch (err) {
+                    console.error(`Failed to delete image ${image}:`, err);
+                }
+            }
+        }
+
+        // Delete featured image
+        if (packagePacket.featuredImage) {
+            try {
+                await fs.unlink(join(uploadsDir, packagePacket.featuredImage));
+            } catch (err) {
+                console.error(`Failed to delete featured image ${packagePacket.featuredImage}:`, err);
+            }
+        }
+
+        // Delete package from database
+        await packageModel.findByIdAndDelete(id);
+
+ 
+        res.status(200).json({
+            message:"Package Deleted Successfuly"
+        })
+    } catch (error) {
+        console.error('Error deleting package:', error);
+    
+        res.status(500).json({ error: 'Failed to delete package' });
+    }
 };
 
 
 
+
+
+
+
+
+export const getPackagesByStatus = async (req, res) => {
+    try {
+        const { page = 1, search = '', status } = req.query;
+        const validStatuses = ['Active', 'Pending', 'Expired'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).redirect('/db-all-packages');
+        }
+
+
+
+
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            return res.status(401).redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        let createdId = userId;
+        if (!userData) {
+            userData = await userModel.findById(userId);
+            if (!userData) {
+                return res.status(401).redirect('/loginPage');
+            }
+            createdId = userData.admin;
+        }
+
+        let query = {adminId: createdId,status };
+      
+
+      
+
+        if (search) {
+            query.title = { $regex: search, $options: 'i' };
+        }
+
+        const limit = 10;
+        const pageNum = Math.max(1, Number(page));
+        const skip = (pageNum - 1) * limit;
+        const totalPackages = await packageModel.countDocuments(query);
+        const totalPages = Math.ceil(totalPackages / limit) || 1;
+
+        const allPackages = await packageModel.find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.render('admin/layout/packagesByStatus', {
+            allPackages,
+            search,
+            currentPage: pageNum,
+            totalPages,
+            isAdmin,
+            user: userData,
+            opencageApiKey: process.env.OPENCAGE_API_KEY,
+            pageTitle: `${status} Packages`
+        });
+    } catch (error) {
+        console.error(`Error fetching ${req.query.status} packages:`, error);
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+
+
+export const getUserDashboard = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if (!userId) {
+            return res.status(401).redirect('/loginPage');
+        }
+
+        const userData = await adminModel.findById(userId)
+        if (!userData) {
+            return res.status(401).redirect('/loginPage');
+        }
+
+        res.render('admin/layout/userPageDashboard', {
+            isAdmin,
+            user: userData
+        });
+    } catch (error) {
+        console.error('Error rendering user dashboard:', error);
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+
+export const getPackageDashboard = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if (!userId) {
+            return res.status(401).redirect('/loginPage');
+        }
+
+        const userData = await adminModel.findById(userId) || await userModel.findById(userId);
+        if (!userData) {
+            return res.status(401).redirect('/loginPage');
+        }
+
+        res.render('admin/layout/packagePageDashboard', {
+            isAdmin,
+            user: userData
+        });
+    } catch (error) {
+        console.error('Error rendering package dashboard:', error);
+        res.status(500).redirect('/loginPage');
+    }
+};

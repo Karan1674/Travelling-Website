@@ -5,16 +5,16 @@
         <ul>
             <li class="active-menu"><a href="/dashboard"><i class="far fa-chart-bar"></i> Dashboard</a></li>
            <% if(isAdmin) {%>
-            <li><a><i class="fas fa-user"></i>Users</a>
+            <li><a onclick="window.location.href='/db-user-dashboard'"><i class="fas fa-user"></i>Users</a>
                 <ul>
                     <li>
-                        <a href="/users">User</a>
+                        <a href="/db-admin-created-users">Admin User</a>
                     </li>
                     <li>
-                        <a href="/user-edit">User edit</a>
+                        <a href="/user-edit">SignedUp User</a>
                     </li>
                     <li>
-                        <a href="/new-user">New user</a>
+                        <a href="/new-user">Create New user</a>
                     </li>
                 </ul>
             </li>
@@ -22,12 +22,12 @@
             <%}%>
             <li><a href="/db-add-package"><i class="fas fa-umbrella-beach"></i>Add Package</a></li>
             <li>
-                <a ><i class="fas fa-hotel"></i></i>packages</a>
+                <a onclick="window.location.href='/db-package-dashboard'"><i class="fas fa-hotel"></i></i>packages</a>
                 <ul>
                     <li><a href="/db-all-packages">All Packages</a></li>
-                    <li><a href="db-package-active.html">Active</a></li>
-                    <li><a href="db-package-pending.html">Pending</a></li>
-                    <li><a href="db-package-expired.html">Expired</a></li>
+                    <li><a href="/db-active-packages">Active</a></li>
+                    <li><a href="/db-pending-packages">Pending</a></li>
+                    <li><a href="/db-expired-packages">Expired</a></li>
                 </ul>   
             </li>
             <li><a href="db-booking.html"><i class="fas fa-ticket-alt"></i> Booking & Enquiry</a></li>

@@ -6,21 +6,20 @@
     <div id="container-wrapper">
         <div id="dashboard" class="dashboard-container">
             <%- include('../partials/Navbar') %>
-          
             <%- include('../partials/Sidebar') %>
             <div class="db-info-wrap db-add-tour-wrap">
-                <form id="add-package-form" action="/add-package" method="post" enctype="multipart/form-data">
+                <form id="add-package-form" action="/edit-package/<%= package?._id %>" method="post" enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-lg-8 col-xl-9">
                             <div class="dashboard-box">
                                 <div class="custom-field-wrap">
                                     <div class="form-group">
                                         <label>Title</label>
-                                        <input type="text" name="title" required>
+                                        <input type="text" name="title" value="<%= package.title %>" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Description</label>
-                                        <textarea name="description" required></textarea>
+                                        <textarea name="description" required><%= package.description %></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -31,7 +30,7 @@
                                         <div class="col-sm-6">
                                             <div class="form-group">
                                                 <label>Group Size</label>
-                                                <input type="number" name="groupSize" placeholder="No of Pax" required>
+                                                <input type="number" name="groupSize" value="<%= package.groupSize %>" placeholder="No of Pax" required>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
@@ -39,12 +38,12 @@
                                             <div class="row">
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <input type="number" name="days" id="days" placeholder="Days" required>
+                                                        <input type="number" name="days" id="days" value="<%= package.tripDuration.days %>" placeholder="Days" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <input type="number" name="nights" id="nights" placeholder="Nights" required>
+                                                        <input type="number" name="nights" id="nights" value="<%= package.tripDuration.nights %>" placeholder="Nights" required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -53,41 +52,51 @@
                                             <div class="form-group">
                                                 <label>Category</label>
                                                 <select name="category" required>
-                                                    <option value="Adult">Adult</option>
-                                                    <option value="Child">Child</option>
-                                                    <option value="Couple">Couple</option>
+                                                    <option value="Adult" <%= package.category === 'Adult' ? 'selected' : '' %>>Adult</option>
+                                                    <option value="Child" <%= package.category === 'Child' ? 'selected' : '' %>>Child</option>
+                                                    <option value="Couple" <%= package.category === 'Couple' ? 'selected' : '' %>>Couple</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="col-sm-3">
                                             <div class="form-group">
                                                 <label>Regular Price</label>
-                                                <input type="text" name="regularPrice" required>
+                                                <input type="text" name="regularPrice" value="<%= package.regularPrice %>" required>
                                             </div>
                                         </div>
                                         <div class="col-sm-3">
                                             <div class="form-group">
                                                 <label>Sale Price</label>
-                                                <input type="text" name="salePrice">
+                                                <input type="text" name="salePrice" value="<%= package.salePrice || '' %>">
                                             </div>
                                         </div>
                                         <div class="col-sm-2">
                                             <div class="form-group">
                                                 <label>Discount</label>
-                                                <input type="text" name="discount">
+                                                <input type="text" name="discount" value="<%= package.discount || '' %>">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="dashboard-box">
-                                <h4>Program (<span id="total-days">0</span> days)</h4>
+                                <h4>Program (<span id="total-days"><%= package.tripDuration.days + package.tripDuration.nights %></span> days)</h4>
                                 <div class="custom-field-wrap">
                                     <div class="form-group">
                                         <label>Itinerary Description</label>
-                                        <textarea name="itineraryDescription"></textarea>
+                                        <textarea name="itineraryDescription"><%= package.itinerary.description || '' %></textarea>
                                     </div>
-                                    <div id="itinerary-days"></div>
+                                    <div id="itinerary-days">
+                                        <% package.itinerary.days.forEach((day, index) => { %>
+                                            <div class="form-group itinerary-content">
+                                                <h5>Day <%= day.dayNumber %></h5>
+                                                <label>Title</label>
+                                                <input type="text" name="itineraryDays[<%= index %>][title]" value="<%= day.title || '' %>">
+                                                <label>Description</label>
+                                                <textarea name="itineraryDays[<%= index %>][description]"><%= day.description || '' %></textarea>
+                                            </div>
+                                        <% }) %>
+                                    </div>
                                 </div>
                             </div>
                             <div class="dashboard-box">
@@ -103,7 +112,22 @@
                                                     <input type="file" id="gallery-input" name="gallery" multiple accept="image/*">
                                                 </div>
                                             </div>
-                                            <div id="gallery-file-names" class="mt-2"></div>
+                                            <div id="gallery-file-names" class="mt-2">
+                                                <% if (package.gallery && package.gallery.length > 0) { %>
+                                                    <div id="existing-images" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                                        <% package.gallery.forEach(image => { %>
+                                                            <div class="image-item" data-filename="<%= image %>">
+                                                                <img src="/Uploads/gallery/<%= image %>" alt="Gallery Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                                                                <span class="delete-image" style="position: absolute; top: 0; right: 0; color: red; cursor: pointer; font-size: 16px; font-weight: bold; background: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">×</span>
+                                                            </div>
+                                                        <% }) %>
+                                                    </div>
+                                                <% } else { %>
+                                                    <span>No images selected</span>
+                                                <% } %>
+                                                <div id="new-images" class="mt-2"></div>
+                                            </div>
+                                            <input type="hidden" name="deletedImages" id="deleted-images" value="">
                                             <p id="gallery-error" style="color: red; display: none;">Maximum 8 images allowed.</p>
                                         </div>
                                     </div>
@@ -114,11 +138,11 @@
                                 <div class="custom-field-wrap">
                                     <div class="form-group">
                                         <label>Search Location</label>
-                                        <input type="text" id="location-search" placeholder="Search for a place">
+                                        <input type="text" id="location-search" placeholder="Search for a place" value="<%= package.location && package.location.address ? package.location.address : '' %>">
                                     </div>
-                                    <input type="hidden" name="latitude" id="latitude">
-                                    <input type="hidden" name="longitude" id="longitude">
-                                    <input type="hidden" name="address" id="address">
+                                    <input type="hidden" name="latitude" id="latitude" value="<%= package.location && package.location.latitude ? package.location.latitude : '' %>">
+                                    <input type="hidden" name="longitude" id="longitude" value="<%= package.location && package.location.longitude ? package.location.longitude : '' %>">
+                                    <input type="hidden" name="address" id="address" value="<%= package.location && package.location.address ? package.location.address : '' %>">
                                     <div id="map" style="height: 400px; width: 100%; margin-top: 20px;"></div>
                                 </div>
                             </div>
@@ -129,11 +153,11 @@
                                     <h4>Departure</h4>
                                     <div class="form-group">
                                         <label>Departure Location</label>
-                                        <input type="text" name="departureLocation" required>
+                                        <input type="text" name="departureLocation" value="<%= package.departure.location %>" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Departure Date and Time</label>
-                                        <input type="datetime-local" name="departureDateTime" required>
+                                        <input type="datetime-local" name="departureDateTime" value="<%= package.departure.dateTime.toISOString().slice(0, 16) %>" required>
                                     </div>
                                 </div>
                             </div>
@@ -141,20 +165,26 @@
                                 <div class="custom-field-wrap db-cat-field-wrap">
                                     <h4>Additional Categories</h4>
                                     <div id="category-list">
-                                        <div class="form-group">
-                                            <label class="custom-input">
-                                                <input type="checkbox" name="additionalCategories[]" value="Hotel">
-                                                <span class="custom-input-field"></span>
-                                                Hotel
-                                            </label>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="custom-input">
-                                                <input type="checkbox" name="additionalCategories[]" value="Walking">
-                                                <span class="custom-input-field"></span>
-                                                Walking
-                                            </label>
-                                        </div>
+                                        <% ['Hotel', 'Walking'].forEach(category => { %>
+                                            <div class="form-group">
+                                                <label class="custom-input">
+                                                    <input type="checkbox" name="additionalCategories[]" value="<%= category %>" <%= package.additionalCategories.includes(category) ? 'checked' : '' %>>
+                                                    <span class="custom-input-field"></span>
+                                                    <%= category %>
+                                                </label>
+                                            </div>
+                                        <% }) %>
+                                        <% package.additionalCategories.forEach(category => { %>
+                                            <% if (!['Hotel', 'Walking'].includes(category)) { %>
+                                                <div class="form-group">
+                                                    <label class="custom-input">
+                                                        <input type="checkbox" name="additionalCategories[]" value="<%= category %>" checked>
+                                                        <span class="custom-input-field"></span>
+                                                        <%= category %>
+                                                    </label>
+                                                </div>
+                                            <% } %>
+                                        <% }) %>
                                     </div>
                                     <div class="add-btn">
                                         <a href="#" id="add-category-btn">Add category</a>
@@ -169,7 +199,7 @@
                                 <div class="custom-field-wrap db-pop-field-wrap">
                                     <h4>Keywords</h4>
                                     <div class="form-group">
-                                        <input type="text" name="keywords" placeholder="Comma-separated keywords">
+                                        <input type="text" name="keywords" value="<%= package.keywords.join(', ') %>" placeholder="Comma-separated keywords">
                                     </div>
                                 </div>
                                 <div class="custom-field-wrap db-media-field-wrap">
@@ -180,26 +210,39 @@
                                             <input type="file" name="featuredImage" accept="image/*">
                                         </div>
                                     </div>
-                                    <div id="featured-file-name" class="mt-2"></div>
-                                </div>
-                            </div>
-                            <div class="dashboard-box">
-                                <div class="custom-field-wrap">
-                                    <h4>Publish</h4>
-                                    <div class="publish-btn">
-                                        <div class="form-group">
-                                            <input type="submit" name="draft" value="Save Draft" onclick="setStatus('Pending')" class="btn-draft">
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="submit" name="publish" value="Publish" onclick="setStatus('Active')" class="btn-publish">
-                                        </div>
-                                    </div>
-                                    <div class="publish-status">
-                                        <span><strong>Status:</strong> Draft</span>
-                                        <input type="hidden" id="status" name="status" value="Pending">
+                                    <div id="featured-file-name" class="mt-2" style="display: flex; align-items: center; justify-content: center;">
+                                        <% if (package.featuredImage) { %>
+                                            <img src="/Uploads/gallery/<%= package.featuredImage %>" alt="Featured Image"
+                                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                                          <% } else { %>
+                                            No file selected
+                                          <% } %>
+                                          
                                     </div>
                                 </div>
                             </div>
+                          
+                                <div class="dashboard-box">
+                                    <div class="custom-field-wrap">
+                                        <h4>Publish</h4>
+                                        <div class="publish-btn">
+                                            <div class="form-group">
+                                                <input type="submit" name="draft" value="Save Draft" onclick="setStatus('Pending')" class="btn-draft">
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="submit" name="publish" value="Publish" onclick="setStatus('Active')" class="btn-publish">
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="submit" name="expire" value="Expired" onclick="setStatus('Expired')" class="btn-expired">
+                                            </div>
+                                        </div>
+                                        <div class="publish-status">
+                                            <span><strong>Status:</strong> <%= package.status %></span>
+                                            <input type="hidden" id="status" name="status" value="<%= package.status %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            
                         </div>
                     </div>
                 </form>
@@ -215,14 +258,14 @@
             background-color: #6b7280 !important; /* Gray-500 */
             color: white !important;
             border: 1px solid #4b5563; /* Gray-600 */
-            padding: 10px 20px;
+           
             cursor: pointer;
-            width: 100%;
-            border-radius: 4px;
+        
+            border-radius: 4px !important;
             transition: background-color 0.3s;
         }
         .btn-draft:hover {
-            background-color: #4b5563; /* Gray-600 */
+            background-color: #4b5563 !important; /* Gray-600 */
         }
         .btn-publish {
             background-color: #1d4ed8 !important; /* Blue-700 */
@@ -230,12 +273,30 @@
             border: 1px solid #1e40af; /* Blue-800 */
             padding: 10px 20px;
             cursor: pointer;
-            width: 100%;
-            border-radius: 4px;
+      
+            border-radius: 4px  !important;
             transition: background-color 0.3s;
         }
         .btn-publish:hover {
-            background-color: #1e40af; /* Blue-800 */
+            background-color: #1e40af !important; /* Blue-800 */
+        }
+        .btn-expired {
+            background-color: #dc2626 !important; /* Red-600 */
+            color: white !important;
+            border: 1px solid #b91c1c; /* Red-700 */
+            padding: 10px 20px;
+            cursor: pointer;
+       
+            border-radius: 4px  !important;
+            transition: background-color 0.3s;
+        }
+        .btn-expired:hover {
+            background-color: #b91c1c !important; /* Red-700 */
+        }
+        .publish-btn {
+            display: flex;
+
+            gap: 4px;
         }
         .upload-btn {
             display: inline-block;
@@ -272,7 +333,7 @@
         #add-category-submit:hover {
             background-color: #0056b3; /* Blue-700 */
         }
-        #gallery-file-names, #featured-file-name {
+        #gallery-file-names {
             color: #333;
             font-size: 14px;
         }
@@ -281,17 +342,33 @@
             padding: 8px;
             margin-bottom: 10px;
         }
+        .image-item {
+            position: relative;
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .delete-image {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .image-item img:hover {
+            opacity: 0.8;
+        }
     </style>
-    <script src="admin/assets/js/jquery-3.2.1.min.js"></script>
+    <script src="/admin/assets/js/jquery-3.2.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="admin/assets/js/bootstrap.min.js"></script>
-    <script src="admin/assets/js/canvasjs.min.js"></script>
-    <script src="admin/assets/js/counterup.min.js"></script>
-    <script src="admin/assets/js/jquery.slicknav.js"></script>
-    <script src="admin/assets/js/dashboard-custom.js"></script>
+    <script src="/admin/assets/js/bootstrap.min.js"></script>
+    <script src="/admin/assets/js/canvasjs.min.js"></script>
+    <script src="/admin/assets/js/counterup.min.js"></script>
+    <script src="/admin/assets/js/jquery.slicknav.js"></script>
+    <script src="/admin/assets/js/dashboard-custom.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script>
+        // Inject OpenCage API key from server
+        const OPENCAGE_API_KEY = '<%= opencageApiKey %>';
+
         document.addEventListener('DOMContentLoaded', () => {
             const daysInput = document.getElementById('days');
             const nightsInput = document.getElementById('nights');
@@ -305,6 +382,9 @@
             const galleryInput = document.getElementById('gallery-input');
             const galleryError = document.getElementById('gallery-error');
             const galleryFileNames = document.getElementById('gallery-file-names');
+            const existingImages = document.getElementById('existing-images');
+            const newImages = document.getElementById('new-images');
+            const deletedImagesInput = document.getElementById('deleted-images');
             const featuredInput = document.querySelector('input[name="featuredImage"]');
             const featuredFileName = document.getElementById('featured-file-name');
             const form = document.getElementById('add-package-form');
@@ -314,16 +394,18 @@
             const longitudeInput = document.getElementById('longitude');
             const addressInput = document.getElementById('address');
 
-            // OpenCage API key (replace with your own key)
-            const OPENCAGE_API_KEY = `<%=OPENCAGE_API_KEY %>`;
+            // Track deleted images
+            let deletedImages = [];
 
             // Initialize Leaflet map
-            const map = L.map('map').setView([0, 0], 2);
+            const initialLat = <%= package.location && package.location.latitude ? package.location.latitude : 0 %>;
+            const initialLng = <%= package.location && package.location.longitude ? package.location.longitude : 0 %>;
+            const map = L.map('map').setView([initialLat, initialLng], initialLat === 0 && initialLng === 0 ? 2 : 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            const marker = L.marker([0, 0], { draggable: true }).addTo(map);
+            const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
 
             // Handle map click
             map.on('click', (e) => {
@@ -425,7 +507,7 @@
             };
 
             daysInput.addEventListener('input', updateItinerary);
-            nightsInput.addEventListener('input', updateItinerary);
+            // nightsInput.addEventListener('input', updateItinerary);
 
             // Toggle add category input
             addCategoryBtn.addEventListener('click', (e) => {
@@ -452,16 +534,37 @@
                 }
             });
 
-            // Display gallery file names
+            // Handle image deletion
+            if (existingImages) {
+                existingImages.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-image')) {
+                        const imageItem = e.target.parentElement;
+                        const filename = imageItem.getAttribute('data-filename');
+                        deletedImages.push(filename);
+                        deletedImagesInput.value = deletedImages.join(',');
+                        imageItem.remove();
+                        // Update display if no existing images remain
+                        if (!existingImages.children.length && !newImages.textContent) {
+                            galleryFileNames.innerHTML = '<span>No images selected</span>';
+                        }
+                    }
+                });
+            }
+
+            // Display new uploaded file names
             galleryInput.addEventListener('change', () => {
-                if (galleryInput.files.length > 8) {
+                const totalImages = (existingImages ? existingImages.children.length : 0) + galleryInput.files.length;
+                if (totalImages > 8) {
                     galleryError.style.display = 'block';
                     galleryInput.value = '';
-                    galleryFileNames.textContent = '';
+                    newImages.textContent = '';
                 } else {
                     galleryError.style.display = 'none';
                     const fileNames = Array.from(galleryInput.files).map(file => file.name).join(', ');
-                    galleryFileNames.textContent = fileNames || 'No files selected';
+                    newImages.textContent = fileNames || '';
+                    if (!existingImages || !existingImages.children.length) {
+                        galleryFileNames.innerHTML = fileNames ? `<span>${fileNames}</span>` : '<span>No images selected</span>';
+                    }
                 }
             });
 
@@ -469,6 +572,8 @@
             featuredInput.addEventListener('change', () => {
                 featuredFileName.textContent = featuredInput.files[0]?.name || 'No file selected';
             });
+
+   
 
             // AJAX form submission
             form.addEventListener('submit', async (e) => {
@@ -480,7 +585,7 @@
                 }
 
                 try {
-                    const response = await fetch('/add-package', {
+                    const response = await fetch(`/edit-package/<%= package._id %>`, {
                         method: 'POST',
                         body: formData,
                     });
@@ -500,9 +605,11 @@
             });
         });
 
-        function setStatus(status) {
-            document.getElementById('status').value = status;
-        }
+                 // Set status for form submission
+                 function setStatus(status) {
+                console.log(status)
+                document.getElementById('status').value = status;
+            }
     </script>
 </body>
 </html>

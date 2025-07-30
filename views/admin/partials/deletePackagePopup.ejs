@@ -1,0 +1,173 @@
+<style>
+    /* Overlay for the popup */
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        /* Low opacity background */
+        z-index: 10500;
+        /* High z-index */
+    }
+
+    /* Popup container */
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10501;
+        /* Above overlay */
+        max-width: 400px;
+        width: 90%;
+        padding: 20px;
+    }
+
+    /* Show popup and overlay */
+    .popup-overlay.show,
+    .popup.show {
+        display: block;
+    }
+
+    /* Popup header */
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .popup-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    .popup-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    /* Popup body */
+    .popup-body {
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+
+    /* Popup footer */
+    .popup-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .popup {
+            width: 95%;
+        }
+    }
+</style>
+
+<!-- Custom Delete Popup -->
+<div class="popup-overlay" id="deletePopupOverlay"></div>
+<div class="popup" id="deletePopup">
+    <div class="popup-header">
+        <h5>Confirm Delete</h5>
+        <button class="popup-close" id="popupCloseBtn">&times;</button>
+    </div>
+    <div class="popup-body">
+        Are you sure you want to delete this Package?
+    </div>
+    <div class="popup-footer">
+        <button type="button" class="btn btn-secondary" id="popupCancelBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="popupConfirmDeleteBtn">Delete</button>
+    </div>
+</div>
+<script>
+    // Vanilla JavaScript to handle the custom delete popup
+    document.addEventListener('DOMContentLoaded', () => {
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        const popupOverlay = document.getElementById('deletePopupOverlay');
+        const popup = document.getElementById('deletePopup');
+        const cancelBtn = document.getElementById('popupCancelBtn');
+        const closeBtn = document.getElementById('popupCloseBtn');
+        const confirmDeleteBtn = document.getElementById('popupConfirmDeleteBtn');
+
+        // Check if elements exist to prevent errors
+        if (!popupOverlay || !popup || !cancelBtn || !closeBtn || !confirmDeleteBtn) {
+            console.error('Popup elements not found');
+            return;
+        }
+
+        // Function to show the popup
+        const showPopup = () => {
+            popupOverlay.classList.add('show');
+            popup.classList.add('show');
+        };
+
+        // Function to hide the popup
+        const hidePopup = () => {
+            popupOverlay.classList.remove('show');
+            popup.classList.remove('show');
+            confirmDeleteBtn.removeAttribute('data-packageId');
+        };
+
+        // Add click event listener to each delete button
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const packageId = button.getAttribute('data-packageId');
+                if (packageId) {
+                    confirmDeleteBtn.setAttribute('data-packageId', packageId);
+                    showPopup();
+                } else {
+                    console.error('packageId not found on button');
+                }
+            });
+        });
+
+        // Add click event listener to the confirm delete button
+        confirmDeleteBtn.addEventListener('click', async () => {
+            const packageId = confirmDeleteBtn.getAttribute('data-packageId');
+            if (packageId) {
+                //    window.location.href = `/delete-package/${packageId}`;
+                try {
+                    const response = await fetch(`/delete-package/${packageId}`, {
+                        method: 'GET',
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+
+                        window.location.reload();
+                    } else {
+                        console.log('Failed to delete package');
+                    }
+                    hidePopup();
+                }
+                catch (error) {
+                    console.log(error)
+                }
+
+            } else {
+                console.error('package ID not found on confirm button');
+            }
+        });
+
+        // Add click event listener to the cancel button
+        cancelBtn.addEventListener('click', hidePopup);
+
+        // Add click event listener to the close button
+        closeBtn.addEventListener('click', hidePopup);
+
+        // Close popup when clicking outside (on the overlay)
+        popupOverlay.addEventListener('click', hidePopup);
+    });
+</script>

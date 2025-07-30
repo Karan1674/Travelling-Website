@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header.ejs') %>
+<style>
+    /* Card container */
+    .card-wrapper {
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0; /* Slate-200 */
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    /* .card-wrapper:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    } */
+    /* Icon section */
+    .card-icon {
+        width: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #6b7280; /* bg-secondary */
+    }
+    .card-icon.green {
+        background-color: #10b981; /* bg-green */
+    }
+    .card-icon i {
+        font-size: 2.5rem;
+        color: #fff;
+    }
+    /* Content section */
+    .card-content {
+        padding: 1.5rem;
+        flex: 1;
+    }
+    .card-content h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937; /* Gray-900 */
+        margin: 0 0 0.5rem;
+    }
+    .card-content span {
+        font-size: 0.875rem;
+        color: #6b7280; /* Gray-500 */
+    }
+    /* Dashboard header */
+    .dashboard-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1d4ed8; /* Blue-700 */
+        margin-bottom: 2rem;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-content h4 {
+            font-size: 1.1rem;
+        }
+        .card-content span {
+            font-size: 0.8rem;
+        }
+        .card-icon {
+            width: 80px;
+        }
+        .card-icon i {
+            font-size: 2rem;
+        }
+    }
+    @media (max-width: 576px) {
+        .card-wrapper {
+            flex-direction: column;
+            text-align: center;
+        }
+        .card-icon {
+            width: 100%;
+            padding: 1rem;
+        }
+        .card-content {
+            padding: 1rem;
+        }
+    }
+</style>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar.ejs') %>
+            <%- include('../partials/Sidebar.ejs') %>
+            <div class="db-info-wrap" style="min-height: 100vh;  padding: 2rem;">
+                <!-- <h2 class="dashboard-title">User Dashboard</h2> -->
+                <div style="margin-top: 60px;" class="row row-cols-xxl-4  row-cols-lg-3 row-cols-md-2 row-cols-1 g-4">
+                    
+                    <div class="col mb-4">
+                        <a href="/db-admin-created-users" class="text-decoration-none">
+                            <div class="card-wrapper d-flex">
+                                <div class="card-icon green">
+                                    <i class="fa fa-user-plus" aria-hidden="true"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Users Created by Admin</h4>
+                                    <span>List of users created by admin</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col mb-4">
+                        <a href="/db-signed-users" class="text-decoration-none">
+                            <div class="card-wrapper d-flex">
+                                <div class="card-icon">
+                                    <i class="fa fa-users" aria-hidden="true"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Signed Up Users</h4>
+                                    <span>List of users who signed up independently</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer.ejs') %>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="/admin/assets/js/bootstrap.min.js"></script>
+    <script src="/admin/assets/js/canvasjs.min.js"></script>
+    <script src="/admin/assets/js/counterup.min.js"></script>
+    <script src="/admin/assets/js/jquery.slicknav.js"></script>
+    <script src="/admin/assets/js/dashboard-custom.js"></script>
+</body>
+</html>

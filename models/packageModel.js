@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const PackageSchema = new mongoose.Schema({
@@ -11,13 +10,14 @@ const PackageSchema = new mongoose.Schema({
     },
     category: { type: String, enum: ['Adult', 'Child', 'Couple'], required: true },
     regularPrice: { type: String, required: true },
-    salePrice: { type: String,},
+    salePrice: { type: String },
     discount: { type: String },
     gallery: [{ type: String }], // Array of image filenames (max 8)
     featuredImage: { type: String }, // Single featured image filename
-    map: {
-        type: { type: String, default: 'Google Map' },
-        apiKey: { type: String },
+    location: {
+        latitude: { type: Number },
+        longitude: { type: Number },
+        address: { type: String }
     },
     keywords: [{ type: String }],
     additionalCategories: [{ type: String }],
@@ -31,14 +31,12 @@ const PackageSchema = new mongoose.Schema({
         description: { type: String },
         days: [{
             dayNumber: { type: Number },
-            title: { type: String},
+            title: { type: String },
             description: { type: String },
         }],
     },
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
-    // createdId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
-    status: { type: String, enum: ['Active', 'Pending' ,"Expired"], default: 'Pending' },
-
+    status: { type: String, enum: ['Active', 'Pending', 'Expired'], default: 'Pending' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Package', PackageSchema);
