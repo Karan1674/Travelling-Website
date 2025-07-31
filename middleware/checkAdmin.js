@@ -1,6 +1,6 @@
 import adminModel from '../models/adminModel.js';
 
-import userModel from '../models/userModel.js';
+import agentModel from '../models/agentModel.js';
 
 
 export const isAdminCheck = async (req, res, next) => {
@@ -11,12 +11,12 @@ export const isAdminCheck = async (req, res, next) => {
         if (AdminData) {
             req.isAdmin = true
         }
-        else {
-            const userData = await userModel.findById(userId)
-            if (userData) {
-                req.isAdmin = false
-            }
-        }
+        // else {
+        //     const userData = await agentModel.findById(userId)
+        //     if (userData) {
+        //         req.isAdmin = false
+        //     }
+        // }
     } else {
         req.isAdmin = false;
     }

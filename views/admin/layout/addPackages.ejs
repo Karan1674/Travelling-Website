@@ -1,154 +1,277 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <%- include('../partials/Header') %>
 <body>
     <div id="container-wrapper">
         <div id="dashboard" class="dashboard-container">
             <%- include('../partials/Navbar') %>
-          
             <%- include('../partials/Sidebar') %>
-            <div class="db-info-wrap db-add-tour-wrap">
+            <div class="db-info-wrap db-add-tour-wrap p-4">
+                <div id="form-error" class="text-danger d-none mt-3"></div>
                 <form id="add-package-form" action="/add-package" method="post" enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-lg-8 col-xl-9">
-                            <div class="dashboard-box">
+                            <!-- Basic Information -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" required>
+                                    <h4 class="mb-3">Basic Information</h4>
+                                    <div class="form-group mb-3">
+                                        <label for="title" class="form-label required-field">Title</label>
+                                        <input type="text" name="title" id="title" class="form-control" required>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Description</label>
-                                        <textarea name="description" required></textarea>
+                                    <div class="form-group mb-3">
+                                        <label for="packageType" class="form-label required-field">Package Type</label>
+                                        <select name="packageType" id="packageType" class="form-control" required>
+                                            <option value="Adventure">Adventure</option>
+                                            <option value="Cultural">Cultural</option>
+                                            <option value="Luxury">Luxury</option>
+                                            <option value="Family">Family</option>
+                                            <option value="Wellness">Wellness</option>
+                                            <option value="Eco">Eco</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="description" class="form-label required-field">Description</label>
+                                        <textarea name="description" id="description" class="form-control" rows="5" required></textarea>
                                     </div>
                                 </div>
                             </div>
-                            <div class="dashboard-box">
+
+                            <!-- Departures -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
-                                    <h4>Dates and Prices</h4>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="form-group">
-                                                <label>Group Size</label>
-                                                <input type="number" name="groupSize" placeholder="No of Pax" required>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Departures</h4>
+                                        <a href="#" id="add-departure" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div id="departures">
+                                        <div class="departure-entry mb-3 d-flex align-items-center">
+                                            <div class="flex-grow-1 me-2">
+                                                <div class="form-group">
+                                                    <label for="departureLocation0" class="form-label required-field">Departure Location</label>
+                                                    <input type="text" name="multipleDepartures[0][location]" id="departureLocation0" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="me-2">
+                                                <div class="form-group">
+                                                    <label for="departureDateTime0" class="form-label required-field">Departure Date and Time</label>
+                                                    <input type="datetime-local" name="multipleDepartures[0][dateTime]" id="departureDateTime0" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <a href="#" class="remove-btn d-none"><i class="fas fa-minus"></i></a>
                                             </div>
                                         </div>
-                                        <div class="col-sm-6">
-                                            <label>Trip Duration</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dates and Prices -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <h4 class="mb-3">Dates and Prices</h4>
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                <label for="groupSize" class="form-label">Group Size</label>
+                                                <input type="number" name="groupSize" id="groupSize" class="form-control" placeholder="No of Pax">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
                                             <div class="row">
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <input type="number" name="days" id="days" placeholder="Days" required>
+                                                        <label for="days" class="form-label">Trip Duration(Days)</label>
+                                                        <input type="number" name="days" id="days" class="form-control" placeholder="Days">
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <input type="number" name="nights" id="nights" placeholder="Nights" required>
+                                                        <label for="nights" class="form-label">Trip Duration(Nights)</label>
+                                                        <input type="number" name="nights" id="nights" class="form-control" placeholder="Nights">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-4">
+                                        <div class="col-sm-4 mb-3">
                                             <div class="form-group">
-                                                <label>Category</label>
-                                                <select name="category" required>
+                                                <label for="category" class="form-label">Category</label>
+                                                <select name="category" id="category" class="form-control">
                                                     <option value="Adult">Adult</option>
                                                     <option value="Child">Child</option>
                                                     <option value="Couple">Couple</option>
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-sm-3">
+                                        <div class="col-sm-3 mb-3">
                                             <div class="form-group">
-                                                <label>Regular Price</label>
-                                                <input type="text" name="regularPrice" required>
+                                                <label for="regularPrice" class="form-label">Regular Price</label>
+                                                <input type="text" name="regularPrice" id="regularPrice" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-sm-3">
+                                        <div class="col-sm-3 mb-3">
                                             <div class="form-group">
-                                                <label>Sale Price</label>
-                                                <input type="text" name="salePrice">
+                                                <label for="salePrice" class="form-label">Sale Price</label>
+                                                <input type="text" name="salePrice" id="salePrice" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-sm-2">
+                                        <div class="col-sm-2 mb-3">
                                             <div class="form-group">
-                                                <label>Discount</label>
-                                                <input type="text" name="discount">
+                                                <label for="discount" class="form-label">Discount</label>
+                                                <input type="text" name="discount" id="discount" class="form-control">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="dashboard-box">
-                                <h4>Program (<span id="total-days">0</span> days)</h4>
+
+                            <!-- Itinerary -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
-                                    <div class="form-group">
-                                        <label>Itinerary Description</label>
-                                        <textarea name="itineraryDescription"></textarea>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Program (<span id="total-days">0</span> days)</h4>
+                                        <a href="#" id="add-day" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="itineraryDescription" class="form-label">Itinerary Description</label>
+                                        <textarea name="itineraryDescription" id="itineraryDescription" class="form-control" rows="4"></textarea>
                                     </div>
                                     <div id="itinerary-days"></div>
                                 </div>
                             </div>
-                            <div class="dashboard-box">
-                                <h4>Gallery (Max 8 Images)</h4>
+
+                            <!-- Inclusions -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
-                                    <div class="dragable-field">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Inclusions</h4>
+                                        <a href="#" id="add-inclusion" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div id="inclusions">
+                                        <div class="inclusion-entry mb-3 d-flex align-items-center">
+                                            <div class="flex-grow-1 me-2">
+                                                <input type="text" name="inclusions[0]" class="form-control" placeholder="e.g., Meals">
+                                            </div>
+                                            <div>
+                                                <a href="#" class="remove-btn d-none"><i class="fas fa-minus"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Exclusions -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Exclusions</h4>
+                                        <a href="#" id="add-exclusion" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div id="exclusions">
+                                        <div class="exclusion-entry mb-3 d-flex align-items-center">
+                                            <div class="flex-grow-1 me-2">
+                                                <input type="text" name="exclusions[0]" class="form-control" placeholder="e.g., Airfare">
+                                            </div>
+                                            <div>
+                                                <a href="#" class="remove-btn d-none"><i class="fas fa-minus"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Types -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Activity Types</h4>
+                                        <a href="#" id="add-activityType" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div id="activityTypes">
+                                        <div class="activityType-entry mb-3 d-flex align-items-center">
+                                            <div class="flex-grow-1 me-2">
+                                                <input type="text" name="activityTypes[0]" class="form-control" placeholder="e.g., Hiking">
+                                            </div>
+                                            <div>
+                                                <a href="#" class="remove-btn d-none"><i class="fas fa-minus"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Highlights -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Highlights</h4>
+                                        <a href="#" id="add-highlight" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <div id="highlights">
+                                        <div class="highlight-entry mb-3 d-flex align-items-center">
+                                            <div class="flex-grow-1 me-2">
+                                                <input type="text" name="highlights[0]" class="form-control" placeholder="e.g., Scenic views">
+                                            </div>
+                                            <div>
+                                                <a href="#" class="remove-btn d-none"><i class="fas fa-minus"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gallery -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <h4 class="mb-3">Gallery (Max 8 Images)</h4>
+                                <div class="custom-field-wrap">
+                                    <div class="dragable-field border border-dashed p-4 text-center">
                                         <div class="dragable-field-inner">
                                             <p class="drag-drop-info">Drop Files To Upload (Max 8)</p>
                                             <p>or</p>
                                             <div class="upload-input">
                                                 <div class="form-group">
-                                                    <span class="upload-btn">Upload images</span>
-                                                    <input type="file" id="gallery-input" name="gallery" multiple accept="image/*">
+                                                    <label for="gallery-input" class="upload-btn btn btn-success">Upload Images</label>
+                                                    <input type="file" id="gallery-input" name="gallery" multiple accept="image/*" class="d-none">
                                                 </div>
                                             </div>
-                                            <div id="gallery-file-names" class="mt-2"></div>
-                                            <p id="gallery-error" style="color: red; display: none;">Maximum 8 images allowed.</p>
+                                            <div id="gallery-preview" class="mt-3 row"></div>
+                                            <p id="gallery-error" class="text-danger d-none mt-2">Maximum 8 images allowed.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="dashboard-box">
-                                <h4>Location</h4>
+
+                            <!-- Location -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <h4 class="mb-3">Location</h4>
                                 <div class="custom-field-wrap">
-                                    <div class="form-group">
-                                        <label>Search Location</label>
-                                        <input type="text" id="location-search" placeholder="Search for a place">
+                                    <div class="form-group mb-3">
+                                        <label for="location-search" class="form-label">Search Location</label>
+                                        <input type="text" id="location-search" class="form-control" placeholder="Search for a place">
                                     </div>
                                     <input type="hidden" name="latitude" id="latitude">
                                     <input type="hidden" name="longitude" id="longitude">
                                     <input type="hidden" name="address" id="address">
-                                    <div id="map" style="height: 400px; width: 100%; margin-top: 20px;"></div>
+                                    <div id="map" style="height: 400px; width: 100%; margin-top: 20px;" class="border rounded"></div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Sidebar -->
                         <div class="col-lg-4 col-xl-3">
-                            <div class="dashboard-box">
-                                <div class="custom-field-wrap">
-                                    <h4>Departure</h4>
-                                    <div class="form-group">
-                                        <label>Departure Location</label>
-                                        <input type="text" name="departureLocation" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Departure Date and Time</label>
-                                        <input type="datetime-local" name="departureDateTime" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="dashboard-box">
+                            <!-- Additional Categories -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap db-cat-field-wrap">
-                                    <h4>Additional Categories</h4>
+                                    <h4 class="mb-3">Additional Categories</h4>
                                     <div id="category-list">
-                                        <div class="form-group">
+                                        <div class="form-group mb-2">
                                             <label class="custom-input">
                                                 <input type="checkbox" name="additionalCategories[]" value="Hotel">
                                                 <span class="custom-input-field"></span>
                                                 Hotel
                                             </label>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group mb-2">
                                             <label class="custom-input">
                                                 <input type="checkbox" name="additionalCategories[]" value="Walking">
                                                 <span class="custom-input-field"></span>
@@ -156,65 +279,95 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="add-btn">
-                                        <a href="#" id="add-category-btn">Add category</a>
-                                    </div>
-                                    <div id="new-category-input" style="display: none;">
+                                    <a href="#" id="add-category-btn" class="add-link border border-success rounded px-2 py-1 mt-2 d-inline-block"><i class="fas fa-plus"></i> Add Categories</a>
+                                    <div id="new-category-input" class="d-none mt-2">
                                         <div class="form-group">
-                                            <input type="text" id="new-category" placeholder="New category">
-                                            <button type="button" id="add-category-submit">Add</button>
+                                            <input type="text" id="new-category" class="form-control" placeholder="New category">
+                                            <button type="button" id="add-category-submit" class="btn btn-primary mt-2">Add</button>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="custom-field-wrap db-pop-field-wrap">
-                                    <h4>Keywords</h4>
-                                    <div class="form-group">
-                                        <input type="text" name="keywords" placeholder="Comma-separated keywords">
-                                    </div>
-                                </div>
-                                <div class="custom-field-wrap db-media-field-wrap">
-                                    <h4>Add Featured Image</h4>
-                                    <div class="upload-input">
-                                        <div class="form-group">
-                                            <span class="upload-btn">Upload a featured image</span>
-                                            <input type="file" name="featuredImage" accept="image/*">
-                                        </div>
-                                    </div>
-                                    <div id="featured-file-name" class="mt-2"></div>
                                 </div>
                             </div>
-                            <div class="dashboard-box">
-                                <div class="custom-field-wrap">
-                                    <h4>Publish</h4>
-                                    <div class="publish-btn">
+
+                            <!-- Keywords -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap db-pop-field-wrap">
+                                    <h4 class="mb-3">Keywords</h4>
+                                    <div class="form-group">
+                                        <input type="text" name="keywords" id="keywords" class="form-control" placeholder="Comma-separated keywords">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Featured Image -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap db-media-field-wrap">
+                                    <h4 class="mb-3">Add Featured Image</h4>
+                                    <div class="upload-input">
                                         <div class="form-group">
-                                            <input type="submit" name="draft" value="Save Draft" onclick="setStatus('Pending')" class="btn-draft">
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="submit" name="publish" value="Publish" onclick="setStatus('Active')" class="btn-publish">
+                                            <label for="featured-input" class="upload-btn btn btn-success">Upload a Featured Image</label>
+                                            <input type="file" id="featured-input" name="featuredImage" accept="image/*" class="d-none">
                                         </div>
                                     </div>
-                                    <div class="publish-status">
-                                        <span><strong>Status:</strong> Draft</span>
-                                        <input type="hidden" id="status" name="status" value="Pending">
+                                    <div id="featured-file-name" class="mt-2 text-dark">No file selected</div>
+                                </div>
+                            </div>
+
+                            <!-- Quote and Difficulty Level -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <h4 class="mb-3">Quote</h4>
+                                    <div id="quotes">
+                                        <div class="quote-entry mb-3">
+                                            <div class="form-group">
+                                                <label for="quote" class="form-label">Quote</label>
+                                                <input type="text" name="quote" id="quote" class="form-control" placeholder="e.g., Explore the world">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mt-3">
+                                        <label for="difficultyLevel" class="form-label">Difficulty Level</label>
+                                        <select name="difficultyLevel" id="difficultyLevel" class="form-control">
+                                            <option value="Easy">Easy</option>
+                                            <option value="Moderate" selected>Moderate</option>
+                                            <option value="Challenging">Challenging</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Publish Status -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <h4 class="mb-3">Publish Status</h4>
+                                    <div class="form-group mb-3">
+                                        <label for="status" class="form-label required-field">Status</label>
+                                        <select name="status" id="status" class="form-control" required>
+                                            <option value="Pending" selected>Draft</option>
+                                            <option value="Active">Publish</option>
+                                            <option value="Expired">Expired</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary w-100">Save</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </form>
-                <div id="form-error" style="color: red; display: none;"></div>
             </div>
-            <div class="copyrights">
-                Copyright © 2021 Travele. All rights reserved.
+            <div class="copyrights text-center mt-4">
+                Copyright © 2025 Travele. All rights reserved.
             </div>
         </div>
     </div>
+
     <style>
         .btn-draft {
-            background-color: #6b7280 !important; /* Gray-500 */
+            background-color: #6b7280 !important;
             color: white !important;
-            border: 1px solid #4b5563; /* Gray-600 */
+            border: 1px solid #4b5563;
             padding: 10px 20px;
             cursor: pointer;
             width: 100%;
@@ -222,12 +375,12 @@
             transition: background-color 0.3s;
         }
         .btn-draft:hover {
-            background-color: #4b5563; /* Gray-600 */
+            background-color: #4b5563 !important;
         }
         .btn-publish {
-            background-color: #1d4ed8 !important; /* Blue-700 */
+            background-color: #1d4ed8 !important;
             color: white !important;
-            border: 1px solid #1e40af; /* Blue-800 */
+            border: 1px solid #1e40af;
             padding: 10px 20px;
             cursor: pointer;
             width: 100%;
@@ -235,11 +388,11 @@
             transition: background-color 0.3s;
         }
         .btn-publish:hover {
-            background-color: #1e40af; /* Blue-800 */
+            background-color: #1e40af !important;
         }
         .upload-btn {
             display: inline-block;
-            background-color: #10b981; /* Green-500 */
+            background-color: #10b981 !important;
             color: white !important;
             padding: 8px 16px;
             border-radius: 4px;
@@ -247,41 +400,49 @@
             cursor: pointer;
         }
         .upload-btn:hover {
-            background-color: #059669; /* Green-600 */
+            background-color: #059669 !important;
         }
-        #add-category-btn {
+        .add-link {
             display: inline-block;
-            background-color: #10b981; /* Green-500 */
-            color: white !important;
-            padding: 8px 16px;
-            border-radius: 4px;
+            color: #10b981 !important;
             text-decoration: none;
+            font-size: 16px;
         }
-        #add-category-btn:hover {
-            background-color: #059669; /* Green-600 */
+        .add-link:hover {
+            color: #059669 !important;
         }
-        #add-category-submit {
-            background-color: #007bff; /* Blue-500 */
-            color: white !important;
-            border: none;
-            padding: 8px 16px;
+        .remove-btn {
+            color: #dc3545 !important;
+            text-decoration: none;
+            font-size: 16px;
+            display: inline-block;
+        }
+        .remove-btn:hover {
+            color: #b02a37 !important;
+        }
+        .departure-entry, .inclusion-entry, .exclusion-entry, .activityType-entry, .highlight-entry {
+            gap: 10px;
+        }
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+        .form-control:valid {
+            border-color: #28a745;
+        }
+        .gallery-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
             border-radius: 4px;
-            margin: 2px;
-            cursor: pointer;
+            margin-right: 10px;
         }
-        #add-category-submit:hover {
-            background-color: #0056b3; /* Blue-700 */
-        }
-        #gallery-file-names, #featured-file-name {
-            color: #333;
-            font-size: 14px;
-        }
-        #location-search {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+        .required-field::after {
+            content: '*';
+            color: #dc3545;
+            margin-left: 4px;
         }
     </style>
+
     <script src="admin/assets/js/jquery-3.2.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <script src="admin/assets/js/bootstrap.min.js"></script>
@@ -291,12 +452,15 @@
     <script src="admin/assets/js/dashboard-custom.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const daysInput = document.getElementById('days');
             const nightsInput = document.getElementById('nights');
             const totalDaysSpan = document.getElementById('total-days');
             const itineraryDays = document.getElementById('itinerary-days');
+            const addDayLink = document.getElementById('add-day');
             const addCategoryBtn = document.getElementById('add-category-btn');
             const newCategoryInput = document.getElementById('new-category-input');
             const newCategoryField = document.getElementById('new-category');
@@ -304,8 +468,8 @@
             const categoryList = document.getElementById('category-list');
             const galleryInput = document.getElementById('gallery-input');
             const galleryError = document.getElementById('gallery-error');
-            const galleryFileNames = document.getElementById('gallery-file-names');
-            const featuredInput = document.querySelector('input[name="featuredImage"]');
+            const galleryPreview = document.getElementById('gallery-preview');
+            const featuredInput = document.getElementById('featured-input');
             const featuredFileName = document.getElementById('featured-file-name');
             const form = document.getElementById('add-package-form');
             const formError = document.getElementById('form-error');
@@ -313,25 +477,32 @@
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
             const addressInput = document.getElementById('address');
+            const addDepartureLink = document.getElementById('add-departure');
+            const departuresContainer = document.getElementById('departures');
+            const addInclusionLink = document.getElementById('add-inclusion');
+            const inclusionsContainer = document.getElementById('inclusions');
+            const addExclusionLink = document.getElementById('add-exclusion');
+            const exclusionsContainer = document.getElementById('exclusions');
+            const addActivityTypeLink = document.getElementById('add-activityType');
+            const activityTypesContainer = document.getElementById('activityTypes');
+            const addHighlightLink = document.getElementById('add-highlight');
+            const highlightsContainer = document.getElementById('highlights');
+            const statusSelect = document.getElementById('status');
 
-            // OpenCage API key (replace with your own key)
-            const OPENCAGE_API_KEY = `<%=OPENCAGE_API_KEY %>`;
+            // OpenCage API key
+            const OPENCAGE_API_KEY = '<%= opencageApiKey %>';
 
             // Initialize Leaflet map
             const map = L.map('map').setView([0, 0], 2);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
             const marker = L.marker([0, 0], { draggable: true }).addTo(map);
 
-            // Handle map click
+            // Map click handler
             map.on('click', (e) => {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
+                const { lat, lng } = e.latlng;
                 marker.setLatLng([lat, lng]);
-
-                // Reverse geocode using OpenCage
                 fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
                     .then(response => response.json())
                     .then(data => {
@@ -339,10 +510,6 @@
                             latitudeInput.value = lat;
                             longitudeInput.value = lng;
                             addressInput.value = data.results[0].formatted || '';
-                        } else {
-                            latitudeInput.value = lat;
-                            longitudeInput.value = lng;
-                            addressInput.value = '';
                         }
                     })
                     .catch(error => {
@@ -353,12 +520,9 @@
                     });
             });
 
-            // Handle marker drag
+            // Marker drag handler
             marker.on('dragend', (e) => {
-                const lat = e.target.getLatLng().lat;
-                const lng = e.target.getLatLng().lng;
-
-                // Reverse geocode using OpenCage
+                const { lat, lng } = e.target.getLatLng();
                 fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
                     .then(response => response.json())
                     .then(data => {
@@ -366,10 +530,6 @@
                             latitudeInput.value = lat;
                             longitudeInput.value = lng;
                             addressInput.value = data.results[0].formatted || '';
-                        } else {
-                            latitudeInput.value = lat;
-                            longitudeInput.value = lng;
-                            addressInput.value = '';
                         }
                     })
                     .catch(error => {
@@ -380,12 +540,10 @@
                     });
             });
 
-            // Handle location search
+            // Location search handler
             locationSearch.addEventListener('input', (e) => {
                 const query = e.target.value;
                 if (query.length < 3) return;
-
-                // Search using OpenCage
                 fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${OPENCAGE_API_KEY}`)
                     .then(response => response.json())
                     .then(data => {
@@ -402,43 +560,511 @@
                     .catch(error => console.error('Search error:', error));
             });
 
-            // Update itinerary
-            const updateItinerary = () => {
-                const days = parseInt(daysInput.value) || 0;
-                const nights = parseInt(nightsInput.value) || 0;
-                const totalDays = days;
-                totalDaysSpan.textContent = totalDays;
+            // Function to toggle required fields based on status
+            const toggleRequiredFields = () => {
+                const isPublish = statusSelect.value === 'Active';
+                const fields = [
+                    { id: 'groupSize', label: 'Group Size' },
+                    { id: 'days', label: 'Trip Duration(Days)' },
+                    { id: 'nights', label: 'Trip Duration(Nights)' },
+                    { id: 'category', label: 'Category' },
+                    { id: 'regularPrice', label: 'Regular Price' },
+                    { id: 'itineraryDescription', label: 'Itinerary Description' },
+                    { id: 'keywords', label: 'Keywords' },
+                    { id: 'difficultyLevel', label: 'Difficulty Level' },
+                    { id: 'location-search', label: 'Search Location' },
+                    { id: 'gallery-input', label: 'Upload Images' },
+                    { id: 'featured-input', label: 'Upload a Featured Image' },
+                    { id: 'quote', label: 'Quote' }
+                ];
 
-                itineraryDays.innerHTML = '';
-                for (let i = 1; i <= totalDays; i++) {
-                    const dayDiv = document.createElement('div');
-                    dayDiv.className = 'form-group itinerary-content';
-                    dayDiv.innerHTML = `
-                        <h5>Day ${i}</h5>
-                        <label>Title</label>
-                        <input type="text" name="itineraryDays[${i-1}][title]">
-                        <label>Description</label>
-                        <textarea name="itineraryDays[${i-1}][description]"></textarea>
-                    `;
-                    itineraryDays.appendChild(dayDiv);
+                fields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    const label = document.querySelector(`label[for="${field.id}"]`);
+                    if (input && label) {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            label.classList.add('required-field');
+                        } else {
+                            input.removeAttribute('required');
+                            label.classList.remove('required-field');
+                        }
+                    }
+                });
+
+                // Handle dynamic fields (departures, inclusions, exclusions, activityTypes, highlights)
+                const dynamicContainers = [
+                    { container: 'inclusions', name: 'inclusions', label: 'Inclusion' },
+                    { container: 'exclusions', name: 'exclusions', label: 'Exclusion' },
+                    { container: 'activityTypes', name: 'activityTypes', label: 'Activity Type' },
+                    { container: 'highlights', name: 'highlights', label: 'Highlight' }
+                ];
+
+                dynamicContainers.forEach(({ container, name }) => {
+                    const entries = document.querySelectorAll(`#${container} .${container.slice(0, -1)}-entry`);
+                    entries.forEach((entry, index) => {
+                        const inputs = entry.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            if (isPublish) {
+                                input.setAttribute('required', '');
+                            } else {
+                                input.removeAttribute('required');
+                            }
+                        });
+                    });
+                });
+
+                // Handle departures separately to apply required-field to labels
+                const departureEntries = document.querySelectorAll('#departures .departure-entry');
+                departureEntries.forEach((entry, index) => {
+                    const inputs = entry.querySelectorAll('input');
+                    const labels = entry.querySelectorAll('label.form-label');
+                    inputs.forEach((input, i) => {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            if (labels[i]) labels[i].classList.add('required-field');
+                        } 
+                        // else {
+                        //     input.removeAttribute('required');
+                        //     if (labels[i]) labels[i].classList.remove('required-field');
+                        // }
+                    });
+                });
+
+                // Handle itinerary days
+                const itineraryEntries = document.querySelectorAll('#itinerary-days .itinerary-content');
+                itineraryEntries.forEach((entry, index) => {
+                    const inputs = entry.querySelectorAll('input, textarea');
+                    inputs.forEach(input => {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            const inputLabel = entry.querySelector(`label[for="${input.id}"]`);
+                            if (inputLabel) inputLabel.classList.add('required-field');
+                        } else {
+                            input.removeAttribute('required');
+                            const inputLabel = entry.querySelector(`label[for="${input.id}"]`);
+                            if (inputLabel) inputLabel.classList.remove('required-field');
+                        }
+                    });
+                });
+
+                // Handle additional categories
+                const categoryInputs = document.querySelectorAll('#category-list input[type="checkbox"]');
+                if (isPublish && categoryInputs.length > 0) {
+                    let isChecked = Array.from(categoryInputs).some(input => input.checked);
+                    categoryInputs.forEach(input => {
+                        if (!isChecked) {
+                            input.setAttribute('required', '');
+                        } else {
+                            input.removeAttribute('required');
+                        }
+                    });
+                } else {
+                    categoryInputs.forEach(input => input.removeAttribute('required'));
                 }
             };
 
-            daysInput.addEventListener('input', updateItinerary);
-            nightsInput.addEventListener('input', updateItinerary);
+            // Itinerary management
+            let dayCount = 0;
+            const updateItinerary = () => {
+                const days = parseInt(daysInput.value) || 0;
+                totalDaysSpan.textContent = days;
+                itineraryDays.innerHTML = '';
+                dayCount = days;
+                for (let i = 1; i <= days; i++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'form-group itinerary-content mb-3';
+                    dayDiv.innerHTML = `
+                        <h5>Day ${i}</h5>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-grow-1 me-2">
+                                <label for="dayTitle${i}" class="form-label">Title</label>
+                                <input type="text" name="itineraryDays[${i-1}][title]" id="dayTitle${i}" class="form-control">
+                            </div>
+                            <div>
+                                <a href="#" class="remove-btn ${dayCount === 1 ? 'd-none' : ''}"><i class="fas fa-minus"></i></a>
+                            </div>
+                        </div>
+                        <label for="dayDescription${i}" class="form-label">Description</label>
+                        <textarea name="itineraryDays[${i-1}][description]" id="dayDescription${i}" class="form-control mb-2" rows="3"></textarea>
+                    `;
+                    itineraryDays.appendChild(dayDiv);
 
-            // Toggle add category input
-            addCategoryBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                newCategoryInput.style.display = newCategoryInput.style.display === 'none' ? 'block' : 'none';
+                    if (statusSelect.value === 'Active') {
+                        dayDiv.querySelectorAll('input, textarea').forEach(input => {
+                            input.setAttribute('required', '');
+                            const inputLabel = dayDiv.querySelector(`label[for="${input.id}"]`);
+                            if (inputLabel) inputLabel.classList.add('required-field');
+                        });
+                    }
+                }
+                updateItineraryIndices();
+            };
+
+            function updateItineraryIndices() {
+                const days = itineraryDays.querySelectorAll('.itinerary-content');
+                days.forEach((day, index) => {
+                    day.querySelector('h5').textContent = `Day ${index + 1}`;
+                    day.querySelector('input').name = `itineraryDays[${index}][title]`;
+                    day.querySelector('textarea').name = `itineraryDays[${index}][description]`;
+                    day.querySelector('input').id = `dayTitle${index + 1}`;
+                    day.querySelector('textarea').id = `dayDescription${index + 1}`;
+                    const removeBtn = day.querySelector('.remove-btn');
+                    if (days.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        day.querySelectorAll('input, textarea').forEach(input => {
+                            input.setAttribute('required', '');
+                            const inputLabel = day.querySelector(`label[for="${input.id}"]`);
+                            if (inputLabel) inputLabel.classList.add('required-field');
+                        });
+                    }
+                });
+            }
+
+            daysInput.addEventListener('input', () => {
+                updateItinerary();
+                toggleRequiredFields();
             });
 
+            nightsInput.addEventListener('input', updateItinerary);
+
+            addDayLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                dayCount++;
+                totalDaysSpan.textContent = dayCount;
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'form-group itinerary-content mb-3';
+                dayDiv.innerHTML = `
+                    <h5>Day ${dayCount}</h5>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="flex-grow-1 me-2">
+                            <label for="dayTitle${dayCount}" class="form-label">Title</label>
+                            <input type="text" name="itineraryDays[${dayCount-1}][title]" id="dayTitle${dayCount}" class="form-control">
+                        </div>
+                        <div>
+                            <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        </div>
+                    </div>
+                    <label for="dayDescription${dayCount}" class="form-label">Description</label>
+                    <textarea name="itineraryDays[${dayCount-1}][description]" id="dayDescription${dayCount}" class="form-control mb-2" rows="3"></textarea>
+                `;
+                itineraryDays.appendChild(dayDiv);
+
+                if (statusSelect.value === 'Active') {
+                    dayDiv.querySelectorAll('input, textarea').forEach(input => {
+                        input.setAttribute('required', '');
+                        const inputLabel = dayDiv.querySelector(`label[for="${input.id}"]`);
+                        if (inputLabel) inputLabel.classList.add('required-field');
+                    });
+                }
+                updateItineraryIndices();
+                toggleRequiredFields();
+            });
+
+            itineraryDays.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && dayCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.itinerary-content').remove();
+                    dayCount--;
+                    totalDaysSpan.textContent = dayCount;
+                    updateItineraryIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            // Departures management
+            let departureCount = 1;
+            addDepartureLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const departureDiv = document.createElement('div');
+                departureDiv.className = 'departure-entry mb-3 d-flex align-items-center';
+                departureDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <div class="form-group">
+                            <label for="departureLocation${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Location</label>
+                            <input type="text" name="multipleDepartures[${departureCount}][location]" id="departureLocation${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
+                        </div>
+                    </div>
+                    <div class="me-2">
+                        <div class="form-group">
+                            <label for="departureDateTime${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Date and Time</label>
+                            <input type="datetime-local" name="multipleDepartures[${departureCount}][dateTime]" id="departureDateTime${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                    </div>
+                `;
+                departuresContainer.appendChild(departureDiv);
+                departureCount++;
+                updateDepartureIndices();
+                toggleRequiredFields();
+            });
+
+            departuresContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && departureCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.departure-entry').remove();
+                    departureCount--;
+                    updateDepartureIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            function updateDepartureIndices() {
+                const departures = departuresContainer.querySelectorAll('.departure-entry');
+                departures.forEach((dep, index) => {
+                    const locationInput = dep.querySelector('input[type="text"]');
+                    const dateTimeInput = dep.querySelector('input[type="datetime-local"]');
+                    const locationLabel = dep.querySelector('label[for^="departureLocation"]');
+                    const dateTimeLabel = dep.querySelector('label[for^="departureDateTime"]');
+                    locationInput.name = `multipleDepartures[${index}][location]`;
+                    dateTimeInput.name = `multipleDepartures[${index}][dateTime]`;
+                    locationInput.id = `departureLocation${index}`;
+                    dateTimeInput.id = `departureDateTime${index}`;
+                    locationLabel.setAttribute('for', `departureLocation${index}`);
+                    dateTimeLabel.setAttribute('for', `departureDateTime${index}`);
+                    const removeBtn = dep.querySelector('.remove-btn');
+                    if (departures.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        locationInput.setAttribute('required', '');
+                        dateTimeInput.setAttribute('required', '');
+                        locationLabel.classList.add('required-field');
+                        dateTimeLabel.classList.add('required-field');
+                    } else {
+                        // locationInput.removeAttribute('required');
+                        // dateTimeInput.removeAttribute('required');
+                        // locationLabel.classList.remove('required-field');
+                        // dateTimeLabel.classList.remove('required-field');
+                    }
+                });
+            }
+
+            // Inclusions management
+            let inclusionCount = 1;
+            addInclusionLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const inclusionDiv = document.createElement('div');
+                inclusionDiv.className = 'inclusion-entry mb-3 d-flex align-items-center';
+                inclusionDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <input type="text" name="inclusions[${inclusionCount}]" class="form-control" placeholder="e.g., Meals">
+                    </div>
+                    <div>
+                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                    </div>
+                `;
+                inclusionsContainer.appendChild(inclusionDiv);
+
+                if (statusSelect.value === 'Active') {
+                    inclusionDiv.querySelector('input').setAttribute('required', '');
+                }
+                inclusionCount++;
+                updateInclusionIndices();
+                toggleRequiredFields();
+            });
+
+            inclusionsContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && inclusionCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.inclusion-entry').remove();
+                    inclusionCount--;
+                    updateInclusionIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            function updateInclusionIndices() {
+                const inclusions = inclusionsContainer.querySelectorAll('.inclusion-entry');
+                inclusions.forEach((inc, index) => {
+                    inc.querySelector('input').name = `inclusions[${index}]`;
+                    const removeBtn = inc.querySelector('.remove-btn');
+                    if (inclusions.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        inc.querySelector('input').setAttribute('required', '');
+                    }
+                });
+            }
+
+            // Exclusions management
+            let exclusionCount = 1;
+            addExclusionLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const exclusionDiv = document.createElement('div');
+                exclusionDiv.className = 'exclusion-entry mb-3 d-flex align-items-center';
+                exclusionDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <input type="text" name="exclusions[${exclusionCount}]" class="form-control" placeholder="e.g., Airfare">
+                    </div>
+                    <div>
+                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                    </div>
+                `;
+                exclusionsContainer.appendChild(exclusionDiv);
+
+                if (statusSelect.value === 'Active') {
+                    exclusionDiv.querySelector('input').setAttribute('required', '');
+                }
+                exclusionCount++;
+                updateExclusionIndices();
+                toggleRequiredFields();
+            });
+
+            exclusionsContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && exclusionCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.exclusion-entry').remove();
+                    exclusionCount--;
+                    updateExclusionIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            function updateExclusionIndices() {
+                const exclusions = exclusionsContainer.querySelectorAll('.exclusion-entry');
+                exclusions.forEach((exc, index) => {
+                    exc.querySelector('input').name = `exclusions[${index}]`;
+                    const removeBtn = exc.querySelector('.remove-btn');
+                    if (exclusions.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        exc.querySelector('input').setAttribute('required', '');
+                    }
+                });
+            }
+
+            // Activity Types management
+            let activityTypeCount = 1;
+            addActivityTypeLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const activityTypeDiv = document.createElement('div');
+                activityTypeDiv.className = 'activityType-entry mb-3 d-flex align-items-center';
+                activityTypeDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <input type="text" name="activityTypes[${activityTypeCount}]" class="form-control" placeholder="e.g., Hiking">
+                    </div>
+                    <div>
+                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                    </div>
+                `;
+                activityTypesContainer.appendChild(activityTypeDiv);
+
+                if (statusSelect.value === 'Active') {
+                    activityTypeDiv.querySelector('input').setAttribute('required', '');
+                }
+                activityTypeCount++;
+                updateActivityTypeIndices();
+                toggleRequiredFields();
+            });
+
+            activityTypesContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && activityTypeCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.activityType-entry').remove();
+                    activityTypeCount--;
+                    updateActivityTypeIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            function updateActivityTypeIndices() {
+                const activityTypes = activityTypesContainer.querySelectorAll('.activityType-entry');
+                activityTypes.forEach((act, index) => {
+                    act.querySelector('input').name = `activityTypes[${index}]`;
+                    const removeBtn = act.querySelector('.remove-btn');
+                    if (activityTypes.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        act.querySelector('input').setAttribute('required', '');
+                    }
+                });
+            }
+
+            // Highlights management
+            let highlightCount = 1;
+            addHighlightLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const highlightDiv = document.createElement('div');
+                highlightDiv.className = 'highlight-entry mb-3 d-flex align-items-center';
+                highlightDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <input type="text" name="highlights[${highlightCount}]" class="form-control" placeholder="e.g., Scenic views">
+                    </div>
+                    <div>
+                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                    </div>
+                `;
+                highlightsContainer.appendChild(highlightDiv);
+
+                if (statusSelect.value === 'Active') {
+                    highlightDiv.querySelector('input').setAttribute('required', '');
+                }
+                highlightCount++;
+                updateHighlightIndices();
+                toggleRequiredFields();
+            });
+
+            highlightsContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-btn');
+                if (btn && highlightCount > 1) {
+                    e.preventDefault();
+                    btn.closest('.highlight-entry').remove();
+                    highlightCount--;
+                    updateHighlightIndices();
+                    toggleRequiredFields();
+                }
+            });
+
+            function updateHighlightIndices() {
+                const highlights = highlightsContainer.querySelectorAll('.highlight-entry');
+                highlights.forEach((hig, index) => {
+                    hig.querySelector('input').name = `highlights[${index}]`;
+                    const removeBtn = hig.querySelector('.remove-btn');
+                    if (highlights.length === 1) {
+                        removeBtn.classList.add('d-none');
+                    } else {
+                        removeBtn.classList.remove('d-none');
+                    }
+                    if (statusSelect.value === 'Active') {
+                        hig.querySelector('input').setAttribute('required', '');
+                    }
+                });
+            }
+
             // Add new category
+            addCategoryBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                newCategoryInput.classList.toggle('d-none');
+            });
+
             addCategorySubmit.addEventListener('click', () => {
                 const newCategory = newCategoryField.value.trim();
                 if (newCategory) {
                     const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'form-group';
+                    categoryDiv.className = 'form-group mb-2';
                     categoryDiv.innerHTML = `
                         <label class="custom-input">
                             <input type="checkbox" name="additionalCategories[]" value="${newCategory}" checked>
@@ -447,38 +1073,69 @@
                         </label>
                     `;
                     categoryList.appendChild(categoryDiv);
+
+                    if (statusSelect.value === 'Active') {
+                        categoryDiv.querySelector('input').setAttribute('required', '');
+                    }
                     newCategoryField.value = '';
-                    newCategoryInput.style.display = 'none';
+                    newCategoryInput.classList.add('d-none');
+                    toggleRequiredFields();
                 }
             });
 
-            // Display gallery file names
+            // Gallery image preview
             galleryInput.addEventListener('change', () => {
+                galleryPreview.innerHTML = '';
                 if (galleryInput.files.length > 8) {
-                    galleryError.style.display = 'block';
+                    galleryError.classList.remove('d-none');
                     galleryInput.value = '';
-                    galleryFileNames.textContent = '';
                 } else {
-                    galleryError.style.display = 'none';
-                    const fileNames = Array.from(galleryInput.files).map(file => file.name).join(', ');
-                    galleryFileNames.textContent = fileNames || 'No files selected';
+                    galleryError.classList.add('d-none');
+                    Array.from(galleryInput.files).forEach((file, index) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const col = document.createElement('div');
+                            col.className = 'col-auto';
+                            col.innerHTML = `
+                                <img src="${e.target.result}" class="gallery-img" alt="Preview">
+                                <a href="#" class="remove-btn mt-1"><i class="fas fa-minus"></i></a>
+                            `;
+                            galleryPreview.appendChild(col);
+
+                            col.querySelector('.remove-btn').addEventListener('click', (e) => {
+                                e.preventDefault();
+                                col.remove();
+                                const dt = new DataTransfer();
+                                Array.from(galleryInput.files).forEach((f, i) => {
+                                    if (i !== index) dt.items.add(f);
+                                });
+                                galleryInput.files = dt.files;
+                                toggleRequiredFields();
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
                 }
             });
 
-            // Display featured image file name
+            // Featured image file name
             featuredInput.addEventListener('change', () => {
                 featuredFileName.textContent = featuredInput.files[0]?.name || 'No file selected';
             });
 
-            // AJAX form submission
+            // Status change handler
+            statusSelect.addEventListener('change', toggleRequiredFields);
+
+            // Form validation and submission
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = new FormData(form);
-                console.log('Form Data:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}: ${value instanceof File ? value.name : value}`);
+                toggleRequiredFields();
+                if (!form.checkValidity()) {
+                    e.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
                 }
-
+                const formData = new FormData(form);
                 try {
                     const response = await fetch('/add-package', {
                         method: 'POST',
@@ -488,21 +1145,24 @@
                     if (response.ok) {
                         window.location.href = '/db-all-packages';
                     } else {
-                        formError.style.display = 'block';
+                        formError.classList.remove('d-none');
                         formError.textContent = result.error || 'Failed to submit form';
-                        console.error('Server error:', result);
                     }
                 } catch (error) {
-                    formError.style.display = 'block';
+                    formError.classList.remove('d-none');
                     formError.textContent = 'Submission error: ' + error.message;
-                    console.error('Submission error:', error);
                 }
             });
-        });
 
-        function setStatus(status) {
-            document.getElementById('status').value = status;
-        }
+            form.classList.add('needs-validation');
+            form.setAttribute('novalidate', '');
+            toggleRequiredFields();
+            updateDepartureIndices();
+            updateInclusionIndices();
+            updateExclusionIndices();
+            updateActivityTypeIndices();
+            updateHighlightIndices();
+        });
     </script>
 </body>
 </html>

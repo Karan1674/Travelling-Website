@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<%- include("../partials/Header.ejs") %>
+
+
+<body class="bg-light">
+
+  <div class=" d-flex align-items-center justify-content-center min-vh-100" style="background-image: url('/assets/images/bg.jpg'); background-size: cover; background-position: center;">
+    <div class="bg-white p-4 p-md-5 rounded shadow w-100" style="max-width: 600px;">
+      <form method="post" action="/signupUser" enctype="multipart/form-data" id="signup-form">
+        
+        <div class="text-center mb-4">
+          <a href="#">
+            <img src="/admin/assets/images/logo.png" alt="Logo" class="img-fluid" style="max-height: 60px;">
+          </a>
+        </div>
+
+        <div id="form-error" class="text-danger text-center mb-3" style="display: none;"></div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" name="firstName" id="firstName" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" name="lastName" id="lastName" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" id="email" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" name="password" id="password" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="tel" name="phone" id="phone" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label for="profilePic" class="form-label">Profile Picture (Optional)</label>
+            <input type="file" name="profilePic" id="profilePic" class="form-control " style="height:45px" accept="image/*">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="button-primary w-100">Sign Up</button>
+        </div>
+
+        <p class="text-center">
+          <span>
+              Already have an account? 
+          </span>
+            <a href="/loginPage" class="btn btn-link p-0">Login</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/admin/assets/js/jquery-3.2.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+  <script src="/admin/assets/js/bootstrap.min.js"></script>
+  <script src="/admin/assets/js/canvasjs.min.js"></script>
+  <script src="/admin/assets/js/counterup.min.js"></script>
+  <script src="/admin/assets/js/jquery.slicknav.js"></script>
+  <script src="/admin/assets/js/dashboard-custom.js"></script>
+</body>
+</html>

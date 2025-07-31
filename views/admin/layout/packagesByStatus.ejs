@@ -16,21 +16,20 @@
                     <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <form id="search-form" style="flex: 1; margin-right: 20px;">
                             <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                <input type="text" name="search" id="search-input" placeholder="Search by user name" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="text" name="search" id="search-input" placeholder="Search by package name" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
                                 <button type="submit" aria-label="Search users" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
                                     <i class="fas fa-search" style="color: #007bff;"></i>
                                 </button>
                             </div>
                         </form>
-           
                     </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Departure Date</th>
-                                    <th>Departure Location</th>
+                                    <th>Trip Duration</th>
+                                    <th>Package Type</th>
                                     <th>Destination</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -41,9 +40,14 @@
                                     <% allPackages.forEach(package => { %>
                                         <tr>
                                             <td><span class="package-name"><%= package.title %></span></td>
-                                            <td><%= package.departure.dateTime.toLocaleDateString() %></td>
-                                            <td><%= package.departure.location %></td>
-                                            <td><%= package.location && package.location.address ? package.location.address : 'Not specified' %></td>
+                                            <td>
+                                                <%= package.tripDuration ? package.tripDuration.days + 'D ' + package.tripDuration.nights + 'N' : 'Not specified' %>
+
+                                            </td>
+                                            <td>
+                                                <%= package.packageType ? package.packageType : 'Not specified' %>
+                                            </td>
+                                            <td><%= package.address ? package.address : 'Not specified' %></td>
                                             <td>
                                                 <span class="badge badge-<%= package.status === 'Active' ? 'success' : package.status === 'Pending' ? 'primary' : 'danger' %>">
                                                     <%= package.status %>
@@ -123,8 +127,6 @@
                     window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
                 }
             });
-
-
         });
     </script>
 </body>

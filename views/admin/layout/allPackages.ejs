@@ -11,26 +11,25 @@
           
                     <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
                         <h4 style="margin: 0;">Packages List</h4>
-                        <a href="/db-add-package" class="btn btn-primary" style="width: fit-content;" aria-label="Add new user">Add Package</a>
+                        <a href="/db-add-package" class="btn btn-primary" style="width: fit-content;" aria-label="Add new package">Add Package</a>
                     </div>
                     <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <form id="search-form" action="/db-all-packages" method="get" style="flex: 1; margin-right: 20px;">
                             <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                <input type="text" name="search" id="search-input" placeholder="Search by user name" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <button type="submit" aria-label="Search users" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                <input type="text" name="search" id="search-input" placeholder="Search by package name" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <button type="submit" aria-label="Search packages" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
                                     <i class="fas fa-search" style="color: #007bff;"></i>
                                 </button>
                             </div>
                         </form>
-                        
                     </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Departure Date</th>
-                                    <th>Departure Location</th>
+                                    <th>Trip Duration</th>
+                                    <th>Package Type</th>
                                     <th>Destination</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -41,9 +40,14 @@
                                     <% allPackages.forEach(package => { %>
                                         <tr>
                                             <td><span class="package-name"><%= package.title %></span></td>
-                                            <td><%= package.departure.dateTime.toLocaleDateString() %></td>
-                                            <td><%= package.departure.location %></td>
-                                            <td><%= package.location && package.location.address ? package.location.address : 'Not specified' %></td>
+                                            <td>
+                                                <%= package.tripDuration ? package.tripDuration.days + 'D ' + package.tripDuration.nights + 'N' : 'Not specified' %>
+
+                                            </td>
+                                            <td>
+                                                <%= package.packageType ? package.packageType : 'Not specified' %>
+                                            </td>
+                                            <td><%= package.address ? package.address : 'Not specified' %></td>
                                             <td>
                                                 <span class="badge badge-<%= package.status === 'Active' ? 'success' : package.status === 'Pending' ? 'primary' : 'danger' %>">
                                                     <%= package.status %>
@@ -56,7 +60,7 @@
                                         </tr>
                                     <% }) %>
                                 <% } else { %>
-                                    <tr >
+                                    <tr>
                                         <td colspan="6" style="text-align: center;">No packages found.</td>
                                     </tr>
                                 <% } %>
@@ -118,6 +122,7 @@
 
             // Handle form submission
             searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
                 const query = searchInput.value.trim();
                 window.location.href = `/db-all-packages?search=${encodeURIComponent(query)}&page=1`;
             });

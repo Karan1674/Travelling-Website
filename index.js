@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 dotenv.config();
 
 const adminRoutes = require('./routes/adminRoute');
-
+const authRoutes = require('./routes/authRoutes');
 app.use(cookieParser());
 
 
@@ -35,6 +35,8 @@ res.render('client/layout/index')
 
 
 app.use('',adminRoutes)
+app.use('',authRoutes)
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

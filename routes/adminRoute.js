@@ -1,21 +1,13 @@
 const express = require('express');
-const { adminRegister ,loginPage , loginUserOrAdmin, logoutUser, dashboard, getAllUsers, getNewUserPage, newUser, editUserPost, editUserPage, deleteUser, forgetPasswordPage, forgetPassword, resetPasswordPage, resetPassword, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard } = require('../controller/adminController');
+const { AdminDashboard, getAllUsers, getNewUserPage, newUser, editUserPost, editUserPage, deleteUser, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard } = require('../controller/adminController');
 const { isAuthenicated } = require('../middleware/isAuthenicated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
 const { uploadProfilePic, uploadGallery } = require('../middleware/multer');
 const router = express.Router();
 
 
-router.post('/adminRegister',adminRegister)
-router.get('/loginPage',loginPage)
-router.post('/loginUserOrAdmin',loginUserOrAdmin)
-router.get('/logout',isAuthenicated,logoutUser)
-router.get('/forgetPasswordPage', forgetPasswordPage);
-router.post('/forgetPassword', forgetPassword);
-router.get('/reset-password', resetPasswordPage);
-router.post('/reset-password', resetPassword);
 
-router.get('/dashboard',isAuthenicated,isAdminCheck, dashboard)
+router.get('/AdminDashboard',isAuthenicated,isAdminCheck, AdminDashboard)
 
 router.get('/db-admin-created-users',isAuthenicated,isAdminCheck,getAllUsers)
 router.get('/new-user',isAuthenicated,isAdminCheck,getNewUserPage);
