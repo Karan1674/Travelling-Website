@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const packageSchema = new mongoose.Schema({
-  title: { type: String, required:true },
+  title: { type: String, required: true },
   description: { type: String },
   packageType: { type: String, enum: ['Adventure', 'Cultural', 'Luxury', 'Family', 'Wellness', 'Eco'] },
   groupSize: { type: Number },
@@ -19,8 +19,14 @@ const packageSchema = new mongoose.Schema({
   }],
   itineraryDescription: { type: String },
   itineraryDays: [{
-    title: { type: String },
-    description: { type: String }
+    day: { type: Number },
+    activities: [{
+      title: { type: String },
+      sub_title: { type: String },
+      start_time: { type: String },
+      end_time: { type: String },
+      type: { type: String }
+    }]
   }],
   inclusions: [{ type: String }],
   exclusions: [{ type: String }],

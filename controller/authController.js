@@ -6,6 +6,41 @@ import userModel from '../models/userModel.js';
 import crypto from 'crypto';
 
 
+export const homePage = async (req, res) => {
+    try {
+        const token = req.cookies?.authToken;
+
+        if (token) {
+            const decoded = jwt.verify(token, process.env.SECRET_KEY);
+            const userId = decoded.userId;
+
+            let loginedUserData = await adminModel.findById(userId);
+            if (loginedUserData) {
+                return res.redirect('/AdminDashboard');
+            }
+
+            loginedUserData = await agentModel.findById(userId);
+            if (loginedUserData) {
+                return res.redirect('/AdminDashboard');
+            }
+
+            loginedUserData = await userModel.findById(userId);
+            if (loginedUserData) {
+                return res.redirect('/UserDashboard');
+            }
+
+            res.clearCookie('authToken');
+        }
+
+   
+        return res.render('client/layout/Home');
+    } catch (error) {
+        console.error("Home page error:", error);
+        return res.status(500).render('client/layout/Home', { error: "Internal server error" });
+    }
+};
+
+
 // Register a Admin
 export const adminRegister = async (req, res) => {
     try {
@@ -93,13 +128,16 @@ export const signupUser = async (req, res) => {
 
 export const loginPage = async (req, res) => {
     try {
-        const token = req.cookies?.authToken;
+        // const token = req.cookies?.authToken;
 
-        if (!token) {
+        // if (!token) {
+        //     return res.render('shared/layout/login');
+        // }
+        // const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const userId = req.id;
+        if(!userId){
             return res.render('shared/layout/login');
         }
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        const userId = decoded.userId;
         let loginedUserData = await adminModel.findById(userId);
         if (loginedUserData) {
             return res.redirect('/AdminDashboard');

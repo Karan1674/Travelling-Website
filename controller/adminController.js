@@ -293,6 +293,7 @@ export const editUserPost = async (req, res) => {
     }
 };
 
+
 export const deleteUser = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
@@ -332,21 +333,24 @@ export const deleteUser = async (req, res) => {
 };
 
 
+
+
+
 // Validation function for package data
 const validatePackage = (data, isActive) => {
     const errors = [];
 
-    // Always required fields (as per schema)
+    // Always required fields
     if (!data.title) errors.push('Title is required');
     if (!data.adminId) errors.push('Admin ID is required');
     if (!data.status || !['Pending', 'Active', 'Expired'].includes(data.status)) {
-        errors.push('Valid status is required');
+        errors.push('Valid status is required (Pending, Active, Expired)');
     }
 
-    // Additional validation for fields that are not strictly required by schema
+    // Additional validation for fields not strictly required by schema
     if (!data.description) errors.push('Description is required');
     if (!data.packageType || !['Adventure', 'Cultural', 'Luxury', 'Family', 'Wellness', 'Eco'].includes(data.packageType)) {
-        errors.push('Valid package type is required');
+        errors.push('Valid package type is required (Adventure, Cultural, Luxury, Family, Wellness, Eco)');
     }
 
     // Additional fields required for Active status
@@ -354,14 +358,14 @@ const validatePackage = (data, isActive) => {
         if (!data.groupSize || isNaN(data.groupSize) || data.groupSize <= 0) errors.push('Valid group size is required');
         if (!data.tripDuration?.days || isNaN(data.tripDuration.days) || data.tripDuration.days <= 0) errors.push('Valid number of days is required');
         if (!data.tripDuration?.nights || isNaN(data.tripDuration.nights) || data.tripDuration.nights < 0) errors.push('Valid number of nights is required');
-        if (!data.category || !['Adult', 'Child', 'Couple'].includes(data.category)) errors.push('Valid category is required');
+        if (!data.category || !['Adult', 'Child', 'Couple'].includes(data.category)) errors.push('Valid category is required (Adult, Child, Couple)');
         if (!data.regularPrice || isNaN(data.regularPrice) || data.regularPrice <= 0) errors.push('Valid regular price is required');
         if (!data.multipleDepartures || !Array.isArray(data.multipleDepartures) || data.multipleDepartures.length === 0) {
             errors.push('At least one departure is required');
         } else {
             data.multipleDepartures.forEach((dep, index) => {
                 if (!dep.location) errors.push(`Departure ${index + 1}: Location is required`);
-                if (!dep.dateTime || dep.dateTime.toString() === 'Invalid Date') {
+                if (!dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
                     errors.push(`Departure ${index + 1}: Valid date and time is required`);
                 }
             });
@@ -371,9 +375,20 @@ const validatePackage = (data, isActive) => {
             errors.push('At least one itinerary day is required');
         } else {
             data.itineraryDays.forEach((day, index) => {
-                if (!day.title) errors.push(`Itinerary Day ${index + 1}: Title is required`);
-                if (!day.description) errors.push(`Itinerary Day ${index + 1}: Description is required`);
-                if (!day.dayNumber || isNaN(day.dayNumber) || day.dayNumber <= 0) errors.push(`Itinerary Day ${index + 1}: Valid day number is required`);
+                if (!day.day || isNaN(day.day) || day.day <= 0) errors.push(`Itinerary Day ${index + 1}: Valid day number is required`);
+                if (!day.activities || !Array.isArray(day.activities) || day.activities.length === 0) {
+                    errors.push(`Itinerary Day ${index + 1}: At least one activity is required`);
+                } else {
+                    day.activities.forEach((activity, actIndex) => {
+                        if (!activity.title) errors.push(`Itinerary Day ${index + 1}, Activity ${actIndex + 1}: Title is required`);
+                        if (!activity.sub_title) errors.push(`Itinerary Day ${index + 1}, Activity ${actIndex + 1}: Sub-title is required`);
+                        if (!activity.start_time) errors.push(`Itinerary Day ${index + 1}, Activity ${actIndex + 1}: Start time is required`);
+                        if (!activity.end_time) errors.push(`Itinerary Day ${index + 1}, Activity ${actIndex + 1}: End time is required`);
+                        if (!activity.type || !['sightseeing', 'activity', 'meal', 'transport', 'accommodation'].includes(activity.type)) {
+                            errors.push(`Itinerary Day ${index + 1}, Activity ${actIndex + 1}: Valid type is required`);
+                        }
+                    });
+                }
             });
         }
         if (!data.inclusions || !Array.isArray(data.inclusions) || data.inclusions.length === 0) errors.push('At least one inclusion is required');
@@ -386,7 +401,7 @@ const validatePackage = (data, isActive) => {
         if (!data.keywords || !Array.isArray(data.keywords) || data.keywords.length === 0) errors.push('At least one keyword is required');
         if (!data.quote) errors.push('Quote is required');
         if (!data.difficultyLevel || !['Easy', 'Moderate', 'Challenging'].includes(data.difficultyLevel)) {
-            errors.push('Valid difficulty level is required');
+            errors.push('Valid difficulty level is required (Easy, Moderate, Challenging)');
         }
         if (!data.latitude || isNaN(data.latitude)) errors.push('Valid latitude is required');
         if (!data.longitude || isNaN(data.longitude)) errors.push('Valid longitude is required');
@@ -423,7 +438,6 @@ export const addPackagePage = async (req, res) => {
             isAdmin,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
-            packageData: {}, // Empty for new package
         });
     } catch (error) {
         console.error('Error rendering add package page:', error);
@@ -436,6 +450,7 @@ export const addPackage = async (req, res) => {
     try {
         const data = req.body;
         let adminId;
+        console.log(data)
         if (req.isAdmin) {
             adminId = req.id;
         } else {
@@ -459,19 +474,32 @@ export const addPackage = async (req, res) => {
                     return res.status(400).json({ error: `Departure ${i + 1}: Valid date and time is required` });
                 }
             }
-
+            data.multipleDepartures = departures.map(dep => ({
+                location: dep.location,
+                dateTime: new Date(dep.dateTime)
+            }));
+        } else {
+            data.multipleDepartures = [];
         }
 
-        // Parse arrays and nested objects
-        data.multipleDepartures = data.multipleDepartures ? (Array.isArray(data.multipleDepartures) ? data.multipleDepartures : [data.multipleDepartures]).map(dep => ({
-            location: dep.location,
-            dateTime: new Date(dep.dateTime) // Already validated above
-        })) : [];
-        data.itineraryDays = data.itineraryDays ? (Array.isArray(data.itineraryDays) ? data.itineraryDays : JSON.parse(data.itineraryDays || '[]')).map((day, index) => ({
-            dayNumber: index + 1,
-            title: day.title,
-            description: day.description,
-        })) : [];
+        // Parse itineraryDays
+        if (data.itineraryDays) {
+            const itineraryDays = Array.isArray(data.itineraryDays) ? data.itineraryDays : [];
+            data.itineraryDays = itineraryDays.map((day, index) => ({
+                day: index + 1,
+                activities: Array.isArray(day.activities) ? day.activities.map(act => ({
+                    title: act.title || '',
+                    sub_title: act.sub_title || '',
+                    start_time: act.start_time || '',
+                    end_time: act.end_time || '',
+                    type: act.type || ''
+                })) : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
+            }));
+        } else {
+            data.itineraryDays = [];
+        }
+
+        // Parse arrays
         data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : [data.inclusions]).filter(i => i) : [];
         data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : [data.exclusions]).filter(e => e) : [];
         data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : [data.activityTypes]).filter(a => a) : [];
@@ -482,8 +510,8 @@ export const addPackage = async (req, res) => {
         }
         data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
         data.tripDuration = {
-            days: Number(data.days) || 0,
-            nights: Number(data.nights) || 0,
+            days: Number(data.tripDuration.days) || 0,
+            nights: Number(data.tripDuration.nights) || 0
         };
         data.groupSize = Number(data.groupSize) || undefined;
         data.regularPrice = Number(data.regularPrice) || undefined;
@@ -491,13 +519,6 @@ export const addPackage = async (req, res) => {
         data.discount = Number(data.discount) || undefined;
         data.latitude = Number(data.latitude) || undefined;
         data.longitude = Number(data.longitude) || undefined;
-
-        // Validate data
-        const validationErrors = validatePackage(data, data.status === 'Active');
-        if (validationErrors.length > 0) {
-            return res.status(400).json({ error: validationErrors.join(', ') });
-        }
-
 
         // Handle file uploads
         const uploadsDir = join(__dirname, '../Uploads/gallery');
@@ -512,7 +533,11 @@ export const addPackage = async (req, res) => {
         data.gallery = gallery;
         data.featuredImage = featuredImage;
 
-
+        // // Validate data
+        const validationErrors = validatePackage(data, data.status === 'Active');
+        if (validationErrors.length > 0) {
+            return res.status(400).json({ error: validationErrors.join(', ') });
+        }
 
         // Remove undefined fields
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
@@ -549,11 +574,18 @@ export const editPackagePage = async (req, res) => {
             return res.status(404).send('Package not found');
         }
 
+        // Ensure itineraryDays has the correct structure
+        packageData.itineraryDays = packageData.itineraryDays || [];
+        packageData.itineraryDays = packageData.itineraryDays.map((day, index) => ({
+            day: day.day || index + 1,
+            activities: Array.isArray(day.activities) ? day.activities : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
+        }));
+
         res.render('admin/layout/editPackage', {
             packageData,
             isAdmin,
             user: userData,
-            opencageApiKey: process.env.OPENCAGE_API_KEY,
+            opencageApiKey: process.env.OPENCAGE_API_KEY
         });
     } catch (error) {
         console.error('Error rendering edit package page:', error);
@@ -564,9 +596,9 @@ export const editPackagePage = async (req, res) => {
 // Handle edit package submission
 export const editPackage = async (req, res) => {
     try {
-        console.log("jj")
         const { id } = req.params;
         const data = req.body;
+
         let adminId;
         if (req.isAdmin) {
             adminId = req.id;
@@ -591,18 +623,32 @@ export const editPackage = async (req, res) => {
                     return res.status(400).json({ error: `Departure ${i + 1}: Valid date and time is required` });
                 }
             }
+            data.multipleDepartures = departures.map(dep => ({
+                location: dep.location,
+                dateTime: new Date(dep.dateTime)
+            }));
+        } else {
+            data.multipleDepartures = [];
         }
 
-        // Parse arrays and nested objects
-        data.multipleDepartures = data.multipleDepartures ? (Array.isArray(data.multipleDepartures) ? data.multipleDepartures : [data.multipleDepartures]).map(dep => ({
-            location: dep.location,
-            dateTime: new Date(dep.dateTime) // Already validated above
-        })) : [];
-        data.itineraryDays = data.itineraryDays ? (Array.isArray(data.itineraryDays) ? data.itineraryDays : JSON.parse(data.itineraryDays || '[]')).map((day, index) => ({
-            dayNumber: index + 1,
-            title: day.title,
-            description: day.description,
-        })) : [];
+        // Parse itineraryDays
+        if (data.itineraryDays) {
+            const itineraryDays = Array.isArray(data.itineraryDays) ? data.itineraryDays : [];
+            data.itineraryDays = itineraryDays.map((day, index) => ({
+                day: index + 1,
+                activities: Array.isArray(day.activities) ? day.activities.map(act => ({
+                    title: act.title || '',
+                    sub_title: act.sub_title || '',
+                    start_time: act.start_time || '',
+                    end_time: act.end_time || '',
+                    type: act.type || ''
+                })) : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
+            }));
+        } else {
+            data.itineraryDays = [];
+        }
+
+        // Parse arrays
         data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : [data.inclusions]).filter(i => i) : [];
         data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : [data.exclusions]).filter(e => e) : [];
         data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : [data.activityTypes]).filter(a => a) : [];
@@ -613,8 +659,8 @@ export const editPackage = async (req, res) => {
         }
         data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
         data.tripDuration = {
-            days: Number(data.days) || 0,
-            nights: Number(data.nights) || 0,
+            days: Number(data.tripDuration.days) || 0,
+            nights: Number(data.tripDuration.nights) || 0
         };
         data.groupSize = Number(data.groupSize) || undefined;
         data.regularPrice = Number(data.regularPrice) || undefined;
@@ -629,52 +675,54 @@ export const editPackage = async (req, res) => {
             return res.status(404).json({ error: 'Package not found' });
         }
 
+
+             // Handle gallery updates
+             const uploadsDir = join(__dirname, '../Uploads/gallery');
+             let gallery = existingPackage.gallery || [];
+             if (data.deletedImages) {
+                console.log(data.deletedImages)
+                 const imagesToDelete = Array.isArray(data.deletedImages) ? data.deletedImages : data.deletedImages.split(',').map(img => img.trim());
+                 for (const image of imagesToDelete) {
+                     if (gallery.includes(image)) {
+                         try {
+                             await fs.unlink(join(uploadsDir, image));
+                         } catch (err) {
+                             console.error(`Failed to delete image ${image}:`, err);
+                         }
+                     }
+                 }
+                 gallery = gallery.filter(image => !imagesToDelete.includes(image));
+             }
+     
+             if (req.files && req.files['gallery']) {
+                 const newImages = req.files['gallery'].map(file => file.filename);
+                 gallery = [...gallery, ...newImages].slice(0, 8);
+             }
+     
+             // Handle featured image
+             let featuredImage = existingPackage.featuredImage;
+             if (req.files && req.files['featuredImage']) {
+                 if (featuredImage) {
+                     try {
+                         await fs.unlink(join(uploadsDir, featuredImage));
+                     } catch (err) {
+                         console.error(`Failed to delete featured image ${featuredImage}:`, err);
+                     }
+                 }
+                 featuredImage = req.files['featuredImage'][0].filename;
+             }
+     
+             data.gallery = gallery;
+             data.featuredImage = featuredImage;
+
+
         // Validate data
         const validationErrors = validatePackage(data, data.status === 'Active');
         if (validationErrors.length > 0) {
             return res.status(400).json({ error: validationErrors.join(', ') });
         }
 
-
-
-        // Handle gallery updates
-        const uploadsDir = join(__dirname, '../Uploads/gallery');
-        let gallery = existingPackage.gallery || [];
-        if (data.deletedImages) {
-            const imagesToDelete = Array.isArray(data.deletedImages) ? data.deletedImages : data.deletedImages.split(',').map(img => img.trim());
-            for (const image of imagesToDelete) {
-                if (gallery.includes(image)) {
-                    try {
-                        await fs.unlink(join(uploadsDir, image));
-                    } catch (err) {
-                        console.error(`Failed to delete image ${image}:`, err);
-                    }
-                }
-            }
-            gallery = gallery.filter(image => !imagesToDelete.includes(image));
-        }
-
-        if (req.files && req.files['gallery']) {
-            const newImages = req.files['gallery'].map(file => file.filename);
-            gallery = [...gallery, ...newImages].slice(0, 8); // Append new images, ensure max 8
-        }
-
-        // Handle featured image
-        let featuredImage = existingPackage.featuredImage;
-        if (req.files && req.files['featuredImage']) {
-            if (featuredImage) {
-                try {
-                    await fs.unlink(join(uploadsDir, featuredImage));
-                } catch (err) {
-                    console.error(`Failed to delete featured image ${featuredImage}:`, err);
-                }
-            }
-            featuredImage = req.files['featuredImage'][0].filename;
-        }
-
-        data.gallery = gallery;
-        data.featuredImage = featuredImage;
-
+   
 
         // Remove undefined fields
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
@@ -684,14 +732,12 @@ export const editPackage = async (req, res) => {
             return res.status(404).json({ error: 'Package not found' });
         }
 
-        return res.status(200).json({ message: 'update' });
+        return res.status(200).json({ message: 'Package updated successfully' });
     } catch (error) {
         console.error('Error updating package:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
-
-
 
 
 // Render all packages page
@@ -902,7 +948,6 @@ export const getUserDashboard = async (req, res) => {
         res.status(500).redirect('/loginPage');
     }
 };
-
 
 
 export const getPackageDashboard = async (req, res) => {

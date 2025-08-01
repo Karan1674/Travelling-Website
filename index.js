@@ -29,9 +29,6 @@ app.use(express.static('public'))
 
 connectDB()
 
-app.get('/', (req, res) => {
-res.render('client/layout/index')
-});
 
 
 app.use('',adminRoutes)

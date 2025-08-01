@@ -7,6 +7,7 @@
             <%- include('../partials/Navbar') %>
             <%- include('../partials/Sidebar') %>
             <div class="db-info-wrap db-add-tour-wrap p-4">
+                <div id="form-error" class="text-danger d-none mt-3"></div>
                 <form id="edit-package-form" action="/edit-package/<%= packageData._id %>" method="post" enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-lg-8 col-xl-9">
@@ -21,9 +22,12 @@
                                     <div class="form-group mb-3">
                                         <label for="packageType" class="form-label required-field">Package Type</label>
                                         <select name="packageType" id="packageType" class="form-control" required>
-                                            <% ['Adventure', 'Cultural', 'Luxury', 'Family', 'Wellness', 'Eco'].forEach(type => { %>
-                                                <option value="<%= type %>" <%= packageData.packageType === type ? 'selected' : '' %>><%= type %></option>
-                                            <% }) %>
+                                            <option value="Adventure" <%= packageData.packageType === 'Adventure' ? 'selected' : '' %>>Adventure</option>
+                                            <option value="Cultural" <%= packageData.packageType === 'Cultural' ? 'selected' : '' %>>Cultural</option>
+                                            <option value="Luxury" <%= packageData.packageType === 'Luxury' ? 'selected' : '' %>>Luxury</option>
+                                            <option value="Family" <%= packageData.packageType === 'Family' ? 'selected' : '' %>>Family</option>
+                                            <option value="Wellness" <%= packageData.packageType === 'Wellness' ? 'selected' : '' %>>Wellness</option>
+                                            <option value="Eco" <%= packageData.packageType === 'Eco' ? 'selected' : '' %>>Eco</option>
                                         </select>
                                     </div>
                                     <div class="form-group mb-3">
@@ -32,7 +36,56 @@
                                     </div>
                                 </div>
                             </div>
-
+                            <!-- Departures -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Departures</h4>
+                                        <span id="add-departure" class="btn btn-outline-success btn-sm rounded-0 px-3">Add Departure</span>
+                                    </div>
+                                    <div id="departures">
+                                        <% if (packageData.multipleDepartures?.length) { %>
+                                            <% packageData.multipleDepartures.forEach((dep, index) => { %>
+                                                <div class="departure-entry mb-3 d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <div class="form-group">
+                                                            <label for="departureLocation<%= index %>" class="form-label required-field">Departure Location</label>
+                                                            <input type="text" name="multipleDepartures[<%= index %>][location]" id="departureLocation<%= index %>" class="form-control" value="<%= dep.location %>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="me-2">
+                                                        <div class="form-group">
+                                                            <label for="departureDateTime<%= index %>" class="form-label required-field">Departure Date and Time</label>
+                                                            <input type="datetime-local" name="multipleDepartures[<%= index %>][dateTime]" id="departureDateTime<%= index %>" class="form-control" value="<%= dep.dateTime ? new Date(dep.dateTime).toISOString().slice(0, 16) : '' %>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-trash text-danger delete-departure" style="font-size: 18px; cursor: pointer; display: <%= packageData.multipleDepartures.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <div class="departure-entry mb-3 d-flex align-items-center">
+                                                <div class="flex-grow-1 me-2">
+                                                    <div class="form-group">
+                                                        <label for="departureLocation0" class="form-label required-field">Departure Location</label>
+                                                        <input type="text" name="multipleDepartures[0][location]" id="departureLocation0" class="form-control" required>
+                                                    </div>
+                                                </div>
+                                                <div class="me-2">
+                                                    <div class="form-group">
+                                                        <label for="departureDateTime0" class="form-label required-field">Departure Date and Time</label>
+                                                        <input type="datetime-local" name="multipleDepartures[0][dateTime]" id="departureDateTime0" class="form-control" required>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-trash text-danger delete-departure" style="font-size: 18px; cursor: pointer; display: none;"></i>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Dates and Prices -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
@@ -49,201 +102,278 @@
                                                 <div class="col-6">
                                                     <div class="form-group">
                                                         <label for="days" class="form-label">Trip Duration(Days)</label>
-                                                        <input type="number" name="days" id="days" class="form-control" value="<%= packageData.tripDuration?.days || '' %>" placeholder="Days">
+                                                        <input type="number" name="tripDuration[days]" id="days" class="form-control" value="<%= packageData.tripDuration?.days || '' %>" placeholder="Days">
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        
                                                         <label for="nights" class="form-label">Trip Duration(Nights)</label>
-                                                        <input type="number" name="nights" id="nights" class="form-control" value="<%= packageData.tripDuration?.nights || '' %>" placeholder="Nights">
+                                                        <input type="number" name="tripDuration[nights]" id="nights" class="form-control" value="<%= packageData.tripDuration?.nights || '' %>" placeholder="Nights">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-4 mb-3">
+                                        <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="category" class="form-label">Category</label>
                                                 <select name="category" id="category" class="form-control">
-                                                    <% ['Adult', 'Child', 'Couple'].forEach(cat => { %>
-                                                        <option value="<%= cat %>" <%= packageData.category === cat ? 'selected' : '' %>><%= cat %></option>
-                                                    <% }) %>
+                                                    <option value="Adult" <%= packageData.category === 'Adult' ? 'selected' : '' %>>Adult</option>
+                                                    <option value="Child" <%= packageData.category === 'Child' ? 'selected' : '' %>>Child</option>
+                                                    <option value="Couple" <%= packageData.category === 'Couple' ? 'selected' : '' %>>Couple</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="regularPrice" class="form-label">Regular Price</label>
-                                                <input type="text" name="regularPrice" id="regularPrice" class="form-control" value="<%= packageData.regularPrice || '' %>">
+                                                <input type="number" name="regularPrice" id="regularPrice" class="form-control" value="<%= packageData.regularPrice || '' %>">
                                             </div>
                                         </div>
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="salePrice" class="form-label">Sale Price</label>
-                                                <input type="text" name="salePrice" id="salePrice" class="form-control" value="<%= packageData.salePrice || '' %>">
+                                                <input type="number" name="salePrice" id="salePrice" class="form-control" value="<%= packageData.salePrice || '' %>">
                                             </div>
                                         </div>
-                                        <div class="col-sm-2 mb-3">
+                                        <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="discount" class="form-label">Discount</label>
-                                                <input type="text" name="discount" id="discount" class="form-control" value="<%= packageData.discount || '' %>">
+                                                <input type="number" name="discount" id="discount" class="form-control" value="<%= packageData.discount || '' %>">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Departures -->
-                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
-                                <div class="custom-field-wrap">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h4 class="mb-0">Departures</h4>
-                                        <a href="#" id="add-departure" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
-                                    </div>
-                                    <div id="departures">
-                                        <% packageData.multipleDepartures?.forEach((dep, index) => { %>
-                                            <div class="departure-entry mb-3 d-flex align-items-center">
-                                                <div class="flex-grow-1 me-2">
-                                                    <div class="form-group">
-                                                        <label for="departureLocation<%= index %>" class="form-label required-field">Departure Location</label>
-                                                        <input type="text" name="multipleDepartures[<%= index %>][location]" required id="departureLocation<%= index %>" class="form-control" value="<%= dep.location %>">
-                                                    </div>
-                                                </div>
-                                                <div class="me-2">
-                                                    <div class="form-group">
-                                                        <label for="departureDateTime<%= index %>" class="form-label required-field">Departure Date and Time</label>
-                                                        <input type="datetime-local" name="multipleDepartures[<%= index %>][dateTime]" required id="departureDateTime<%= index %>" class="form-control" value="<%= dep.dateTime ? new Date(dep.dateTime).toISOString().slice(0, 16) : '' %>">
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <a href="#" class="remove-btn <%= packageData.multipleDepartures.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
-                                                </div>
-                                            </div>
-                                        <% }) %>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Itinerary -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h4 class="mb-0">Program (<span id="total-days"><%= packageData.tripDuration?.days || 0 %> days)</span></h4>
-                                        <a href="#" id="add-day" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                        <h4 class="mb-0">Itinerary (<span id="total-days"><%= packageData.tripDuration?.days || 0 %></span> days)</h4>
                                     </div>
                                     <div class="form-group mb-3">
                                         <label for="itineraryDescription" class="form-label">Itinerary Description</label>
                                         <textarea name="itineraryDescription" id="itineraryDescription" class="form-control" rows="4"><%= packageData.itineraryDescription || '' %></textarea>
                                     </div>
-                                    <div id="itinerary-days">
-                                        <% packageData.itineraryDays?.forEach((day, index) => { %>
-                                            <div class="form-group itinerary-content mb-3">
-                                                <h5>Day <%= index + 1 %></h5>
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <div class="flex-grow-1 me-2">
-                                                        <label for="dayTitle<%= index + 1 %>" class="form-label">Title</label>
-                                                        <input type="text" name="itineraryDays[<%= index %>][title]" id="dayTitle<%= index + 1 %>" class="form-control" value="<%= day.title %>">
+                                    <div id="itinerarySection">
+                                        <div id="itinerary-days">
+                                            <% if (packageData.itineraryDays?.length) { %>
+                                                <% packageData.itineraryDays.forEach((day, dayIndex) => { %>
+                                                    <div class="d-flex flex-column mb-3" id="itinerary-<%= dayIndex %>">
+                                                        <input type="hidden" name="itineraryDays[<%= dayIndex %>][day]" value="<%= dayIndex + 1 %>">
+                                                        <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                                                            <strong class="d-inline" style="font-size: 18px">Day <%= dayIndex + 1 %></strong>
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="btn btn-outline-light btn-sm rounded-0 px-3 itineraryAdd" id="itinerary-add-<%= dayIndex %>">Add Activity</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="itinerary-activities-<%= dayIndex %>" class="mt-3 itinerary-activities">
+                                                            <% if (day.activities?.length) { %>
+                                                                <% day.activities.forEach((activity, activityIndex) => { %>
+                                                                    <div class="w-100 mt-3 itinerary-item" id="itinerary-item-<%= dayIndex %>-<%= activityIndex %>">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <strong>#<%= activityIndex + 1 %></strong>
+                                                                            <i id="delete-item-<%= dayIndex %>-<%= activityIndex %>" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer; display: <%= day.activities.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="form-group col-md-5">
+                                                                                <label>Title</label>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][title]" class="form-control itinerary-title" type="text" value="<%= (activity.title || '').replace(/"/g, '&quot;') %>" required>
+                                                                            </div>
+                                                                            <div class="form-group col-md-7">
+                                                                                <label>Sub Title</label>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][sub_title]" class="form-control itinerary-sub-title" type="text" value="<%= (activity.sub_title || '').replace(/"/g, '&quot;') %>" required>
+                                                                            </div>
+                                                                            <div class="form-group col-md-4">
+                                                                                <label>Start Time</label>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][start_time]" class="form-control itinerary-start-time" type="time" value="<%= activity.start_time || '' %>" required>
+                                                                            </div>
+                                                                            <div class="form-group col-md-4">
+                                                                                <label>End Time</label>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][end_time]" class="form-control itinerary-end-time" type="time" value="<%= activity.end_time || '' %>" required>
+                                                                            </div>
+                                                                            <div class="form-group col-md-4">
+                                                                                <label>Type</label>
+                                                                                <select name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][type]" class="form-control itinerary-type" required>
+                                                                                    <option value="" disabled <%= !activity.type ? 'selected' : '' %>>Select itinerary item type</option>
+                                                                                    <% ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'].forEach(type => { %>
+                                                                                        <option value="<%= type %>" <%= activity.type === type ? 'selected' : '' %>><%= type.toUpperCase() %></option>
+                                                                                    <% }) %>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                <% }) %>
+                                                            <% } else { %>
+                                                                <div class="w-100 mt-3 itinerary-item" id="itinerary-item-<%= dayIndex %>-0">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <strong>#1</strong>
+                                                                        <i id="delete-item-<%= dayIndex %>-0" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer; display: none;"></i>
+                                                                    </div>
+                                                                    <div class="row mt-2">
+                                                                        <div class="form-group col-md-5">
+                                                                            <label>Title</label>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][title]" class="form-control itinerary-title" type="text" required>
+                                                                        </div>
+                                                                        <div class="form-group col-md-7">
+                                                                            <label>Sub Title</label>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][sub_title]" class="form-control itinerary-sub-title" type="text" required>
+                                                                        </div>
+                                                                        <div class="form-group col-md-4">
+                                                                            <label>Start Time</label>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][start_time]" class="form-control itinerary-start-time" type="time" required>
+                                                                        </div>
+                                                                        <div class="form-group col-md-4">
+                                                                            <label>End Time</label>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][end_time]" class="form-control itinerary-end-time" type="time" required>
+                                                                        </div>
+                                                                        <div class="form-group col-md-4">
+                                                                            <label>Type</label>
+                                                                            <select name="itineraryDays[<%= dayIndex %>][activities][0][type]" class="form-control itinerary-type" required>
+                                                                                <option value="" disabled selected>Select itinerary item type</option>
+                                                                                <% ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'].forEach(type => { %>
+                                                                                    <option value="<%= type %>"><%= type.toUpperCase() %></option>
+                                                                                <% }) %>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <a href="#" class="remove-btn <%= packageData.itineraryDays.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
-                                                    </div>
-                                                </div>
-                                                <label for="dayDescription<%= index + 1 %>" class="form-label">Description</label>
-                                                <textarea name="itineraryDays[<%= index %>][description]" id="dayDescription<%= index + 1 %>" class="form-control mb-2" rows="3"><%= day.description %></textarea>
-                                            </div>
-                                        <% }) %>
+                                                <% }) %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Inclusions -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h4 class="mb-0">Inclusions</h4>
-                                        <a href="#" id="add-inclusion" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                        <span id="add-inclusion" class="btn btn-outline-success btn-sm rounded-0 px-3">Add Inclusion</span>
                                     </div>
                                     <div id="inclusions">
-                                        <% packageData.inclusions?.forEach((inc, index) => { %>
+                                        <% if (packageData.inclusions?.length) { %>
+                                            <% packageData.inclusions.forEach((inc, index) => { %>
+                                                <div class="inclusion-entry mb-3 d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <input type="text" name="inclusions[<%= index %>]" class="form-control" value="<%= inc %>" placeholder="e.g., Meals">
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer; display: <%= packageData.inclusions.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
                                             <div class="inclusion-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="inclusions[<%= index %>]" class="form-control" value="<%= inc %>" placeholder="e.g., Meals">
+                                                    <input type="text" name="inclusions[0]" class="form-control" placeholder="e.g., Meals">
                                                 </div>
                                                 <div>
-                                                    <a href="#" class="remove-btn <%= packageData.inclusions.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
+                                                    <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer; display: none;"></i>
                                                 </div>
                                             </div>
-                                        <% }) %>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Exclusions -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h4 class="mb-0">Exclusions</h4>
-                                        <a href="#" id="add-exclusion" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                        <span id="add-exclusion" class="btn btn-outline-success btn-sm rounded-0 px-3">Add Exclusion</span>
                                     </div>
                                     <div id="exclusions">
-                                        <% packageData.exclusions?.forEach((exc, index) => { %>
+                                        <% if (packageData.exclusions?.length) { %>
+                                            <% packageData.exclusions.forEach((exc, index) => { %>
+                                                <div class="exclusion-entry mb-3 d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <input type="text" name="exclusions[<%= index %>]" class="form-control" value="<%= exc %>" placeholder="e.g., Airfare">
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer; display: <%= packageData.exclusions.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
                                             <div class="exclusion-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="exclusions[<%= index %>]" class="form-control" value="<%= exc %>" placeholder="e.g., Airfare">
+                                                    <input type="text" name="exclusions[0]" class="form-control" placeholder="e.g., Airfare">
                                                 </div>
                                                 <div>
-                                                    <a href="#" class="remove-btn <%= packageData.exclusions.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
+                                                    <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer; display: none;"></i>
                                                 </div>
                                             </div>
-                                        <% }) %>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Activity Types -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h4 class="mb-0">Activity Types</h4>
-                                        <a href="#" id="add-activityType" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                        <span id="add-activityType" class="btn btn-outline-success btn-sm rounded-0 px-3">Add Activity Type</span>
                                     </div>
                                     <div id="activityTypes">
-                                        <% packageData.activityTypes?.forEach((act, index) => { %>
+                                        <% if (packageData.activityTypes?.length) { %>
+                                            <% packageData.activityTypes.forEach((act, index) => { %>
+                                                <div class="activityType-entry mb-3 d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <input type="text" name="activityTypes[<%= index %>]" class="form-control" value="<%= act %>" placeholder="e.g., Hiking">
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer; display: <%= packageData.activityTypes.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
                                             <div class="activityType-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="activityTypes[<%= index %>]" class="form-control" value="<%= act %>" placeholder="e.g., Hiking">
+                                                    <input type="text" name="activityTypes[0]" class="form-control" placeholder="e.g., Hiking">
                                                 </div>
                                                 <div>
-                                                    <a href="#" class="remove-btn <%= packageData.activityTypes.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
+                                                    <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer; display: none;"></i>
                                                 </div>
                                             </div>
-                                        <% }) %>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Highlights -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h4 class="mb-0">Highlights</h4>
-                                        <a href="#" id="add-highlight" class="add-link border border-success rounded px-2 py-1"><i class="fas fa-plus"></i> Add</a>
+                                        <span id="add-highlight" class="btn btn-outline-success btn-sm rounded-0 px-3">Add Highlight</span>
                                     </div>
                                     <div id="highlights">
-                                        <% packageData.highlights?.forEach((hig, index) => { %>
+                                        <% if (packageData.highlights?.length) { %>
+                                            <% packageData.highlights.forEach((hig, index) => { %>
+                                                <div class="highlight-entry mb-3 d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <input type="text" name="highlights[<%= index %>]" class="form-control" value="<%= hig %>" placeholder="e.g., Scenic views">
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer; display: <%= packageData.highlights.length === 1 ? 'none' : 'inline-block' %>;"></i>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
                                             <div class="highlight-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="highlights[<%= index %>]" class="form-control" value="<%= hig %>" placeholder="e.g., Scenic views">
+                                                    <input type="text" name="highlights[0]" class="form-control" placeholder="e.g., Scenic views">
                                                 </div>
                                                 <div>
-                                                    <a href="#" class="remove-btn <%= packageData.highlights.length === 1 ? 'd-none' : '' %>"><i class="fas fa-minus"></i></a>
+                                                    <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer; display: none;"></i>
                                                 </div>
                                             </div>
-                                        <% }) %>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Gallery -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <h4 class="mb-3">Gallery (Max 8 Images)</h4>
@@ -262,8 +392,8 @@
                                                 <% packageData.gallery?.forEach((img, index) => { %>
                                                     <div class="col-auto gallery-img-container">
                                                         <img src="/Uploads/gallery/<%= img %>" class="gallery-img" alt="Gallery Image">
-                                                        <input type="hidden" name="existingImages[<%= index %>]" value="<%= img %>">
-                                                        <a href="#" class="remove-btn mt-1"><i class="fas fa-minus"></i></a>
+                                                        <input type="hidden" name="gallery[<%= index %>]" value="<%= img %>">
+                                                        <i class="fas fa-trash text-danger delete-gallery mt-1" style="font-size: 18px; cursor: pointer;"></i>
                                                     </div>
                                                 <% }) %>
                                             </div>
@@ -272,7 +402,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Location -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <h4 class="mb-3">Location</h4>
@@ -288,7 +417,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Sidebar -->
                         <div class="col-lg-4 col-xl-3">
                             <!-- Additional Categories -->
@@ -315,7 +443,7 @@
                                             </div>
                                         <% }) %>
                                     </div>
-                                    <a href="#" id="add-category-btn" class="add-link border border-success rounded px-2 py-1 mt-2 d-inline-block"><i class="fas fa-plus"></i> Add Categories</a>
+                                    <span id="add-category-btn" class="btn btn-outline-success btn-sm rounded-0 px-3 mt-2 d-inline-block">Add Category</span>
                                     <div id="new-category-input" class="d-none mt-2">
                                         <div class="form-group">
                                             <input type="text" id="new-category" class="form-control" placeholder="New category">
@@ -324,17 +452,16 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Keywords -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap db-pop-field-wrap">
                                     <h4 class="mb-3">Keywords</h4>
                                     <div class="form-group">
-                                        <input type="text" name="keywords" id="keywords" class="form-control" value="<%= packageData.keywords || '' %>" placeholder="Comma-separated keywords">
+                                        <label for="keywords" class="form-label">Keywords</label>
+                                        <input type="text" name="keywords" id="keywords" class="form-control" value="<%= packageData.keywords?.join(', ') || '' %>" placeholder="Comma-separated keywords">
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Featured Image -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap db-media-field-wrap">
@@ -353,7 +480,6 @@
                                     <% } %>
                                 </div>
                             </div>
-
                             <!-- Quote and Difficulty Level -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
@@ -367,14 +493,13 @@
                                     <div class="form-group mt-3">
                                         <label for="difficultyLevel" class="form-label">Difficulty Level</label>
                                         <select name="difficultyLevel" id="difficultyLevel" class="form-control">
-                                            <% ['Easy', 'Moderate', 'Challenging'].forEach(level => { %>
-                                                <option value="<%= level %>" <%= packageData.difficultyLevel === level ? 'selected' : '' %>><%= level %></option>
-                                            <% }) %>
+                                            <option value="Easy" <%= packageData.difficultyLevel === 'Easy' ? 'selected' : '' %>>Easy</option>
+                                            <option value="Moderate" <%= packageData.difficultyLevel === 'Moderate' ? 'selected' : '' %>>Moderate</option>
+                                            <option value="Challenging" <%= packageData.difficultyLevel === 'Challenging' ? 'selected' : '' %>>Challenging</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Publish Status -->
                             <div class="dashboard-box mb-4 border rounded p-4 bg-white">
                                 <div class="custom-field-wrap">
@@ -382,45 +507,110 @@
                                     <div class="form-group mb-3">
                                         <label for="status" class="form-label required-field">Status</label>
                                         <select name="status" id="status" class="form-control" required>
-                                            <% ['Pending', 'Publish', 'Expired'].forEach(stat => { %>
-                                                <option value="<%= stat %>" <%= packageData.status === stat ? 'selected' : '' %>><%= stat === 'Pending' ? 'Draft' : stat %></option>
-                                            <% }) %>
+                                            <option value="Pending" <%= packageData.status === 'Pending' ? 'selected' : '' %>>Draft</option>
+                                            <option value="Active" <%= packageData.status === 'Active' ? 'selected' : '' %>>Publish</option>
+                                            <option value="Expired" <%= packageData.status === 'Expired' ? 'selected' : '' %>>Expired</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-primary w-100">Save</button>
+                                        <button type="submit" class="btn btn-primary w-100">Save Package</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </form>
-                <div id="form-error" class="text-danger d-none mt-3"></div>
             </div>
             <div class="copyrights text-center mt-4">
                 Copyright © 2025 Travele. All rights reserved.
             </div>
         </div>
     </div>
-
     <style>
-        .btn-draft { background-color: #6b7280 !important; color: white !important; border: 1px solid #4b5563; padding: 10px 20px; cursor: pointer; width: 100%; border-radius: 4px; transition: background-color 0.3s; }
-        .btn-draft:hover { background-color: #4b5563 !important; }
-        .btn-publish { background-color: #1d4ed8 !important; color: white !important; border: 1px solid #1e40af; padding: 10px 20px; cursor: pointer; width: 100%; border-radius: 4px; transition: background-color 0.3s; }
-        .btn-publish:hover { background-color: #1e40af !important; }
-        .upload-btn { display: inline-block; background-color: #10b981 !important; color: white !important; padding: 8px 16px; border-radius: 4px; text-decoration: none; cursor: pointer; }
-        .upload-btn:hover { background-color: #059669 !important; }
-        .add-link { display: inline-block; color: #10b981 !important; text-decoration: none; font-size: 16px; }
-        .add-link:hover { color: #059669 !important; }
-        .remove-btn { color: #dc3545 !important; text-decoration: none; font-size: 16px; display: inline-block; }
-        .remove-btn:hover { color: #b02a37 !important; }
-        .departure-entry, .inclusion-entry, .exclusion-entry, .activityType-entry, .highlight-entry { gap: 10px; }
-        .form-control:invalid { border-color: #dc3545; }
-        .form-control:valid { border-color: #28a745; }
-        .gallery-img { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
-        .required-field::after { content: '*'; color: #dc3545; margin-left: 4px; }
+        .btn-draft {
+            background-color: #6b7280 !important;
+            color: white !important;
+            border: 1px solid #4b5563;
+            padding: 10px 20px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .btn-draft:hover {
+            background-color: #4b5563 !important;
+        }
+        .btn-publish {
+            background-color: #1d4ed8 !important;
+            color: white !important;
+            border: 1px solid #1e40af;
+            padding: 10px 20px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .btn-publish:hover {
+            background-color: #1e40af !important;
+        }
+        .upload-btn {
+            display: inline-block;
+            background-color: #10b981 !important;
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .upload-btn:hover {
+            background-color: #059669 !important;
+        }
+        .delete-departure, .delete-inclusion, .delete-exclusion, .delete-activityType, .delete-highlight, .delete-itinerary-row, .delete-gallery {
+            color: #dc3545 !important;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .delete-departure:hover, .delete-inclusion:hover, .delete-exclusion:hover, .delete-activityType:hover, .delete-highlight:hover, .delete-itinerary-row:hover, .delete-gallery:hover {
+            color: #b02a37 !important;
+        }
+        .departure-entry, .inclusion-entry, .exclusion-entry, .activityType-entry, .highlight-entry {
+            gap: 10px;
+        }
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+        .form-control:valid {
+            border-color: #28a745;
+        }
+        .gallery-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .required-field::after {
+            content: '*';
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        .itinerary-activities {
+            margin-left: 20px;
+        }
+        .itinerary-item {
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545 !important;
+            background-image: none !important;
+        }
+        .form-control.is-invalid:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+        }
     </style>
-
     <script src="/admin/assets/js/jquery-3.2.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <script src="/admin/assets/js/bootstrap.min.js"></script>
@@ -431,15 +621,142 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Define toggleRequiredFields first to ensure it’s available for all calls
+            const toggleRequiredFields = () => {
+                const isPublish = statusSelect.value === 'Active';
+                const fields = [
+                    { id: 'groupSize', label: 'Group Size' },
+                    { id: 'days', label: 'Trip Duration(Days)' },
+                    { id: 'nights', label: 'Trip Duration(Nights)' },
+                    { id: 'category', label: 'Category' },
+                    { id: 'regularPrice', label: 'Regular Price' },
+                    { id: 'itineraryDescription', label: 'Itinerary Description' },
+                    { id: 'keywords', label: 'Keywords' },
+                    { id: 'difficultyLevel', label: 'Difficulty Level' },
+                    { id: 'location-search', label: 'Search Location' },
+                    { id: 'gallery-input', label: 'Upload Images' },
+                    { id: 'featured-input', label: 'Upload a Featured Image' },
+                    { id: 'quote', label: 'Quote' }
+                ];
+                fields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    const label = document.querySelector(`label[for="${field.id}"]`);
+                    if (input && label) {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            label.classList.add('required-field');
+                            if (field.id === 'keywords' && !input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            label.classList.remove('required-field');
+                            if (field.id === 'keywords') {
+                                input.classList.remove('is-invalid');
+                            }
+                        }
+                    }
+                });
+                const dynamicContainers = [
+                    { container: 'inclusions', name: 'inclusions', label: 'Inclusion' },
+                    { container: 'exclusions', name: 'exclusions', label: 'Exclusion' },
+                    { container: 'activityTypes', name: 'activityTypes', label: 'Activity Type' },
+                    { container: 'highlights', name: 'highlights', label: 'Highlight' }
+                ];
+                dynamicContainers.forEach(({ container, name }) => {
+                    const entries = document.querySelectorAll(`#${container} .${container.slice(0, -1)}-entry`);
+                    entries.forEach((entry, index) => {
+                        const inputs = entry.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            if (isPublish) {
+                                input.setAttribute('required', '');
+                                if (!input.value.trim()) {
+                                    input.classList.add('is-invalid');
+                                }
+                            } else {
+                                input.removeAttribute('required');
+                                input.classList.remove('is-invalid');
+                            }
+                        });
+                        const deleteBtn = entry.querySelector(`.delete-${container.slice(0, -1)}`);
+                        if (deleteBtn) {
+                            deleteBtn.style.display = entries.length === 1 ? 'none' : 'inline-block';
+                        }
+                    });
+                });
+                const departureEntries = document.querySelectorAll('#departures .departure-entry');
+                departureEntries.forEach((entry, index) => {
+                    const inputs = entry.querySelectorAll('input');
+                    const labels = entry.querySelectorAll('label.form-label');
+                    inputs.forEach((input, i) => {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            if (labels[i]) labels[i].classList.add('required-field');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            if (labels[i]) labels[i].classList.remove('required-field');
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    const deleteBtn = entry.querySelector('.delete-departure');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = departureEntries.length === 1 ? 'none' : 'inline-block';
+                    }
+                });
+                const itineraryItems = document.querySelectorAll('.itinerary-item');
+                itineraryItems.forEach((item) => {
+                    const inputs = item.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        if (isPublish) {
+                            input.setAttribute('required', '');
+                            const inputLabel = input.closest('.form-group').querySelector('label');
+                            if (inputLabel) inputLabel.classList.add('required-field');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            const inputLabel = input.closest('.form-group').querySelector('label');
+                            if (inputLabel) inputLabel.classList.remove('required-field');
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    const deleteBtn = item.querySelector('.delete-itinerary-row');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = item.parentElement.querySelectorAll('.itinerary-item').length === 1 ? 'none' : 'inline-block';
+                    }
+                });
+                const categoryInputs = document.querySelectorAll('#category-list input[type="checkbox"]');
+                const categoriesHeader = document.querySelector('.db-cat-field-wrap h4');
+                if (isPublish && categoryInputs.length > 0) {
+                    let isChecked = Array.from(categoryInputs).some(input => input.checked);
+                    categoryInputs.forEach(input => {
+                        if (!isChecked) {
+                            input.setAttribute('required', '');
+                        } else {
+                            input.removeAttribute('required');
+                        }
+                    });
+                    if (categoriesHeader) {
+                        categoriesHeader.classList.add('required-field');
+                    }
+                } else {
+                    categoryInputs.forEach(input => input.removeAttribute('required'));
+                    if (categoriesHeader) {
+                        categoriesHeader.classList.remove('required-field');
+                    }
+                }
+            };
+
             const daysInput = document.getElementById('days');
             const nightsInput = document.getElementById('nights');
             const totalDaysSpan = document.getElementById('total-days');
             const itineraryDays = document.getElementById('itinerary-days');
-            const addDayLink = document.getElementById('add-day');
             const addCategoryBtn = document.getElementById('add-category-btn');
             const newCategoryInput = document.getElementById('new-category-input');
             const newCategoryField = document.getElementById('new-category');
@@ -467,22 +784,14 @@
             const addHighlightLink = document.getElementById('add-highlight');
             const highlightsContainer = document.getElementById('highlights');
             const statusSelect = document.getElementById('status');
-
-            // Store itineraryDays in a JavaScript variable to avoid inline JSON
-            const itineraryDaysData = <%- JSON.stringify(packageData.itineraryDays || []) %>;
-            const departuresData = <%- JSON.stringify(packageData.multipleDepartures || []) %>;
-
-            // OpenCage API key
+            const keywordsInput = document.getElementById('keywords');
             const OPENCAGE_API_KEY = '<%= opencageApiKey %>';
-
-            // Initialize Leaflet map
             const map = L.map('map').setView([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             const marker = L.marker([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], { draggable: true }).addTo(map);
 
-            // Map click handler
             map.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 marker.setLatLng([lat, lng]);
@@ -503,7 +812,6 @@
                     });
             });
 
-            // Marker drag handler
             marker.on('dragend', (e) => {
                 const { lat, lng } = e.target.getLatLng();
                 fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
@@ -523,7 +831,6 @@
                     });
             });
 
-            // Location search handler
             locationSearch.addEventListener('input', (e) => {
                 const query = e.target.value;
                 if (query.length < 3) return;
@@ -543,186 +850,161 @@
                     .catch(error => console.error('Search error:', error));
             });
 
-            // Toggle required fields based on status
-            function toggleRequiredFields() {
-                const isPublish = statusSelect.value === 'Publish';
-                const fields = [
-                    { id: 'groupSize', label: 'Group Size' },
-                    { id: 'days', label: 'Trip Duration' },
-                    { id: 'nights', label: 'Trip Duration' },
-                    { id: 'category', label: 'Category' },
-                    { id: 'regularPrice', label: 'Regular Price' },
-                    { id: 'itineraryDescription', label: 'Itinerary Description' },
-                    { id: 'keywords', label: 'Keywords' },
-                    { id: 'difficultyLevel', label: 'Difficulty Level' },
-                    { id: 'location-search', label: 'Search Location' },
-                    { id: 'gallery-input', label: 'Upload Images' },
-                    { id: 'featured-input', label: 'Upload a Featured Image' },
-                    { id: 'quote', label: 'Quote' }
-                ];
+            const itineraryItemTypes = ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'];
 
-                fields.forEach(field => {
-                    const input = document.getElementById(field.id);
-                    const label = document.querySelector(`label[for="${field.id}"]`);
-                    if (input && label) {
-                        if (isPublish) {
-                            input.setAttribute('required', '');
-                            label.classList.add('required-field');
-                        } else {
-                            input.removeAttribute('required');
-                            label.classList.remove('required-field');
-                        }
-                    }
-                });
-
-                // Handle dynamic fields
-                [ 'inclusions', 'exclusions', 'activityTypes', 'highlights'].forEach(container => {
-                    const entries = document.querySelectorAll(`#${container} .${container.slice(0, -1)}-entry`);
-                    entries.forEach(entry => {
-                        entry.querySelectorAll('input').forEach(input => {
-                            input.required = isPublish;
-                            const inputLabel = entry.querySelector(`label[for="${input.id}"]`);
-                            if (inputLabel) inputLabel.classList.toggle('required-field', isPublish);
-                        });
-                    });
-                });
-
-                // Handle itinerary days
-                const itineraryEntries = document.querySelectorAll('#itinerary-days .itinerary-content');
-                itineraryEntries.forEach(entry => {
-                    entry.querySelectorAll('input, textarea').forEach(input => {
-                        input.required = isPublish;
-                        const inputLabel = entry.querySelector(`label[for="${input.id}"]`);
-                        if (inputLabel) inputLabel.classList.toggle('required-field', isPublish);
-                    });
-                });
-
-                // Handle additional categories
-                const categoryInputs = document.querySelectorAll('#category-list input[type="checkbox"]');
-                if (isPublish && categoryInputs.length > 0) {
-                    const isChecked = Array.from(categoryInputs).some(input => input.checked);
-                    categoryInputs.forEach(input => input.required = !isChecked);
-                } else {
-                    categoryInputs.forEach(input => input.required = false);
-                }
-            }
-
-            statusSelect.addEventListener('change', toggleRequiredFields);
-
-            // Itinerary management
-            let dayCount = <%= packageData.tripDuration?.days || 0 %>;
-            function updateItinerary() {
+            const updateItinerary = () => {
+       
                 const days = parseInt(daysInput.value) || 0;
-                totalDaysSpan.textContent = `${days} days`;
+                totalDaysSpan.textContent = days;
                 itineraryDays.innerHTML = '';
-                dayCount = days;
-                for (let i = 1; i <= days; i++) {
-                    const day = itineraryDaysData[i-1] || { title: '', description: '' };
-                    const dayDiv = document.createElement('div');
-                    dayDiv.className = 'form-group itinerary-content mb-3';
+                const itineraryData = <%- JSON.stringify(packageData.itineraryDays || []) %>;
+
+for (let i = 0; i < days; i++) {
+    const dayData = itineraryData[i] || { activities: [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }] };
+    
+    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'd-flex flex-column mb-3';
+                    dayDiv.id = `itinerary-${i}`;
                     dayDiv.innerHTML = `
-                        <h5>Day ${i}</h5>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="flex-grow-1 me-2">
-                                <label for="dayTitle${i}" class="form-label">Title</label>
-                                <input type="text" name="itineraryDays[${i-1}][title]" id="dayTitle${i}" class="form-control" value="${(day.title || '').replace(/"/g, '&quot;')}">
-                            </div>
-                            <div>
-                                <a href="#" class="remove-btn ${dayCount === 1 ? 'd-none' : ''}"><i class="fas fa-minus"></i></a>
+                        <input type="hidden" name="itineraryDays[${i}][day]" value="${i + 1}">
+                        <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                            <strong class="d-inline" style="font-size: 18px">Day ${i + 1}</strong>
+                            <div class="d-flex align-items-center">
+                                <span class="btn btn-outline-light btn-sm rounded-0 px-3 itineraryAdd" id="itinerary-add-${i}">Add Activity</span>
                             </div>
                         </div>
-                        <label for="dayDescription${i}" class="form-label">Description</label>
-                        <textarea name="itineraryDays[${i-1}][description]" id="dayDescription${i}" class="form-control mb-2" rows="3">${(day.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                        <div id="itinerary-activities-${i}" class="mt-3 itinerary-activities">
+                            ${dayData.activities.map((activity, activityIndex) => `
+                                <div class="w-100 mt-3 itinerary-item" id="itinerary-item-${i}-${activityIndex}">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>#${activityIndex + 1}</strong>
+                                        <i id="delete-item-${i}-${activityIndex}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer; display: ${dayData.activities.length === 1 ? 'none' : 'inline-block'};"></i>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="form-group col-md-5">
+                                            <label>Title</label>
+                                            <input name="itineraryDays[${i}][activities][${activityIndex}][title]" class="form-control itinerary-title" type="text" value="${(activity.title || '').replace(/"/g, '&quot;')}" required>
+                                        </div>
+                                        <div class="form-group col-md-7">
+                                            <label>Sub Title</label>
+                                            <input name="itineraryDays[${i}][activities][${activityIndex}][sub_title]" class="form-control itinerary-sub-title" type="text" value="${(activity.sub_title || '').replace(/"/g, '&quot;')}" required>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>Start Time</label>
+                                            <input name="itineraryDays[${i}][activities][${activityIndex}][start_time]" class="form-control itinerary-start-time" type="time" value="${activity.start_time || ''}" required>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>End Time</label>
+                                            <input name="itineraryDays[${i}][activities][${activityIndex}][end_time]" class="form-control itinerary-end-time" type="time" value="${activity.end_time || ''}" required>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>Type</label>
+                                            <select name="itineraryDays[${i}][activities][${activityIndex}][type]" class="form-control itinerary-type" required>
+                                                <option value="" disabled ${!activity.type ? 'selected' : ''}>Select itinerary item type</option>
+                                                ${itineraryItemTypes.map(type => `<option value="${type}" ${activity.type === type ? 'selected' : ''}>${type.toUpperCase()}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     `;
                     itineraryDays.appendChild(dayDiv);
-                    if (statusSelect.value === 'Publish') {
-                        dayDiv.querySelectorAll('input, textarea').forEach(input => {
-                            input.required = true;
-                            const inputLabel = dayDiv.querySelector(`label[for="${input.id}"]`);
-                            if (inputLabel) inputLabel.classList.add('required-field');
-                        });
-                    }
+                    dayDiv.querySelector(`#itinerary-add-${i}`).addEventListener('click', (e) => {
+                        e.preventDefault();
+                        addActivity(i);
+                    });
+                    setupItineraryDeleteListener(i);
                 }
-                updateItineraryIndices();
+                toggleRequiredFields();
+            };
+
+
+            daysInput.addEventListener('input', updateItinerary);
+            nightsInput.addEventListener('input', updateItinerary);
+
+            function addActivity(dayIndex) {
+                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+                const activityCount = activitiesContainer.querySelectorAll('.itinerary-item').length;
+                const activityDiv = document.createElement('div');
+                activityDiv.className = 'w-100 mt-3 itinerary-item';
+                activityDiv.id = `itinerary-item-${dayIndex}-${activityCount}`;
+                activityDiv.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <strong>#${activityCount + 1}</strong>
+                        <i id="delete-item-${dayIndex}-${activityCount}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer;"></i>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="form-group col-md-5">
+                            <label>Title</label>
+                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][title]" class="form-control itinerary-title" type="text" required>
+                        </div>
+                        <div class="form-group col-md-7">
+                            <label>Sub Title</label>
+                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][sub_title]" class="form-control itinerary-sub-title" type="text" required>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Start Time</label>
+                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][start_time]" class="form-control itinerary-start-time" type="time" required>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>End Time</label>
+                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][end_time]" class="form-control itinerary-end-time" type="time" required>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Type</label>
+                            <select name="itineraryDays[${dayIndex}][activities][${activityCount}][type]" class="form-control itinerary-type" required>
+                                <option value="" disabled selected>Select itinerary item type</option>
+                                ${itineraryItemTypes.map(type => `<option value="${type}">${type.toUpperCase()}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                activitiesContainer.appendChild(activityDiv);
+                updateActivityIndices(dayIndex);
+                toggleRequiredFields();
             }
 
-            function updateItineraryIndices() {
-                const days = itineraryDays.querySelectorAll('.itinerary-content');
-                days.forEach((day, index) => {
-                    day.querySelector('h5').textContent = `Day ${index + 1}`;
-                    day.querySelector('input').name = `itineraryDays[${index}][title]`;
-                    day.querySelector('textarea').name = `itineraryDays[${index}][description]`;
-                    day.querySelector('input').id = `dayTitle${index + 1}`;
-                    day.querySelector('textarea').id = `dayDescription${index + 1}`;
-                    const removeBtn = day.querySelector('.remove-btn');
-                    if (days.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+            function setupItineraryDeleteListener(dayIndex) {
+                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+                if (!activitiesContainer) return;
+                activitiesContainer.removeEventListener('click', handleItineraryDelete);
+                activitiesContainer.addEventListener('click', handleItineraryDelete);
+                function handleItineraryDelete(e) {
+                    const btn = e.target.closest('.delete-itinerary-row');
+                    if (btn && activitiesContainer.querySelectorAll('.itinerary-item').length > 1) {
+                        e.preventDefault();
+                        const activityDiv = btn.closest('.itinerary-item');
+                        if (activityDiv) {
+                            activityDiv.remove();
+                            updateActivityIndices(dayIndex);
+                            toggleRequiredFields();
+                        }
                     }
-                    if (statusSelect.value === 'Publish') {
-                        day.querySelectorAll('input, textarea').forEach(input => {
-                            input.required = true;
-                            const inputLabel = day.querySelector(`label[for="${input.id}"]`);
-                            if (inputLabel) inputLabel.classList.add('required-field');
-                        });
+                }
+            }
+
+            function updateActivityIndices(dayIndex) {
+                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+                if (!activitiesContainer) return;
+                const activities = activitiesContainer.querySelectorAll('.itinerary-item');
+                activities.forEach((activity, index) => {
+                    activity.id = `itinerary-item-${dayIndex}-${index}`;
+                    activity.querySelector('strong').textContent = `#${index + 1}`;
+                    const inputs = activity.querySelectorAll('input, select');
+                    inputs[0].name = `itineraryDays[${dayIndex}][activities][${index}][title]`;
+                    inputs[1].name = `itineraryDays[${dayIndex}][activities][${index}][sub_title]`;
+                    inputs[2].name = `itineraryDays[${dayIndex}][activities][${index}][start_time]`;
+                    inputs[3].name = `itineraryDays[${dayIndex}][activities][${index}][end_time]`;
+                    inputs[4].name = `itineraryDays[${dayIndex}][activities][${index}][type]`;
+                    const deleteBtn = activity.querySelector('.delete-itinerary-row');
+                    if (deleteBtn) {
+                        deleteBtn.id = `delete-item-${dayIndex}-${index}`;
+                        deleteBtn.style.display = activities.length === 1 ? 'none' : 'inline-block';
                     }
                 });
             }
 
-            daysInput.addEventListener('input', () => {
-                updateItinerary();
-                toggleRequiredFields();
-            });
-
-            nightsInput.addEventListener('input', updateItinerary);
-
-            addDayLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                dayCount++;
-                totalDaysSpan.textContent = `${dayCount} days`;
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'form-group itinerary-content mb-3';
-                dayDiv.innerHTML = `
-                    <h5>Day ${dayCount}</h5>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="flex-grow-1 me-2">
-                            <label for="dayTitle${dayCount}" class="form-label">Title</label>
-                            <input type="text" name="itineraryDays[${dayCount-1}][title]" id="dayTitle${dayCount}" class="form-control">
-                        </div>
-                        <div>
-                            <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
-                        </div>
-                    </div>
-                    <label for="dayDescription${dayCount}" class="form-label">Description</label>
-                    <textarea name="itineraryDays[${dayCount-1}][description]" id="dayDescription${dayCount}" class="form-control mb-2" rows="3"></textarea>
-                `;
-                itineraryDays.appendChild(dayDiv);
-
-                if (statusSelect.value === 'Publish') {
-                    dayDiv.querySelectorAll('input, textarea').forEach(input => {
-                        input.required = true;
-                        const inputLabel = dayDiv.querySelector(`label[for="${input.id}"]`);
-                        if (inputLabel) inputLabel.classList.add('required-field');
-                    });
-                }
-                updateItineraryIndices();
-                toggleRequiredFields();
-            });
-
-            itineraryDays.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && dayCount > 1) {
-                    e.preventDefault();
-                    btn.closest('.itinerary-content').remove();
-                    dayCount--;
-                    totalDaysSpan.textContent = `${dayCount} days`;
-                    updateItineraryIndices();
-                    toggleRequiredFields();
-                }
-            });
-
-            // Departures management
             let departureCount = <%= packageData.multipleDepartures?.length || 1 %>;
             addDepartureLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -731,37 +1013,29 @@
                 departureDiv.innerHTML = `
                     <div class="flex-grow-1 me-2">
                         <div class="form-group">
-                            <label for="departureLocation${departureCount}" class="form-label">Departure Location</label>
-                            <input type="text" name="multipleDepartures[${departureCount}][location]" id="departureLocation${departureCount}" class="form-control">
+                            <label for="departureLocation${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Location</label>
+                            <input type="text" name="multipleDepartures[${departureCount}][location]" id="departureLocation${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
                         </div>
                     </div>
                     <div class="me-2">
                         <div class="form-group">
-                            <label for="departureDateTime${departureCount}" class="form-label">Departure Date and Time</label>
-                            <input type="datetime-local" name="multipleDepartures[${departureCount}][dateTime]" id="departureDateTime${departureCount}" class="form-control">
+                            <label for="departureDateTime${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Date and Time</label>
+                            <input type="datetime-local" name="multipleDepartures[${departureCount}][dateTime]" id="departureDateTime${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
                         </div>
                     </div>
                     <div>
-                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        <i class="fas fa-trash text-danger delete-departure" style="font-size: 18px; cursor: pointer;"></i>
                     </div>
                 `;
                 departuresContainer.appendChild(departureDiv);
-
-                if (statusSelect.value === 'Publish') {
-                    departureDiv.querySelectorAll('input').forEach(input => {
-                        input.required = true;
-                        const inputLabel = departureDiv.querySelector(`label[for="${input.id}"]`);
-                        if (inputLabel) inputLabel.classList.add('required-field');
-                    });
-                }
                 departureCount++;
                 updateDepartureIndices();
                 toggleRequiredFields();
             });
 
             departuresContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && departureCount > 1) {
+                const btn = e.target.closest('.delete-departure');
+                if (btn && departuresContainer.querySelectorAll('.departure-entry').length > 1) {
                     e.preventDefault();
                     btn.closest('.departure-entry').remove();
                     departureCount--;
@@ -773,27 +1047,25 @@
             function updateDepartureIndices() {
                 const departures = departuresContainer.querySelectorAll('.departure-entry');
                 departures.forEach((dep, index) => {
-                    dep.querySelector('input[type="text"]').name = `multipleDepartures[${index}][location]`;
-                    dep.querySelector('input[type="datetime-local"]').name = `multipleDepartures[${index}][dateTime]`;
-                    dep.querySelector('input[type="text"]').id = `departureLocation${index}`;
-                    dep.querySelector('input[type="datetime-local"]').id = `departureDateTime${index}`;
-                    const removeBtn = dep.querySelector('.remove-btn');
-                    if (departures.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+                    const locationInput = dep.querySelector('input[type="text"]');
+                    const dateTimeInput = dep.querySelector('input[type="datetime-local"]');
+                    const locationLabel = dep.querySelector('label[for^="departureLocation"]');
+                    const dateTimeLabel = dep.querySelector('label[for^="departureDateTime"]');
+                    if (locationInput && dateTimeInput && locationLabel && dateTimeLabel) {
+                        locationInput.name = `multipleDepartures[${index}][location]`;
+                        dateTimeInput.name = `multipleDepartures[${index}][dateTime]`;
+                        locationInput.id = `departureLocation${index}`;
+                        dateTimeInput.id = `departureDateTime${index}`;
+                        locationLabel.setAttribute('for', `departureLocation${index}`);
+                        dateTimeLabel.setAttribute('for', `departureDateTime${index}`);
+                        const deleteBtn = dep.querySelector('.delete-departure');
+                        if (deleteBtn) {
+                            deleteBtn.style.display = departures.length === 1 ? 'none' : 'inline-block';
+                        }
                     }
-                    // if (statusSelect.value === 'Publish') {
-                    //     dep.querySelectorAll('input').forEach(input => {
-                    //         input.required = true;
-                    //         const inputLabel = dep.querySelector(`label[for="${input.id}"]`);
-                    //         // if (inputLabel) inputLabel.classList.add('required-field');
-                    //     });
-                    // }
                 });
             }
 
-            // Inclusions management
             let inclusionCount = <%= packageData.inclusions?.length || 1 %>;
             addInclusionLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -804,20 +1076,18 @@
                         <input type="text" name="inclusions[${inclusionCount}]" class="form-control" placeholder="e.g., Meals">
                     </div>
                     <div>
-                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer;"></i>
                     </div>
                 `;
                 inclusionsContainer.appendChild(inclusionDiv);
-
-                if (statusSelect.value === 'Publish') inclusionDiv.querySelector('input').required = true;
                 inclusionCount++;
                 updateInclusionIndices();
                 toggleRequiredFields();
             });
 
             inclusionsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && inclusionCount > 1) {
+                const btn = e.target.closest('.delete-inclusion');
+                if (btn && inclusionsContainer.querySelectorAll('.inclusion-entry').length > 1) {
                     e.preventDefault();
                     btn.closest('.inclusion-entry').remove();
                     inclusionCount--;
@@ -829,18 +1099,26 @@
             function updateInclusionIndices() {
                 const inclusions = inclusionsContainer.querySelectorAll('.inclusion-entry');
                 inclusions.forEach((inc, index) => {
-                    inc.querySelector('input').name = `inclusions[${index}]`;
-                    const removeBtn = inc.querySelector('.remove-btn');
-                    if (inclusions.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+                    const input = inc.querySelector('input');
+                    if (input) {
+                        input.name = `inclusions[${index}]`;
+                        const deleteBtn = inc.querySelector('.delete-inclusion');
+                        if (deleteBtn) {
+                            deleteBtn.style.display = inclusions.length === 1 ? 'none' : 'inline-block';
+                        }
+                        if (statusSelect.value === 'Active') {
+                            input.setAttribute('required', '');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            input.classList.remove('is-invalid');
+                        }
                     }
-                    if (statusSelect.value === 'Publish') inc.querySelector('input').required = true;
                 });
             }
 
-            // Exclusions management
             let exclusionCount = <%= packageData.exclusions?.length || 1 %>;
             addExclusionLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -851,20 +1129,18 @@
                         <input type="text" name="exclusions[${exclusionCount}]" class="form-control" placeholder="e.g., Airfare">
                     </div>
                     <div>
-                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer;"></i>
                     </div>
                 `;
                 exclusionsContainer.appendChild(exclusionDiv);
-
-                if (statusSelect.value === 'Publish') exclusionDiv.querySelector('input').required = true;
                 exclusionCount++;
                 updateExclusionIndices();
                 toggleRequiredFields();
             });
 
             exclusionsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && exclusionCount > 1) {
+                const btn = e.target.closest('.delete-exclusion');
+                if (btn && exclusionsContainer.querySelectorAll('.exclusion-entry').length > 1) {
                     e.preventDefault();
                     btn.closest('.exclusion-entry').remove();
                     exclusionCount--;
@@ -876,18 +1152,26 @@
             function updateExclusionIndices() {
                 const exclusions = exclusionsContainer.querySelectorAll('.exclusion-entry');
                 exclusions.forEach((exc, index) => {
-                    exc.querySelector('input').name = `exclusions[${index}]`;
-                    const removeBtn = exc.querySelector('.remove-btn');
-                    if (exclusions.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+                    const input = exc.querySelector('input');
+                    if (input) {
+                        input.name = `exclusions[${index}]`;
+                        const deleteBtn = exc.querySelector('.delete-exclusion');
+                        if (deleteBtn) {
+                            deleteBtn.style.display = exclusions.length === 1 ? 'none' : 'inline-block';
+                        }
+                        if (statusSelect.value === 'Active') {
+                            input.setAttribute('required', '');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            input.classList.remove('is-invalid');
+                        }
                     }
-                    if (statusSelect.value === 'Publish') exc.querySelector('input').required = true;
                 });
             }
 
-            // Activity Types management
             let activityTypeCount = <%= packageData.activityTypes?.length || 1 %>;
             addActivityTypeLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -898,20 +1182,18 @@
                         <input type="text" name="activityTypes[${activityTypeCount}]" class="form-control" placeholder="e.g., Hiking">
                     </div>
                     <div>
-                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer;"></i>
                     </div>
                 `;
                 activityTypesContainer.appendChild(activityTypeDiv);
-
-                if (statusSelect.value === 'Publish') activityTypeDiv.querySelector('input').required = true;
                 activityTypeCount++;
                 updateActivityTypeIndices();
                 toggleRequiredFields();
             });
 
             activityTypesContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && activityTypeCount > 1) {
+                const btn = e.target.closest('.delete-activityType');
+                if (btn && activityTypesContainer.querySelectorAll('.activityType-entry').length > 1) {
                     e.preventDefault();
                     btn.closest('.activityType-entry').remove();
                     activityTypeCount--;
@@ -923,18 +1205,26 @@
             function updateActivityTypeIndices() {
                 const activityTypes = activityTypesContainer.querySelectorAll('.activityType-entry');
                 activityTypes.forEach((act, index) => {
-                    act.querySelector('input').name = `activityTypes[${index}]`;
-                    const removeBtn = act.querySelector('.remove-btn');
-                    if (activityTypes.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+                    const input = act.querySelector('input');
+                    if (input) {
+                        input.name = `activityTypes[${index}]`;
+                        const deleteBtn = act.querySelector('.delete-activityType');
+                        if (deleteBtn) {
+                            deleteBtn.style.display = activityTypes.length === 1 ? 'none' : 'inline-block';
+                        }
+                        if (statusSelect.value === 'Active') {
+                            input.setAttribute('required', '');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            input.classList.remove('is-invalid');
+                        }
                     }
-                    if (statusSelect.value === 'Publish') act.querySelector('input').required = true;
                 });
             }
 
-            // Highlights management
             let highlightCount = <%= packageData.highlights?.length || 1 %>;
             addHighlightLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -945,20 +1235,18 @@
                         <input type="text" name="highlights[${highlightCount}]" class="form-control" placeholder="e.g., Scenic views">
                     </div>
                     <div>
-                        <a href="#" class="remove-btn"><i class="fas fa-minus"></i></a>
+                        <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer;"></i>
                     </div>
                 `;
                 highlightsContainer.appendChild(highlightDiv);
-
-                if (statusSelect.value === 'Publish') highlightDiv.querySelector('input').required = true;
                 highlightCount++;
                 updateHighlightIndices();
                 toggleRequiredFields();
             });
 
             highlightsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
-                if (btn && highlightCount > 1) {
+                const btn = e.target.closest('.delete-highlight');
+                if (btn && highlightsContainer.querySelectorAll('.highlight-entry').length > 1) {
                     e.preventDefault();
                     btn.closest('.highlight-entry').remove();
                     highlightCount--;
@@ -970,18 +1258,26 @@
             function updateHighlightIndices() {
                 const highlights = highlightsContainer.querySelectorAll('.highlight-entry');
                 highlights.forEach((hig, index) => {
-                    hig.querySelector('input').name = `highlights[${index}]`;
-                    const removeBtn = hig.querySelector('.remove-btn');
-                    if (highlights.length === 1) {
-                        removeBtn.classList.add('d-none');
-                    } else {
-                        removeBtn.classList.remove('d-none');
+                    const input = hig.querySelector('input');
+                    if (input) {
+                        input.name = `highlights[${index}]`;
+                        const deleteBtn = hig.querySelector('.delete-highlight');
+                        if (deleteBtn) {
+                            deleteBtn.style.display = highlights.length === 1 ? 'none' : 'inline-block';
+                        }
+                        if (statusSelect.value === 'Active') {
+                            input.setAttribute('required', '');
+                            if (!input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
+                        } else {
+                            input.removeAttribute('required');
+                            input.classList.remove('is-invalid');
+                        }
                     }
-                    if (statusSelect.value === 'Publish') hig.querySelector('input').required = true;
                 });
             }
 
-            // Add new category
             addCategoryBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 newCategoryInput.classList.toggle('d-none');
@@ -1000,51 +1296,62 @@
                         </label>
                     `;
                     categoryList.appendChild(categoryDiv);
-
-                    if (statusSelect.value === 'Publish') categoryDiv.querySelector('input').required = true;
+                    if (statusSelect.value === 'Active') {
+                        const categoriesHeader = document.querySelector('.db-cat-field-wrap h4');
+                        if (categoriesHeader) {
+                            categoriesHeader.classList.add('required-field');
+                        }
+                        const newInput = categoryDiv.querySelector('input');
+                        if (!Array.from(document.querySelectorAll('#category-list input[type="checkbox"]')).some(input => input.checked && input !== newInput)) {
+                            newInput.setAttribute('required', '');
+                        }
+                    }
                     newCategoryField.value = '';
                     newCategoryInput.classList.add('d-none');
                     toggleRequiredFields();
                 }
             });
 
-            // Handle gallery input
             galleryInput.addEventListener('change', () => {
-                const totalImages = galleryPreview.querySelectorAll('.gallery-img-container').length + galleryInput.files.length;
-                if (totalImages > 8) {
+                const existingImages = document.querySelectorAll('input[name^="gallery"]').length;
+                const newImages = galleryInput.files.length;
+                if (existingImages + newImages > 8) {
                     galleryError.classList.remove('d-none');
                     galleryInput.value = '';
                 } else {
                     galleryError.classList.add('d-none');
-                    for (let file of galleryInput.files) {
+                    Array.from(galleryInput.files).forEach((file, index) => {
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            const container = document.createElement('div');
-                            container.className = 'col-auto gallery-img-container';
-                            container.innerHTML = `
-                                <img src="${e.target.result}" class="gallery-img" alt="Gallery Image">
-                                <a href="#" class="remove-btn mt-1"><i class="fas fa-minus"></i></a>
+                            const col = document.createElement('div');
+                            col.className = 'col-auto';
+                            col.innerHTML = `
+                                <img src="${e.target.result}" class="gallery-img" alt="Preview">
+                                <i class="fas fa-trash text-danger delete-gallery mt-1" style="font-size: 18px; cursor: pointer;"></i>
                             `;
-                            galleryPreview.appendChild(container);
-
-                            container.querySelector('.remove-btn').addEventListener('click', (e) => {
+                            galleryPreview.appendChild(col);
+                            col.querySelector('.delete-gallery').addEventListener('click', (e) => {
                                 e.preventDefault();
-                                container.remove();
-                                galleryInput.value = '';
+                                col.remove();
+                                const dt = new DataTransfer();
+                                Array.from(galleryInput.files).forEach((f, i) => {
+                                    if (i !== index) dt.items.add(f);
+                                });
+                                galleryInput.files = dt.files;
                                 toggleRequiredFields();
                             });
                         };
                         reader.readAsDataURL(file);
-                    }
+                    });
                 }
             });
 
             galleryPreview.addEventListener('click', (e) => {
-                const btn = e.target.closest('.remove-btn');
+                const btn = e.target.closest('.delete-gallery');
                 if (btn) {
                     e.preventDefault();
-                    const container = btn.closest('.gallery-img-container');
-                    const imageName = container.querySelector('input[name^="existingImages"]')?.value;
+                    const container = btn.closest('.col-auto');
+                    const imageName = container.querySelector('input[name^="gallery"]')?.value;
                     if (imageName) {
                         const deletedImagesInput = document.createElement('input');
                         deletedImagesInput.type = 'hidden';
@@ -1057,56 +1364,64 @@
                 }
             });
 
-            // Handle featured image input
             featuredInput.addEventListener('change', () => {
-                if (featuredInput.files.length > 0) {
-                    featuredFileName.textContent = featuredInput.files[0].name;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'gallery-img mt-2';
-                        img.alt = 'Featured Image';
-                        const existingImg = featuredFileName.nextElementSibling;
-                        if (existingImg && existingImg.tagName === 'IMG') existingImg.remove();
-                        featuredFileName.insertAdjacentElement('afterend', img);
-                    };
-                    reader.readAsDataURL(featuredInput.files[0]);
+                featuredFileName.textContent = featuredInput.files[0]?.name || 'No file selected';
+            });
+
+            statusSelect.addEventListener('change', toggleRequiredFields);
+
+            keywordsInput.addEventListener('input', () => {
+                if (statusSelect.value === 'Active') {
+                    if (keywordsInput.value.trim()) {
+                        keywordsInput.classList.remove('is-invalid');
+                    } else {
+                        keywordsInput.classList.add('is-invalid');
+                    }
+                } else {
+                    keywordsInput.classList.remove('is-invalid');
                 }
             });
 
-            // Form submission
-            form.addEventListener('submit', (e) => {
+            categoryList.addEventListener('change', (e) => {
+                if (statusSelect.value === 'Active') {
+                    toggleRequiredFields();
+                }
+            });
+
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 toggleRequiredFields();
-                if (!form.checkValidity()) {
-                    formError.textContent = 'Please fill all required fields';
-                    formError.classList.remove('d-none');
-                    form.classList.add('was-validated');
-                    return;
-                }
+                // console.log("hh3")
+                // if (!form.checkValidity()) {
+                //     e.stopPropagation();
+                //     console.log(statusSelect.value,keywordsInput.value.trim())
+                //     form.classList.add('was-validated');
+                //     if (statusSelect.value === 'Active' && !keywordsInput.value.trim()) {
+                //         keywordsInput.classList.add('is-invalid');
+                //     }
+                //     return;
+                // }
                 const formData = new FormData(form);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        formError.textContent = data.error;
-                        formError.classList.remove('d-none');
-                    } else {
+                
+                console.log("hh")
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    console.log("hh2")
+                    const result = await response.json();
+                    if (response.ok) {
+                        console.log("hhe")
                         window.location.href = '/db-all-packages';
+                    } else {
+                        formError.classList.remove('d-none');
+                        formError.textContent = result.error || 'Failed to submit form';
                     }
-                })
-                .catch(error => {
-                    console.error('Form submission error:', error);
-                    formError.textContent = 'Failed to update package';
+                } catch (error) {
                     formError.classList.remove('d-none');
-                });
+                    formError.textContent = 'Submission error: ' + error.message;
+                }
             });
 
             form.classList.add('needs-validation');
@@ -1117,6 +1432,7 @@
             updateExclusionIndices();
             updateActivityTypeIndices();
             updateHighlightIndices();
+            updateItinerary();
         });
     </script>
 </body>
