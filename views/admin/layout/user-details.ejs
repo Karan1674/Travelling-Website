@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<style>
+    .user-details-card {
+        background: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .user-details-card img {
+        max-width: 150px;
+        border-radius: 50%;
+        margin-bottom: 15px;
+    }
+    .user-details-card h4 {
+        margin-bottom: 20px;
+    }
+    .user-details-card .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .user-details-card .detail-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .user-details-card .detail-value {
+        color: #343a40;
+    }
+</style>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box table-opp-color-box user-details-card">
+                            <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">User Details</h4>
+                                <a href="/db-signed-in-users" class="btn btn-primary" style="width: fit-content;" aria-label="Back to users list">Back to Users</a>
+                            </div>
+                            <% if (userDetail) { %>
+                                <div class="text-center">
+                                    <img src="<%= userDetail.profilePic ? '/Uploads/profiles/' + userDetail.profilePic : '/assets/images/favicon.png' %>" alt="Profile Picture">
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Full Name</span>
+                                    <span class="detail-value"><%= userDetail.firstName %> <%= userDetail.lastName %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Email</span>
+                                    <span class="detail-value"><%= userDetail.email || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Phone</span>
+                                    <span class="detail-value"><%= userDetail.phone || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Created At</span>
+                                    <span class="detail-value"><%= userDetail.createdAt ? new Date(userDetail.createdAt).toLocaleString() : 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Updated At</span>
+                                    <span class="detail-value"><%= userDetail.updatedAt ? new Date(userDetail.updatedAt).toLocaleString() : 'N/A' %></span>
+                                </div>
+                            <% } else { %>
+                                <div class="text-center text-muted">User not found.</div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script.ejs') %>
+</body>
+</html>

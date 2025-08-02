@@ -14,7 +14,7 @@ const AgentSchema = new mongoose.Schema({
     address: { type: String },
     description: { type: String },
     profilePic: { type: String },
-    listing: { type: Number, default: 0 },
+    // listing: { type: Number, default: 0 },
     admin: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },

@@ -1,6 +1,7 @@
 import adminModel from '../models/adminModel.js';
 import agentModel from '../models/agentModel.js';
 import packageModel from '../models/packageModel.js';
+import userModel from '../models/userModel.js';
 
 import bcrypt from 'bcrypt';
 import { promises as fs } from 'fs'
@@ -33,10 +34,10 @@ export const AdminDashboard = async (req, res) => {
 
 
 
-export const getAllUsers = async (req, res) => {
+export const getAllAgents = async (req, res) => {
     try {
         const { page = 1, search = '' } = req.query;
-        const limit = 10; // Users per page
+        const limit = 10; // Agents per page
         const pageNum = Math.max(1, Number(page)); // Ensure page is at least 1
         const skip = (pageNum - 1) * limit; // Calculate skip, never negative
         const adminId = req.id;
@@ -62,19 +63,19 @@ export const getAllUsers = async (req, res) => {
         }
 
         // Get total count for pagination
-        const totalUsers = await agentModel.countDocuments(query);
-        const totalPages = Math.ceil(totalUsers / limit) || 1; // Ensure at least 1 page
+        const totalAgents = await agentModel.countDocuments(query);
+        const totalPages = Math.ceil(totalAgents / limit) || 1; // Ensure at least 1 page
 
-        // Fetch paginated users
-        const users = await agentModel
+        // Fetch paginated agents
+        const agents = await agentModel
             .find(query)
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
             .lean();
 
-        res.render('admin/layout/user', {
-            allUsers: users,
+        res.render('admin/layout/agent', {
+            allAgents: agents,
             search,
             currentPage: pageNum,
             totalPages,
@@ -82,16 +83,13 @@ export const getAllUsers = async (req, res) => {
             user: userData
         });
     } catch (error) {
-        console.error('Error fetching users:', error);
-        if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
-            return res.status(500).json({ error: 'Failed to fetch users' });
-        }
+        console.error('Error fetching agents:', error);
         res.status(500).redirect('/loginPage');
     }
 };
 
 
-export const getNewUserPage = async (req, res) => {
+export const getNewAgentPage = async (req, res) => {
     const userId = req.id;
     const isAdmin = req.isAdmin
     if (!userId) {
@@ -104,14 +102,14 @@ export const getNewUserPage = async (req, res) => {
         return res.redirect('/AdminDashboard')
     }
 
-    res.render('admin/layout/new-user', {
+    res.render('admin/layout/new-agent', {
         isAdmin,
         user: userData
     });
 };
 
 
-export const newUser = async (req, res) => {
+export const newAgent = async (req, res) => {
     try {
 
         const adminId = req.id
@@ -133,28 +131,28 @@ export const newUser = async (req, res) => {
 
         if (!firstName || !lastName || !countryCode || !phone || !city || !country || !email || !confirmEmail || !password || !confirmPassword) {
             console.log("All fields are required.");
-            return res.redirect('/new-user?error=All fields are required');
+            return res.redirect('/new-agent?error=All fields are required');
         }
 
         if (password !== confirmPassword) {
             console.log("Passwords do not match.");
-            return res.redirect('/new-user?error=Passwords do not match');
+            return res.redirect('/new-agent?error=Passwords do not match');
         }
 
         if (email !== confirmEmail) {
             console.log("Emails do not match.");
-            return res.redirect('/new-user?error=Emails do not match');
+            return res.redirect('/new-agent?error=Emails do not match');
         }
 
-        const existingUser = await agentModel.findOne({ email });
-        if (existingUser) {
-            console.log("User already exists.");
-            return res.redirect('/new-user?error=User already exists');
+        const existingAgent = await agentModel.findOne({ email });
+        if (existingAgent) {
+            console.log("Agent already exists.");
+            return res.redirect('/new-agent?error=agent already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new agentModel({
+        const agent = new agentModel({
             firstName,
             lastName,
             countryCode,
@@ -166,20 +164,20 @@ export const newUser = async (req, res) => {
             admin: adminId
         });
 
-        await user.save();
-        console.log("User registered successfully.");
-        return res.redirect('/db-admin-created-users?success=User created');
+        await agent.save();
+        console.log("Agent registered successfully.");
+        return res.redirect('/db-admin-created-agents?success=Agent created');
     } catch (error) {
-        console.log("User registration error:", error.message);
-        return res.redirect('/new-user?error=Internal server error');
+        console.log("Agent registration error:", error.message);
+        return res.redirect('/new-agent?error=Internal server error');
     }
 };
 
 
 
-export const editUserPage = async (req, res) => {
+export const editAgentPage = async (req, res) => {
     try {
-        const editUserId = req.query.editUserId
+        const editAgentId = req.query.editAgentId
         const userId = req.id;
         const isAdmin = req.isAdmin
         if (!userId) {
@@ -192,16 +190,16 @@ export const editUserPage = async (req, res) => {
             return res.redirect('/AdminDashboard')
         }
 
-        if (!editUserId) {
+        if (!editAgentId) {
             return res.redirect('/AdminDashboard')
         }
 
-        const editUserData = await agentModel.findById(editUserId)
+        const editAgentData = await agentModel.findById(editAgentId)
 
-        res.render('admin/layout/edit-user', {
+        res.render('admin/layout/edit-agent', {
             isAdmin,
             user: userData,
-            editUser: editUserData
+            editAgent: editAgentData
         });
 
     } catch (error) {
@@ -212,10 +210,11 @@ export const editUserPage = async (req, res) => {
 
 
 
-export const editUserPost = async (req, res) => {
+
+export const editAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
-        const { editUserId } = req.params;
+        const { editAgentId } = req.params;
         const { firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year } = req.body;
 
         console.log(firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year)
@@ -240,7 +239,7 @@ export const editUserPost = async (req, res) => {
         }
 
         // Build the update object
-        const editUser = {
+        const editAgent = {
             firstName,
             lastName,
             email,
@@ -256,14 +255,14 @@ export const editUserPost = async (req, res) => {
 
 
         if (req.file) {
-            editUser.profilePic = req.file.filename;
-            const user = await agentModel.findById(editUserId);
-            if (!user) {
-                return res.status(404).json({ error: "User not found" });
+            editAgent.profilePic = req.file.filename;
+            const agent = await agentModel.findById(editAgentId);
+            if (!agent) {
+                return res.status(404).json({ error: "Agent not found" });
             }
 
-            if (user.profilePic) {
-                const filePath = join(__dirname, '../Uploads/profiles', user.profilePic);
+            if (agent.profilePic) {
+                const filePath = join(__dirname, '../Uploads/profiles', agent.profilePic);
                 try {
                     await fs.unlink(filePath);
                     console.log(`Profile picture deleted: ${filePath}`);
@@ -275,44 +274,88 @@ export const editUserPost = async (req, res) => {
 
 
 
-        const updatedUser = await agentModel.findByIdAndUpdate(
-            editUserId,
-            { $set: editUser },
+        const updatedAgent = await agentModel.findByIdAndUpdate(
+            editAgentId,
+            { $set: editAgent },
             { new: true, runValidators: true }
         );
 
-        if (!updatedUser) {
-            return res.status(404).json({ error: "User not found" });
+        if (!updatedAgent) {
+            return res.status(404).json({ error: "Agent not found" });
         }
 
-        console.log("User updated successfully");
-        res.redirect('/db-admin-created-users');
+        console.log("Agent updated successfully");
+        res.redirect('/db-admin-created-agents');
     } catch (error) {
-        console.error("Error updating user:", error);
-        res.status(500).json({ error: "Failed to update user" });
+        console.error("Error updating Agent:", error);
+        res.status(500).json({ error: "Failed to update Agent" });
     }
 };
 
 
-export const deleteUser = async (req, res) => {
+
+
+export const getAgentDetails = async (req, res) => {
+    try {
+        
+        const agentId  = req.query.agentId;
+        const adminId = req.id; 
+        const isAdmin = req.isAdmin; 
+
+        // Check if admin ID is present
+        if (!adminId) {
+            console.log("Unauthorized: Admin ID missing");
+            return res.status(401).send("Unauthorized: Admin ID missing");
+        }
+
+        // Verify admin exists
+        const adminData = await adminModel.findById(adminId);
+        if (!adminData) {
+            console.log("Admin not found");
+            return res.status(401).send("Unauthorized: Admin details not found");
+        }
+
+        // Check if user is admin
+        if (!isAdmin) {
+            console.log("User is not authorized to view user details");
+            return res.status(403).send("Unauthorized: Admin access required");
+        }
+
+        // Fetch user data
+        const agent = await agentModel.findById(agentId);
+        if (!agent) {
+            console.log(`Agent not found for ID: ${agentId}`);
+            return res.redirect('/db-admin-created-agents')
+        }
+
+      
+        res.render('admin/layout/agentDetail', { user: adminData , isAdmin, agent });
+    } catch (error) {
+        console.error("Error fetching agent details:", error);
+
+    }
+};
+
+
+export const deleteAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
-        const { userId } = req.params;
+        const { agentId } = req.params;
 
 
         if (!isAdmin) {
-            console.log("User is not authorized to delete");
+            console.log("Agent is not authorized to delete");
             return res.status(403).json({ error: "Unauthorized: Admin access required" });
         }
 
 
-        const user = await agentModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
+        const agent = await agentModel.findById(agentId);
+        if (!agent) {
+            return res.status(404).json({ error: "Agent not found" });
         }
 
-        if (user.profilePic) {
-            const filePath = join(__dirname, '../Uploads/profiles', user.profilePic);
+        if (agent.profilePic) {
+            const filePath = join(__dirname, '../Uploads/profiles', agent.profilePic);
             try {
                 await fs.unlink(filePath);
                 console.log(`Profile picture deleted: ${filePath}`);
@@ -322,19 +365,114 @@ export const deleteUser = async (req, res) => {
         }
 
 
-        await agentModel.findByIdAndDelete(userId);
+        await agentModel.findByIdAndDelete(agentId);
 
-        console.log("User deleted successfully");
-        res.redirect('/db-admin-created-users');
+        console.log("Agent deleted successfully");
+        res.redirect('/db-admin-created-agents');
     } catch (error) {
-        console.error("Error deleting user:", error);
-        res.status(500).json({ error: "Failed to delete user" });
+        console.error("Error deleting agent:", error);
+        res.status(500).json({ error: "Failed to delete agent" });
     }
 };
 
 
 
+export const getSignedInUsers = async (req, res) => {
+    try {
+        const adminId = req.id; 
+        const isAdmin = req.isAdmin; 
+        const { search = '', page = 1 } = req.query;
+        const limit = 10; 
 
+        // Check if admin ID is present
+        if (!adminId) {
+            console.log("Unauthorized: Admin ID missing");
+            return res.status(401).send("Unauthorized: Admin ID missing");
+        }
+
+        // Verify admin exists
+        const adminData = await adminModel.findById(adminId);
+        if (!adminData) {
+            console.log("Admin not found");
+            return res.status(401).send("Unauthorized: Admin details not found");
+        }
+
+        // Check if user is admin
+        if (!isAdmin) {
+            console.log("User is not authorized to view signed-in users");
+            return res.status(403).send("Unauthorized: Admin access required");
+        }
+
+        // Build search query
+        const searchQuery = search
+            ? {
+                  $or: [
+                      { firstName: { $regex: search, $options: 'i' } },
+                      { lastName: { $regex: search, $options: 'i' } },
+                      { email: { $regex: search, $options: 'i' } },
+                  ],
+              }
+            : {};
+
+        
+        const users = await userModel
+            .find(searchQuery)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        const totalUsers = await userModel.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        res.render('admin/layout/signed-in-users', {
+            allUsers: users,
+            search,
+            currentPage: parseInt(page),
+            totalPages: totalPages || 1,
+            isAdmin,
+            user:adminData
+        });
+    } catch (error) {
+        console.error("Error fetching signed-in users:", error);
+        res.redirect('/loginPage')
+    }
+};
+
+
+export const getUserDetails = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const adminId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!adminId) {
+            console.log("Unauthorized: Admin ID missing");
+            return res.status(401).send("Unauthorized: Admin ID missing");
+        }
+
+        const adminData = await adminModel.findById(adminId);
+        if (!adminData) {
+            console.log("Admin not found");
+            return res.status(401).send("Unauthorized: Admin details not found");
+        }
+
+        if (!isAdmin) {
+            console.log("User is not authorized to view user details");
+            return res.status(403).send("Unauthorized: Admin access required");
+        }
+
+        const userDetail = await userModel.findById(userId);
+        if (!userDetail) {
+            console.log(`User not found for ID: ${userId}`);
+            return res.render('user-details', { userDetail: null });
+        }
+
+        res.render('admin/layout/user-details', { userDetail,isAdmin,user:adminData });
+    } catch (error) {
+        console.error("Error fetching user details:", error);
+        res.redirect('/loginPage')
+    }
+};
 
 // Validation function for package data
 const validatePackage = (data, isActive) => {
@@ -405,7 +543,8 @@ const validatePackage = (data, isActive) => {
         }
         if (!data.latitude || isNaN(data.latitude)) errors.push('Valid latitude is required');
         if (!data.longitude || isNaN(data.longitude)) errors.push('Valid longitude is required');
-        if (!data.address) errors.push('Address is required');
+        if (!data.destinationAddress) errors.push('Destination address is required');
+        if (!data.destinationCountry) errors.push('Destination country is required');
         if (!data.gallery || !Array.isArray(data.gallery) || data.gallery.length === 0) errors.push('At least one gallery image is required');
         if (!data.featuredImage) errors.push('Featured image is required');
     }
@@ -450,7 +589,6 @@ export const addPackage = async (req, res) => {
     try {
         const data = req.body;
         let adminId;
-        console.log(data)
         if (req.isAdmin) {
             adminId = req.id;
         } else {
@@ -519,6 +657,8 @@ export const addPackage = async (req, res) => {
         data.discount = Number(data.discount) || undefined;
         data.latitude = Number(data.latitude) || undefined;
         data.longitude = Number(data.longitude) || undefined;
+        data.destinationAddress = data.destinationAddress || undefined;
+        data.destinationCountry = data.destinationCountry || undefined;
 
         // Handle file uploads
         const uploadsDir = join(__dirname, '../Uploads/gallery');
@@ -533,7 +673,7 @@ export const addPackage = async (req, res) => {
         data.gallery = gallery;
         data.featuredImage = featuredImage;
 
-        // // Validate data
+        // Validate data
         const validationErrors = validatePackage(data, data.status === 'Active');
         if (validationErrors.length > 0) {
             return res.status(400).json({ error: validationErrors.join(', ') });
@@ -594,6 +734,7 @@ export const editPackagePage = async (req, res) => {
 };
 
 // Handle edit package submission
+
 export const editPackage = async (req, res) => {
     try {
         const { id } = req.params;
@@ -668,6 +809,8 @@ export const editPackage = async (req, res) => {
         data.discount = Number(data.discount) || undefined;
         data.latitude = Number(data.latitude) || undefined;
         data.longitude = Number(data.longitude) || undefined;
+        data.destinationAddress = data.destinationAddress || undefined;
+        data.destinationCountry = data.destinationCountry || undefined;
 
         // Fetch existing package
         const existingPackage = await packageModel.findById(id);
@@ -675,54 +818,49 @@ export const editPackage = async (req, res) => {
             return res.status(404).json({ error: 'Package not found' });
         }
 
+        // Handle gallery updates
+        const uploadsDir = join(__dirname, '../Uploads/gallery');
+        let gallery = existingPackage.gallery || [];
+        if (data.deletedImages) {
+            const imagesToDelete = Array.isArray(data.deletedImages) ? data.deletedImages : data.deletedImages.split(',').map(img => img.trim());
+            for (const image of imagesToDelete) {
+                if (gallery.includes(image)) {
+                    try {
+                        await fs.unlink(join(uploadsDir, image));
+                    } catch (err) {
+                        console.error(`Failed to delete image ${image}:`, err);
+                    }
+                }
+            }
+            gallery = gallery.filter(image => !imagesToDelete.includes(image));
+        }
 
-             // Handle gallery updates
-             const uploadsDir = join(__dirname, '../Uploads/gallery');
-             let gallery = existingPackage.gallery || [];
-             if (data.deletedImages) {
-                console.log(data.deletedImages)
-                 const imagesToDelete = Array.isArray(data.deletedImages) ? data.deletedImages : data.deletedImages.split(',').map(img => img.trim());
-                 for (const image of imagesToDelete) {
-                     if (gallery.includes(image)) {
-                         try {
-                             await fs.unlink(join(uploadsDir, image));
-                         } catch (err) {
-                             console.error(`Failed to delete image ${image}:`, err);
-                         }
-                     }
-                 }
-                 gallery = gallery.filter(image => !imagesToDelete.includes(image));
-             }
-     
-             if (req.files && req.files['gallery']) {
-                 const newImages = req.files['gallery'].map(file => file.filename);
-                 gallery = [...gallery, ...newImages].slice(0, 8);
-             }
-     
-             // Handle featured image
-             let featuredImage = existingPackage.featuredImage;
-             if (req.files && req.files['featuredImage']) {
-                 if (featuredImage) {
-                     try {
-                         await fs.unlink(join(uploadsDir, featuredImage));
-                     } catch (err) {
-                         console.error(`Failed to delete featured image ${featuredImage}:`, err);
-                     }
-                 }
-                 featuredImage = req.files['featuredImage'][0].filename;
-             }
-     
-             data.gallery = gallery;
-             data.featuredImage = featuredImage;
+        if (req.files && req.files['gallery']) {
+            const newImages = req.files['gallery'].map(file => file.filename);
+            gallery = [...gallery, ...newImages].slice(0, 8);
+        }
 
+        // Handle featured image
+        let featuredImage = existingPackage.featuredImage;
+        if (req.files && req.files['featuredImage']) {
+            if (featuredImage) {
+                try {
+                    await fs.unlink(join(uploadsDir, featuredImage));
+                } catch (err) {
+                    console.error(`Failed to delete featured image ${featuredImage}:`, err);
+                }
+            }
+            featuredImage = req.files['featuredImage'][0].filename;
+        }
+
+        data.gallery = gallery;
+        data.featuredImage = featuredImage;
 
         // Validate data
         const validationErrors = validatePackage(data, data.status === 'Active');
         if (validationErrors.length > 0) {
             return res.status(400).json({ error: validationErrors.join(', ') });
         }
-
-   
 
         // Remove undefined fields
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);

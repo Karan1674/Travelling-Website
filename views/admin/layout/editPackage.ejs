@@ -407,12 +407,16 @@
                                 <h4 class="mb-3">Location</h4>
                                 <div class="custom-field-wrap">
                                     <div class="form-group mb-3">
-                                        <label for="location-search" class="form-label">Search Location</label>
-                                        <input type="text" id="location-search" class="form-control" value="<%= packageData.address || '' %>" placeholder="Search for a place">
+                                        <label for="location-search" class="form-label">Search Destination</label>
+                                        <input type="text" id="location-search" class="form-control" value="<%= packageData.destinationAddress || '' %>" placeholder="Search for a destination">
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="destinationCountry" class="form-label">Destination Country</label>
+                                        <input type="text" id="destinationCountry" name="destinationCountry" class="form-control" value="<%= packageData.destinationCountry || '' %>" placeholder="Enter destination country">
                                     </div>
                                     <input type="hidden" name="latitude" id="latitude" value="<%= packageData.latitude || '' %>">
                                     <input type="hidden" name="longitude" id="longitude" value="<%= packageData.longitude || '' %>">
-                                    <input type="hidden" name="address" id="address" value="<%= packageData.address || '' %>">
+                                    <input type="hidden" name="destinationAddress" id="destinationAddress" value="<%= packageData.destinationAddress || '' %>">
                                     <div id="map" style="height: 400px; width: 100%; margin-top: 20px;" class="border rounded"></div>
                                 </div>
                             </div>
@@ -521,9 +525,7 @@
                     </div>
                 </form>
             </div>
-            <div class="copyrights text-center mt-4">
-                Copyright © 2025 Travele. All rights reserved.
-            </div>
+            <%- include('../partials/Footer.ejs') %>
         </div>
     </div>
     <style>
@@ -554,7 +556,6 @@
             background-color: #1e40af !important;
         }
         .upload-btn {
-            display: inline-block;
             background-color: #10b981 !important;
             color: white !important;
             padding: 8px 16px;
@@ -611,13 +612,7 @@
             box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
         }
     </style>
-    <script src="/admin/assets/js/jquery-3.2.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="/admin/assets/js/bootstrap.min.js"></script>
-    <script src="/admin/assets/js/canvasjs.min.js"></script>
-    <script src="/admin/assets/js/counterup.min.js"></script>
-    <script src="/admin/assets/js/jquery.slicknav.js"></script>
-    <script src="/admin/assets/js/dashboard-custom.js"></script>
+    <%- include('../partials/script.ejs') %>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
@@ -635,7 +630,8 @@
                     { id: 'itineraryDescription', label: 'Itinerary Description' },
                     { id: 'keywords', label: 'Keywords' },
                     { id: 'difficultyLevel', label: 'Difficulty Level' },
-                    { id: 'location-search', label: 'Search Location' },
+                    { id: 'location-search', label: 'Search Destination' },
+                    { id: 'destinationCountry', label: 'Destination Country' },
                     { id: 'gallery-input', label: 'Upload Images' },
                     { id: 'featured-input', label: 'Upload a Featured Image' },
                     { id: 'quote', label: 'Quote' }
@@ -650,10 +646,13 @@
                             if (field.id === 'keywords' && !input.value.trim()) {
                                 input.classList.add('is-invalid');
                             }
+                            if (field.id === 'destinationCountry' && !input.value.trim()) {
+                                input.classList.add('is-invalid');
+                            }
                         } else {
                             input.removeAttribute('required');
                             label.classList.remove('required-field');
-                            if (field.id === 'keywords') {
+                            if (field.id === 'keywords' || field.id === 'destinationCountry') {
                                 input.classList.remove('is-invalid');
                             }
                         }
@@ -770,9 +769,10 @@
             const form = document.getElementById('edit-package-form');
             const formError = document.getElementById('form-error');
             const locationSearch = document.getElementById('location-search');
+            const destinationCountryInput = document.getElementById('destinationCountry');
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
-            const addressInput = document.getElementById('address');
+            const destinationAddressInput = document.getElementById('destinationAddress');
             const addDepartureLink = document.getElementById('add-departure');
             const departuresContainer = document.getElementById('departures');
             const addInclusionLink = document.getElementById('add-inclusion');
@@ -801,14 +801,16 @@
                         if (data.results && data.results.length > 0) {
                             latitudeInput.value = lat;
                             longitudeInput.value = lng;
-                            addressInput.value = data.results[0].formatted || '';
+                            destinationAddressInput.value = data.results[0].formatted || '';
+                            destinationCountryInput.value = data.results[0].components?.country || '';
                         }
                     })
                     .catch(error => {
                         console.error('Reverse geocoding error:', error);
                         latitudeInput.value = lat;
                         longitudeInput.value = lng;
-                        addressInput.value = '';
+                        destinationAddressInput.value = '';
+                        destinationCountryInput.value = '';
                     });
             });
 
@@ -820,14 +822,16 @@
                         if (data.results && data.results.length > 0) {
                             latitudeInput.value = lat;
                             longitudeInput.value = lng;
-                            addressInput.value = data.results[0].formatted || '';
+                            destinationAddressInput.value = data.results[0].formatted || '';
+                            destinationCountryInput.value = data.results[0].components?.country || '';
                         }
                     })
                     .catch(error => {
                         console.error('Reverse geocoding error:', error);
                         latitudeInput.value = lat;
                         longitudeInput.value = lng;
-                        addressInput.value = '';
+                        destinationAddressInput.value = '';
+                        destinationCountryInput.value = '';
                     });
             });
 
@@ -840,11 +844,13 @@
                         if (data.results && data.results.length > 0) {
                             const { lat, lng } = data.results[0].geometry;
                             const formattedAddress = data.results[0].formatted;
+                            const country = data.results[0].components?.country || '';
                             map.setView([lat, lng], 15);
                             marker.setLatLng([lat, lng]);
                             latitudeInput.value = lat;
                             longitudeInput.value = lng;
-                            addressInput.value = formattedAddress || '';
+                            destinationAddressInput.value = formattedAddress || '';
+                            destinationCountryInput.value = country;
                         }
                     })
                     .catch(error => console.error('Search error:', error));
@@ -853,16 +859,14 @@
             const itineraryItemTypes = ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'];
 
             const updateItinerary = () => {
-       
                 const days = parseInt(daysInput.value) || 0;
                 totalDaysSpan.textContent = days;
                 itineraryDays.innerHTML = '';
                 const itineraryData = <%- JSON.stringify(packageData.itineraryDays || []) %>;
 
-for (let i = 0; i < days; i++) {
-    const dayData = itineraryData[i] || { activities: [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }] };
-    
-    const dayDiv = document.createElement('div');
+                for (let i = 0; i < days; i++) {
+                    const dayData = itineraryData[i] || { activities: [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }] };
+                    const dayDiv = document.createElement('div');
                     dayDiv.className = 'd-flex flex-column mb-3';
                     dayDiv.id = `itinerary-${i}`;
                     dayDiv.innerHTML = `
@@ -918,7 +922,6 @@ for (let i = 0; i < days; i++) {
                 }
                 toggleRequiredFields();
             };
-
 
             daysInput.addEventListener('input', updateItinerary);
             nightsInput.addEventListener('input', updateItinerary);
@@ -1382,6 +1385,18 @@ for (let i = 0; i < days; i++) {
                 }
             });
 
+            destinationCountryInput.addEventListener('input', () => {
+                if (statusSelect.value === 'Active') {
+                    if (destinationCountryInput.value.trim()) {
+                        destinationCountryInput.classList.remove('is-invalid');
+                    } else {
+                        destinationCountryInput.classList.add('is-invalid');
+                    }
+                } else {
+                    destinationCountryInput.classList.remove('is-invalid');
+                }
+            });
+
             categoryList.addEventListener('change', (e) => {
                 if (statusSelect.value === 'Active') {
                     toggleRequiredFields();
@@ -1391,28 +1406,14 @@ for (let i = 0; i < days; i++) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 toggleRequiredFields();
-                // console.log("hh3")
-                // if (!form.checkValidity()) {
-                //     e.stopPropagation();
-                //     console.log(statusSelect.value,keywordsInput.value.trim())
-                //     form.classList.add('was-validated');
-                //     if (statusSelect.value === 'Active' && !keywordsInput.value.trim()) {
-                //         keywordsInput.classList.add('is-invalid');
-                //     }
-                //     return;
-                // }
                 const formData = new FormData(form);
-                
-                console.log("hh")
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
                     });
-                    console.log("hh2")
                     const result = await response.json();
                     if (response.ok) {
-                        console.log("hhe")
                         window.location.href = '/db-all-packages';
                     } else {
                         formError.classList.remove('d-none');

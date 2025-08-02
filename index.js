@@ -11,6 +11,8 @@ dotenv.config();
 
 const adminRoutes = require('./routes/adminRoute');
 const authRoutes = require('./routes/authRoutes');
+const clientRoutes = require('./routes/clientRoutes');
+
 app.use(cookieParser());
 
 
@@ -31,9 +33,9 @@ connectDB()
 
 
 
-app.use('',adminRoutes)
 app.use('',authRoutes)
-
+app.use('',adminRoutes)
+app.use('',clientRoutes)
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

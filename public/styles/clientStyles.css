@@ -2476,7 +2476,7 @@ input[type=submit]:focus {
   position: relative;
 }
 .shape-search-section .slider-shape {
-  background-image: url(assets/images/slider-pattern.png);
+  background-image: url(/assets/images/slider-pattern.png);
   background-size: cover;
   background-repeat: no-repeat;
   content: "";
@@ -4571,7 +4571,7 @@ Due to the split circle of progress-left and progress right, we must use the ani
 }
 
 .inner-shape {
-  background-image: url(assets/images/slider-pattern.png);
+  background-image: url(/assets/images/slider-pattern.png);
   background-size: cover;
   background-repeat: no-repeat;
   content: "";

@@ -38,10 +38,11 @@ const packageSchema = new mongoose.Schema({
   difficultyLevel: { type: String, enum: ['Easy', 'Moderate', 'Challenging'] },
   latitude: { type: Number },
   longitude: { type: Number },
-  address: { type: String },
+  destinationAddress: { type: String },
+  destinationCountry: { type: String },
   gallery: [{ type: String }],
   featuredImage: { type: String },
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   status: { type: String, enum: ['Pending', 'Active', 'Expired'], required: true }
 }, { timestamps: true });
 

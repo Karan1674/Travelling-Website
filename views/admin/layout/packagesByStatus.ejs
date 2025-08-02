@@ -47,7 +47,7 @@
                                             <td>
                                                 <%= package.packageType ? package.packageType : 'Not specified' %>
                                             </td>
-                                            <td><%= package.address ? package.address : 'Not specified' %></td>
+                                            <td><%= package.destinationCountry ? package.destinationCountry : 'Not specified' %></td>
                                             <td>
                                                 <span class="badge badge-<%= package.status === 'Active' ? 'success' : package.status === 'Pending' ? 'primary' : 'danger' %>">
                                                     <%= package.status %>
@@ -107,13 +107,7 @@
         </div>
     </div>
     
-    <script src="/admin/assets/js/jquery-3.2.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="/admin/assets/js/bootstrap.min.js"></script>
-    <script src="/admin/assets/js/canvasjs.min.js"></script>
-    <script src="/admin/assets/js/counterup.min.js"></script>
-    <script src="/admin/assets/js/jquery.slicknav.js"></script>
-    <script src="/admin/assets/js/dashboard-custom.js"></script>
+    <%- include('../partials/script.ejs') %>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');

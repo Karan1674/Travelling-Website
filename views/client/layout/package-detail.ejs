@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<head>
+    <style>
+        /* Accordion Styling */
+        .accordion-item {
+            border: 1px solid #e5e5e5 !important;
+            border-radius: 6px !important;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+        .accordion-header {
+            cursor: pointer;
+            padding: 1rem;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .accordion-header:hover {
+            background-color: #f9f9f9;
+        }
+        .accordion-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #000000;
+            display: flex;
+            align-items: center;
+        }
+        .accordion-header i {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+            color: #000000;
+        }
+        .accordion-header .toggle-icon {
+            margin-left: auto;
+            font-size: 0.9rem;
+            color: #000000;
+            transition: transform 0.2s ease;
+        }
+        .accordion-header[aria-expanded="true"] .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .accordion-body {
+            padding: 1rem;
+            background-color: #ffffff;
+            font-size: 1rem;
+            color: #000000;
+        }
+        /* Program Section Styling */
+        .itinerary-timeline-wrap {
+            padding: 0.5rem 0;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #e5e5e5;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.75rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background-color: #000000;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+        }
+        .activity-card {
+            background: #ffffff;
+            padding: 0.75rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .activity-card h5 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #000000;
+            margin: 0 0 0.5rem;
+        }
+        .activity-subtitle {
+            font-size: 0.9rem;
+            color: #333333;
+            margin: 0 0 0.5rem;
+        }
+        .activity-time {
+            font-size: 0.85rem;
+            color: #000000;
+            margin: 0 0 0.5rem;
+        }
+        .activity-type {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            color: #000000;
+            background-color: #e5e5e5;
+            border-radius: 10px;
+        }
+        /* Additional Info Styling */
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .info-list li {
+            font-size: 0.95rem;
+            color: #000000;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .info-list li i {
+            font-size: 0.95rem;
+            margin-right: 0.5rem;
+            color: #000000;
+        }
+        .quote-block {
+            border-left: 3px solid #000000;
+            padding-left: 1rem;
+            margin: 1rem 0;
+        }
+        .quote-block p {
+            font-style: italic;
+            color: #333333;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        .keywords-wrap .badge {
+            background-color: #e5e5e5;
+            color: #000000;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            border-radius: 10px;
+            margin: 0.2rem;
+        }
+        /* Review Section Styling */
+        .rating-start {
+            display: inline-block;
+            width: 100px;
+            height: 20px;
+            background: url('/assets/images/rating-stars.png') no-repeat;
+            background-size: contain;
+        }
+        .rating-start span {
+            display: block;
+            height: 100%;
+            background: url('/assets/images/rating-stars-filled.png') no-repeat;
+            background-size: contain;
+        }
+        @media (max-width: 768px) {
+            .accordion-header h3 {
+                font-size: 1rem;
+            }
+            .accordion-body {
+                font-size: 0.95rem;
+            }
+            .timeline {
+                padding-left: 1.5rem;
+            }
+            .timeline-item {
+                padding-left: 1rem;
+            }
+            .timeline-item::before {
+                left: -0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<%- include('../partials/Loader') %>
+
+<div id="page" class="full-page">
+    <%- include('../partials/Navbar') %>
+
+    <main id="content" class="site-main">
+        <!-- Inner Banner -->
+        <section class="inner-banner-wrap">
+            <div class="inner-baner-container" style="background-image: url(<%= package && package.featuredImage ? package.featuredImage : '/assets/images/inner-banner.jpg' %>);">
+                <div class="container">
+                    <div class="inner-banner-content">
+                        <h1 class="inner-title"><%= package ? package.title : 'Package Not Found' %></h1>
+                    </div>
+                </div>
+            </div>
+            <div class="inner-shape"></div>
+        </section>
+
+        <!-- Package Detail Section -->
+        <div class="single-tour-section">
+            <div class="container">
+                <% if (package) { %>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="single-tour-inner">
+                                <h2><%= package.title %></h2>
+                                <figure class="feature-image">
+                                    <img src="<%= package.featuredImage || '/assets/images/img27.jpg' %>" alt="<%= package.title %>">
+                                    <div class="package-meta text-center">
+                                        <ul>
+                                            <li>
+                                                <i class="far fa-clock"></i>
+                                                <%= package.tripDuration.days %> days / <%= package.tripDuration.nights %> night
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-user-friends"></i>
+                                                People: <%= package.groupSize %>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-map-marked-alt"></i>
+                                                <%= package.destinationCountry %>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </figure>
+                                <div class="tab-container">
+                                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">DESCRIPTION</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="program-tab" data-bs-toggle="tab" href="#program" role="tab" aria-controls="program" aria-selected="false">PROGRAM</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="additional-info-tab" data-bs-toggle="tab" href="#additional-info" role="tab" aria-controls="additional-info" aria-selected="false">ADDITIONAL INFO</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="review-tab" data-bs-toggle="tab" href="#review" role="tab" aria-controls="review" aria-selected="false">REVIEW</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="map-tab" data-bs-toggle="tab" href="#map" role="tab" aria-controls="map" aria-selected="false">MAP</a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content" id="myTabContent">
+                                        <!-- Description Tab -->
+                                        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                                            <div class="overview-content">
+                                                <p><%= package.description || 'No description available.' %></p>
+                                            </div>
+                                        </div>
+                                        <!-- Program Tab -->
+                                        <div class="tab-pane fade" id="program" role="tabpanel" aria-labelledby="program-tab">
+                                            <div class="itinerary-content">
+                                                <h3 class="mb-3">Program <span class="text-muted fs-5">(<%= package.tripDuration.days %> days)</span></h3>
+                                                <p class="text-muted mb-3"><%= package.itineraryDescription || 'Explore the highlights of this amazing journey.' %></p>
+                                            </div>
+                                            <div class="itinerary-timeline-wrap w-100">
+                                                <% if (package.itineraryDays && package.itineraryDays.length > 0) { %>
+                                                    <div class="accordion accordion-flush" id="itineraryAccordion">
+                                                        <% package.itineraryDays.forEach((day, index) => { %>
+                                                            <div class="accordion-item">
+                                                                <div class="accordion-header" id="dayHeading<%= index %>" data-bs-toggle="collapse" data-bs-target="#dayCollapse<%= index %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" aria-controls="dayCollapse<%= index %>">
+                                                                    <h3><i class="fas fa-calendar-day"></i> Day <%= day.day %> <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                                </div>
+                                                                <div id="dayCollapse<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" aria-labelledby="dayHeading<%= index %>" data-bs-parent="#itineraryAccordion">
+                                                                    <div class="accordion-body">
+                                                                        <% if (day.activities && day.activities.length > 0) { %>
+                                                                            <div class="timeline">
+                                                                                <% day.activities.forEach(activity => { %>
+                                                                                    <div class="timeline-item">
+                                                                                        <div class="activity-card">
+                                                                                            <h5><i class="fas fa-map-pin me-1"></i><%= activity.title %></h5>
+                                                                                            <p class="activity-subtitle"><%= activity.sub_title %></p>
+                                                                                            <p class="activity-time">
+                                                                                                <i class="far fa-clock me-1"></i>
+                                                                                                <%= activity.start_time %> - <%= activity.end_time %>
+                                                                                            </p>
+                                                                                            <% if (activity.type) { %>
+                                                                                                <span class="activity-type"><i class="fas fa-tag me-1"></i><%= activity.type %></span>
+                                                                                            <% } %>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                <% }) %>
+                                                                            </div>
+                                                                        <% } else { %>
+                                                                            <p class="text-muted">No activities scheduled for this day.</p>
+                                                                        <% } %>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <% }) %>
+                                                    </div>
+                                                <% } else { %>
+                                                    <p class="text-muted">No itinerary details available.</p>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <!-- Additional Info Tab -->
+                                        <div class="tab-pane fade" id="additional-info" role="tabpanel" aria-labelledby="additional-info-tab">
+                                            <div class="additional-info-content">
+                                                <h3 class="mb-3">Additional Information</h3>
+                                                <div class="accordion accordion-flush" id="additionalInfoAccordion">
+                                                    <!-- Inclusions -->
+                                                    <% if (package.inclusions && package.inclusions.length > 0) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="inclusionsHeading" data-bs-toggle="collapse" data-bs-target="#inclusionsCollapse" aria-expanded="true" aria-controls="inclusionsCollapse">
+                                                                <h3><i class="fas fa-check-circle"></i> Inclusions <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="inclusionsCollapse" class="accordion-collapse collapse show" aria-labelledby="inclusionsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <ul class="info-list">
+                                                                        <% package.inclusions.forEach(item => { %>
+                                                                            <li><i class="fas fa-check"></i> <%= item %></li>
+                                                                        <% }) %>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                    <!-- Exclusions -->
+                                                    <% if (package.exclusions && package.exclusions.length > 0) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="exclusionsHeading" data-bs-toggle="collapse" data-bs-target="#exclusionsCollapse" aria-expanded="false" aria-controls="exclusionsCollapse">
+                                                                <h3><i class="fas fa-times-circle"></i> Exclusions <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="exclusionsCollapse" class="accordion-collapse collapse" aria-labelledby="exclusionsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <ul class="info-list">
+                                                                        <% package.exclusions.forEach(item => { %>
+                                                                            <li><i class="fas fa-times"></i> <%= item %></li>
+                                                                        <% }) %>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                    <!-- Highlights -->
+                                                    <% if (package.highlights && package.highlights.length > 0) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="highlightsHeading" data-bs-toggle="collapse" data-bs-target="#highlightsCollapse" aria-expanded="false" aria-controls="highlightsCollapse">
+                                                                <h3><i class="fas fa-star"></i> Highlights <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="highlightsCollapse" class="accordion-collapse collapse" aria-labelledby="highlightsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <ul class="info-list">
+                                                                        <% package.highlights.forEach(highlight => { %>
+                                                                            <li><i class="fas fa-star"></i> <%= highlight %></li>
+                                                                        <% }) %>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                    <!-- Details -->
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="detailsHeading" data-bs-toggle="collapse" data-bs-target="#detailsCollapse" aria-expanded="false" aria-controls="detailsCollapse">
+                                                            <h3><i class="fas fa-info-circle"></i> Details <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="detailsCollapse" class="accordion-collapse collapse" aria-labelledby="detailsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <ul class="info-list">
+                                                                    <li><i class="fas fa-info-circle"></i> <strong>Type:</strong> <%= package.packageType || 'N/A' %></li>
+                                                                    <li><i class="fas fa-info-circle"></i> <strong>Category:</strong> <%= package.category || 'N/A' %></li>
+                                                                    <li><i class="fas fa-info-circle"></i> <strong>Difficulty Level:</strong> <%= package.difficultyLevel || 'N/A' %></li>
+                                                                    <li><i class="fas fa-info-circle"></i> <strong>Group Size:</strong> <%= package.groupSize || 'N/A' %></li>
+                                                                    <li><i class="fas fa-info-circle"></i> <strong>Destination:</strong> <%= package.destinationAddress ? `${package.destinationAddress}, ${package.destinationCountry}` : package.destinationCountry || 'N/A' %></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Departure Dates -->
+                                                    <% if (package.multipleDepartures && package.multipleDepartures.length > 0) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="departuresHeading" data-bs-toggle="collapse" data-bs-target="#departuresCollapse" aria-expanded="false" aria-controls="departuresCollapse">
+                                                                <h3><i class="fas fa-calendar-alt"></i> Departure Dates <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="departuresCollapse" class="accordion-collapse collapse" aria-labelledby="departuresHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <ul class="info-list">
+                                                                        <% package.multipleDepartures.forEach(departure => { %>
+                                                                            <li><i class="fas fa-calendar-check"></i> <%= departure.dateTime.toDateString() %> - <%= departure.location %></li>
+                                                                        <% }) %>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                    <!-- Keywords -->
+                                                    <% if (package.keywords && package.keywords.length > 0) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="keywordsHeading" data-bs-toggle="collapse" data-bs-target="#keywordsCollapse" aria-expanded="false" aria-controls="keywordsCollapse">
+                                                                <h3><i class="fas fa-tags"></i> Keywords <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="keywordsCollapse" class="accordion-collapse collapse" aria-labelledby="keywordsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <div class="keywords-wrap d-flex flex-wrap gap-2">
+                                                                        <% package.keywords.forEach(keyword => { %>
+                                                                            <span class="badge"><i class="fas fa-tag me-1"></i><%= keyword %></span>
+                                                                        <% }) %>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                    <!-- Quote -->
+                                                    <% if (package.quote) { %>
+                                                        <div class="accordion-item">
+                                                            <div class="accordion-header" id="quoteHeading" data-bs-toggle="collapse" data-bs-target="#quoteCollapse" aria-expanded="false" aria-controls="quoteCollapse">
+                                                                <h3><i class="fas fa-quote-left"></i> Quote <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                            </div>
+                                                            <div id="quoteCollapse" class="accordion-collapse collapse" aria-labelledby="quoteHeading" data-bs-parent="#additionalInfoAccordion">
+                                                                <div class="accordion-body">
+                                                                    <blockquote class="quote-block">
+                                                                        <p>"<%= package.quote %>"</p>
+                                                                    </blockquote>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Review Tab -->
+                                        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+                                            <div class="summary-review">
+                                                <div class="review-score">
+                                                    <span><%= averageRating || '4.9' %></span>
+                                                </div>
+                                                <div class="review-score-content">
+                                                    <h3>
+                                                        Excellent
+                                                        <span>( Based on <%= reviewCount || 24 %> reviews )</span>
+                                                    </h3>
+                                                    <p>Tincidunt iaculis pede mus lobortis hendrerit eveniet impedit aenean mauris qui, pharetra rem doloremque laboris euismod deserunt non, cupiditate, vestibulum.</p>
+                                                </div>
+                                            </div>
+                                            <div class="comment-area">
+                                                <h3 class="comment-title"><%= reviewCount || 3 %> Reviews</h3>
+                                                <div class="comment-area-inner">
+                                                    <ol>
+                                                        <% if (package.reviews && package.reviews.length > 0) { %>
+                                                            <% package.reviews.forEach(review => { %>
+                                                                <li>
+                                                                    <figure class="comment-thumb">
+                                                                        <img src="/assets/images/default-user.jpg" alt="">
+                                                                    </figure>
+                                                                    <div class="comment-content">
+                                                                        <div class="comment-header">
+                                                                            <h5 class="author-name"><%= review.name %></h5>
+                                                                            <span class="post-on"><%= review.date.toDateString() %></span>
+                                                                            <div class="rating-wrap">
+                                                                                <div class="rating-start" title="Rated <%= review.rating %> out of 5">
+                                                                                    <span style="width: <%= review.rating * 20 %>%"></span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <p><%= review.comment %></p>
+                                                                        <a href="#" class="reply"><i class="fas fa-reply"></i>Reply</a>
+                                                                    </div>
+                                                                </li>
+                                                            <% }) %>
+                                                        <% } else { %>
+                                                            <!-- Static placeholder reviews -->
+                                                            <li>
+                                                                <figure class="comment-thumb">
+                                                                    <img src="/assets/images/img20.jpg" alt="">
+                                                                </figure>
+                                                                <div class="comment-content">
+                                                                    <div class="comment-header">
+                                                                        <h5 class="author-name">Tom Sawyer</h5>
+                                                                        <span class="post-on">Jan 10, 2020</span>
+                                                                        <div class="rating-wrap">
+                                                                            <div class="rating-start" title="Rated 5 out of 5">
+                                                                                <span style="width: 90%;"></span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p>Officia amet posuere voluptates, mollit montes eaque accusamus laboriosam quisque cupidatat dolor pariatur, pariatur auctor.</p>
+                                                                    <a href="#" class="reply"><i class="fas fa-reply"></i>Reply</a>
+                                                                </div>
+                                                            </li>
+                                                        <% } %>
+                                                    </ol>
+                                                </div>
+                                                <div class="comment-form-wrap">
+                                                    <h3 class="comment-title">Leave a Review</h3>
+                                                    <form class="comment-form" action="/review/<%= package._id %>" method="POST">
+                                                        <div class="full-width rate-wrap">
+                                                            <label>Your rating</label>
+                                                            <div class="procduct-rate">
+                                                                <input type="number" name="rating" min="1" max="5" required>
+                                                            </div>
+                                                        </div>
+                                                        <p>
+                                                            <input type="text" name="name" placeholder="Name" value="<%= user ? user.name : '' %>" required>
+                                                        </p>
+                                                        <p>
+                                                            <input type="email" name="email" placeholder="Email" value="<%= user ? user.email : '' %>" required>
+                                                        </p>
+                                                        <p>
+                                                            <input type="text" name="subject" placeholder="Subject" required>
+                                                        </p>
+                                                        <p>
+                                                            <textarea rows="6" name="comment" placeholder="Your review" required></textarea>
+                                                        </p>
+                                                        <p>
+                                                            <input type="submit" name="submit" value="Submit">
+                                                        </p>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Map Tab -->
+                                        <div class="tab-pane fade" id="map" role="tabpanel" aria-labelledby="map-tab">
+                                            <div class="map-area">
+                                                <iframe
+                                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000!2d<%= package.longitude %>!3d<%= package.latitude %>!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z<%= package.latitude %>%2C<%= package.longitude %>!5e0!3m2!1sen!2snp!4v1579777829477!5m2!1sen!2snp"
+                                                    height="450"
+                                                    allowfullscreen=""
+                                                ></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Gallery -->
+                                <% if (package.gallery && package.gallery.length > 0) { %>
+                                    <div class="single-tour-gallery">
+                                        <h3>GALLERY / PHOTOS</h3>
+                                        <div class="single-tour-slider">
+                                            <% package.gallery.forEach(image => { %>
+                                                <div class="single-tour-item">
+                                                    <figure class="feature-image">
+                                                        <img src="<%= image %>" alt="<%= package.title %>">
+                                                    </figure>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="sidebar">
+                                <div class="package-price">
+                                    <h5 class="price">
+                                        <span>$<%= package.salePrice || package.regularPrice %></span> / per person
+                                    </h5>
+                                    <% if (package.discount && package.salePrice < package.regularPrice) { %>
+                                        <p class="text-muted">Regular Price: <span class="text-decoration-line-through">$<%= package.regularPrice %></span> (<%= package.discount %>% OFF)</p>
+                                    <% } %>
+                                    <div class="start-wrap">
+                                        <div class="rating-start" title="Rated 5 out of 5">
+                                            <span style="width: 60%"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="widget-bg booking-form-wrap">
+                                    <h4 class="bg-title">Booking</h4>
+                                    <form class="booking-form" action="/booking/<%= package._id %>" method="POST">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <input name="name_booking" type="text" placeholder="Full Name" value="<%= user ? user.name : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <input name="email_booking" type="email" placeholder="Email" value="<%= user ? user.email : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <input name="phone_booking" type="text" placeholder="Number">
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <select name="departure_date" required>
+                                                        <option value="">Select Departure Date</option>
+                                                        <% package.multipleDepartures.forEach(departure => { %>
+                                                            <option value="<%= departure.dateTime %>"><%= departure.dateTime.toDateString() %> - <%= departure.location %></option>
+                                                        <% }) %>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <h4>Add Options</h4>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="checkbox-list">
+                                                        <input type="checkbox" name="options" value="Tour guide">
+                                                        <span class="custom-checkbox"></span>
+                                                        Tour guide
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="checkbox-list">
+                                                        <input type="checkbox" name="options" value="Insurance">
+                                                        <span class="custom-checkbox"></span>
+                                                        Insurance
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="checkbox-list">
+                                                        <input type="checkbox" name="options" value="Dinner">
+                                                        <span class="custom-checkbox"></span>
+                                                        Dinner
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="checkbox-list">
+                                                        <input type="checkbox" name="options" value="Bike rent">
+                                                        <span class="custom-checkbox"></span>
+                                                        Bike rent
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group submit-btn">
+                                                    <input type="submit" name="submit" value="Book Now">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="widget-bg information-content text-center">
+                                    <h5>TRAVEL TIPS</h5>
+                                    <h3>NEED TRAVEL RELATED TIPS & INFORMATION</h3>
+                                    <p><%= package.quote || 'Mollit voluptatem perspiciatis convallis elementum corporis quo veritatis aliquid blandit.' %></p>
+                                    <a href="/contact" class="button-primary">GET A QUOTE</a>
+                                </div>
+                                <div class="travel-package-content text-center" style="background-image: url(/assets/images/img11.jpg);">
+                                    <h5>MORE PACKAGES</h5>
+                                    <h3>OTHER TRAVEL PACKAGES</h3>
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                                    <ul>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Vacation packages</a></li>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Honeymoon packages</a></li>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>New year packages</a></li>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Weekend packages</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Subscribe Section -->
+        <section class="subscribe-section" style="background-image: url(/assets/images/img16.jpg);">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="section-heading section-heading-white">
+                            <h5 class="dash-style">HOLIDAY PACKAGE OFFER</h5>
+                            <h2>HOLIDAY SPECIAL <%= package && package.discount ? package.discount + '% OFF' : '25% OFF' %>!</h2>
+                            <h4>Sign up now to receive hot special offers and information about the best tour packages, updates, and discounts!</h4>
+                            <div class="newsletter-form">
+                                <form action="/subscribe" method="POST">
+                                    <input type="email" name="email" placeholder="Your Email Address" required>
+                                    <input type="submit" name="signup" value="SIGN UP NOW!">
+                                </form>
+                            </div>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="colophon" class="site-footer footer-primary">
+        <div class="top-footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <aside class="widget widget_text">
+                            <h3 class="widget-title">About Travel</h3>
+                            <div class="textwidget widget-text">
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
+                            </div>
+                            <div class="award-img">
+                                <a href="#"><img src="/assets/images/logo6.png" alt=""></a>
+                                <a href="#"><img src="/assets/images/logo2.png" alt=""></a>
+                            </div>
+                        </aside>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <aside class="widget widget_text">
+                            <h3 class="widget-title">CONTACT INFORMATION</h3>
+                            <div class="textwidget widget-text">
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                <ul>
+                                    <li><a href="#"><i class="fas fa-phone-alt"></i> +01 (977) 2599 12</a></li>
+                                    <li><a href="#"><i class="fas fa-envelope"></i> company@domain.com</a></li>
+                                    <li><i class="fas fa-map-marker-alt"></i> 3146 Koontz, California</li>
+                                </ul>
+                            </div>
+                        </aside>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <aside class="widget widget_recent_post">
+                            <h3 class="widget-title">Latest Post</h3>
+                            <ul>
+                                <li>
+                                    <h5><a href="#">Life is a beautiful journey not a destination</a></h5>
+                                    <div class="entry-meta">
+                                        <span class="post-on"><a href="#">August 17, 2021</a></span>
+                                        <span class="comments-link"><a href="#">No Comments</a></span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <h5><a href="#">Take only memories, leave only footprints</a></h5>
+                                    <div class="entry-meta">
+                                        <span class="post-on"><a href="#">August 17, 2021</a></span>
+                                        <span class="comments-link"><a href="#">No Comments</a></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </aside>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <aside class="widget widget_newslatter">
+                            <h3 class="widget-title">SUBSCRIBE US</h3>
+                            <div class="widget-text">
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                            </div>
+                            <form class="newslatter-form" action="/subscribe" method="POST">
+                                <input type="email" name="email" placeholder="Your Email..">
+                                <input type="submit" name="submit" value="SUBSCRIBE NOW">
+                            </form>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="buttom-footer">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <div class="footer-menu">
+                            <ul>
+                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Term & Condition</a></li>
+                                <li><a href="#">FAQ</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <div class="footer-logo">
+                            <a href="#"><img src="/assets/images/travele-logo.png" alt=""></a>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="copy-right text-right">Copyright © 2025 Travele. All rights reserved</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <a id="backTotop" href="#" class="to-top-icon">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+    <!-- Custom Search Field -->
+    <div class="header-search-form">
+        <div class="container">
+            <div class="header-search-container">
+                <form class="search-form" role="search" method="get" action="/search">
+                    <input type="text" name="s" placeholder="Enter your text...">
+                </form>
+                <a href="#" class="search-close">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<%- include('../partials/Script') %>
+<!-- Dependencies -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

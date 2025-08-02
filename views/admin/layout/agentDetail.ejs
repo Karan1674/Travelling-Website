@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<style>
+    /* Inherit popup styles from the reference page */
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10500;
+    }
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10501;
+        max-width: 400px;
+        width: 90%;
+        padding: 20px;
+    }
+    .popup-overlay.show, .popup.show {
+        display: block;
+    }
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .popup-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    .popup-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    .popup-close:hover {
+        color: #343a40;
+    }
+    .popup-body {
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+    .popup-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    @media (max-width: 576px) {
+        .popup {
+            width: 95%;
+        }
+    }
+    /* Custom styles for user details */
+    .user-details-card {
+        background: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .user-details-card img {
+        max-width: 150px;
+        /* border-radius: 50%; */
+        margin-bottom: 15px;
+    }
+    .user-details-card h4 {
+        margin-bottom: 20px;
+    }
+    .user-details-card .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .user-details-card .detail-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .user-details-card .detail-value {
+        color: #343a40;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+</style>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box table-opp-color-box user-details-card">
+                            <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">Agent Details</h4>
+                                <a href="/db-admin-created-agents" class="btn btn-primary" style="width: fit-content;" aria-label="Back to agents list">Back to Agents</a>
+                            </div>
+                            <% if (agent) { %>
+                                <div class="text-center">
+                                    <img src="<%= agent.profilePic ? '/Uploads/profiles/' + agent.profilePic : '/assets/images/favicon.png' %>" alt="Profile Picture">
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Full Name</span>
+                                    <span class="detail-value"><%= agent.firstName %> <%= agent.lastName %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Email</span>
+                                    <span class="detail-value"><%= agent.email || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Phone</span>
+                                    <span class="detail-value"><%= agent.countryCode ? agent.countryCode : '' %> <%= agent.phone || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Date of Birth</span>
+                                    <span class="detail-value"><%= agent.dateOfBirth ? new Date(agent.dateOfBirth).toLocaleDateString() : 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Country</span>
+                                    <span class="detail-value"><%= agent.country || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">State</span>
+                                    <span class="detail-value"><%= agent.state || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">City</span>
+                                    <span class="detail-value"><%= agent.city || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Address</span>
+                                    <span class="detail-value"><%= agent.address || 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Description</span>
+                                    <span class="detail-value"><%= agent.description || 'N/A' %></span>
+                                </div>
+                           
+                                <div class="detail-row">
+                                    <span class="detail-label">Created At</span>
+                                    <span class="detail-value"><%= agent.createdAt ? new Date(agent.createdAt).toLocaleString() : 'N/A' %></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Updated At</span>
+                                    <span class="detail-value"><%= agent.updatedAt ? new Date(agent.updatedAt).toLocaleString() : 'N/A' %></span>
+                                </div>
+                                <div class="action-buttons">
+                                    <a href="/edit-agent?editAgentId=<%= agent._id %>" class="btn btn-success" aria-label="Edit agent"><i class="far fa-edit"></i> Edit</a>
+                                    <button class="btn btn-danger delete-btn" data-agentId="<%= agent._id %>" aria-label="Delete agent"><i class="far fa-trash-alt"></i> Delete</button>
+                                </div>
+                            <% } else { %>
+                                <div class="text-center text-muted">Agent not found.</div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-overlay" id="deletePopupOverlay"></div>
+            <div class="popup" id="deletePopup">
+                <div class="popup-header">
+                    <h5>Confirm Delete</h5>
+                    <button class="popup-close" id="popupCloseBtn" aria-label="Close popup">&times;</button>
+                </div>
+                <div class="popup-body">
+                    Are you sure you want to delete this agent?
+                </div>
+                <div class="popup-footer">
+                    <button type="button" class="btn btn-secondary" id="popupCancelBtn" aria-label="Cancel delete">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="popupConfirmDeleteBtn" aria-label="Confirm delete">Delete</button>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script.ejs') %>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteButton = document.querySelector('.delete-btn');
+            const popupOverlay = document.getElementById('deletePopupOverlay');
+            const popup = document.getElementById('deletePopup');
+            const cancelBtn = document.getElementById('popupCancelBtn');
+            const closeBtn = document.getElementById('popupCloseBtn');
+            const confirmDeleteBtn = document.getElementById('popupConfirmDeleteBtn');
+
+            // Handle delete popup
+            if (!popupOverlay || !popup || !cancelBtn || !closeBtn || !confirmDeleteBtn) {
+                console.error('Popup elements not found');
+                return;
+            }
+
+            const showPopup = () => {
+                popupOverlay.classList.add('show');
+                popup.classList.add('show');
+            };
+
+            const hidePopup = () => {
+                popupOverlay.classList.remove('show');
+                popup.classList.remove('show');
+                confirmDeleteBtn.removeAttribute('data-agentId');
+            };
+
+            if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                    const agentId = deleteButton.getAttribute('data-agentId');
+                    if (agentId) {
+                        confirmDeleteBtn.setAttribute('data-agentId', agentId);
+                        showPopup();
+                    } else {
+                        console.error('Agent ID not found on button');
+                    }
+                });
+            }
+
+            confirmDeleteBtn.addEventListener('click', () => {
+                const agentId = confirmDeleteBtn.getAttribute('data-agentId');
+                if (agentId) {
+                    window.location.href = `/delete-agent/${agentId}`;
+                    hidePopup();
+                } else {
+                    console.error('Agent ID not found on confirm button');
+                }
+            });
+
+            cancelBtn.addEventListener('click', hidePopup);
+            closeBtn.addEventListener('click', hidePopup);
+            popupOverlay.addEventListener('click', hidePopup);
+        });
+    </script>
+</body>
+</html>

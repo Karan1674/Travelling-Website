@@ -128,13 +128,14 @@ export const signupUser = async (req, res) => {
 
 export const loginPage = async (req, res) => {
     try {
-        // const token = req.cookies?.authToken;
+        const token = req.cookies?.authToken;
 
-        // if (!token) {
-        //     return res.render('shared/layout/login');
-        // }
-        // const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        const userId = req.id;
+        if (!token) {
+            return res.render('shared/layout/login');
+        }
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const userId = decoded.userId;
+
         if(!userId){
             return res.render('shared/layout/login');
         }

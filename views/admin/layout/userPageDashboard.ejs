@@ -91,28 +91,28 @@
                 <div style="margin-top: 60px;" class="row row-cols-xxl-4  row-cols-lg-3 row-cols-md-2 row-cols-1 g-4">
                     
                     <div class="col mb-4">
-                        <a href="/db-admin-created-users" class="text-decoration-none">
+                        <a href="/db-admin-created-agents" class="text-decoration-none">
                             <div class="card-wrapper d-flex">
                                 <div class="card-icon green">
                                     <i class="fa fa-user-plus" aria-hidden="true"></i>
                                 </div>
                                 <div class="card-content">
-                                    <h4>Users Created by Admin</h4>
-                                    <span>List of users created by admin</span>
+                                    <h4>Admin Agents</h4>
+                                    <span>List of agents created by admin</span>
                                 </div>
                             </div>
                         </a>
                     </div>
 
                     <div class="col mb-4">
-                        <a href="/db-signed-users" class="text-decoration-none">
+                        <a href="/db-signed-in-users" class="text-decoration-none">
                             <div class="card-wrapper d-flex">
                                 <div class="card-icon">
                                     <i class="fa fa-users" aria-hidden="true"></i>
                                 </div>
                                 <div class="card-content">
                                     <h4>Signed Up Users</h4>
-                                    <span>List of users who signed up independently</span>
+                                    <span>List of users who signed up</span>
                                 </div>
                             </div>
                         </a>
@@ -122,12 +122,6 @@
             <%- include('../partials/Footer.ejs') %>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="/admin/assets/js/bootstrap.min.js"></script>
-    <script src="/admin/assets/js/canvasjs.min.js"></script>
-    <script src="/admin/assets/js/counterup.min.js"></script>
-    <script src="/admin/assets/js/jquery.slicknav.js"></script>
-    <script src="/admin/assets/js/dashboard-custom.js"></script>
+    <%- include('../partials/script.ejs') %>
 </body>
 </html>

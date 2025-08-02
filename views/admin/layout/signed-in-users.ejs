@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box table-opp-color-box">
+                            <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">Signed-In Users</h4>
+                            </div>
+                            <div class="user-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <form id="search-form" action="/db-signed-in-users" method="get" style="flex: 1; margin-right: 20px;">
+                                    <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                                        <input type="text" name="search" id="search-input" placeholder="Search by user name or email" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <button type="submit" aria-label="Search users" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-search" style="color: #007bff;"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Profile Pic</th>
+                                            <th>Name</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>View</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (allUsers && allUsers.length > 0) { %>
+                                            <% allUsers.forEach((user) => { %>
+                                                <tr>
+                                                    <td>
+                                                        <span class="list-img">
+                                                            <img src="<%= user.profilePic ? '/Uploads/profiles/' + user.profilePic : '/assets/images/favicon.png' %>" alt="Profile Picture">
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a href="#">
+                                                            <span class="list-name">
+                                                                <%= user.firstName %> <%= user.lastName %>
+                                                            </span>
+                                                        </a>
+                                                    </td>
+                                                    <td><%= user.phone || 'N/A' %></td>
+                                                    <td><%= user.email || 'N/A' %></td>
+                                                    <td>
+                                                        <span class="badge badge-success" onclick="window.location.href='/user-details?userId=<%= user._id %>'" aria-label="View User"><i class="far fa-eye"></i></span>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted">No users found.</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pagination-wrap">
+                    <nav class="pagination-inner">
+                        <ul class="pagination <%= currentPage === 1 ? 'disabled' : '' %>">
+                            <li class="page-item">
+                                <% if (currentPage === 1) { %>
+                                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                <% } else { %>
+                                    <a class="page-link" href="/db-signed-in-users?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>"><i class="fas fa-chevron-left"></i></a>
+                                <% } %>
+                            </li>
+                            <% 
+                                const maxPagesToShow = 5;
+                                let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+                                let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                                if (endPage - startPage < maxPagesToShow - 1) {
+                                    startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                                }
+                                for (let i = startPage; i <= endPage; i++) { 
+                            %>
+                                <li class="page-item">
+                                    <a class="page-link <%= i === currentPage ? 'active' : '' %>" href="/db-signed-in-users?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                <% if (currentPage === totalPages) { %>
+                                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                <% } else { %>
+                                    <a class="page-link" href="/db-signed-in-users?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>"><i class="fas fa-chevron-right"></i></a>
+                                <% } %>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script.ejs') %>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+
+            // Handle form submission
+            if (searchForm && searchInput) {
+                searchForm.addEventListener('submit', (e) => {
+                    const query = searchInput.value.trim();
+                    window.location.href = `/db-signed-in-users?search=${encodeURIComponent(query)}&page=1`;
+                });
+            } else {
+                console.error('Search form or input not found');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,10 +3,10 @@
     <div id="dashboard-Navigation" class="slick-nav"></div>
     <div id="navigation" class="navigation-container">
         <ul>
-            <li class="active-menu"><a href="/dashboard"><i class="far fa-chart-bar"></i> Dashboard</a></li>
+            <li class="active-menu"><a href="/AdminDashboard"><i class="far fa-chart-bar"></i> Dashboard</a></li>
            <% if(isAdmin) {%>
-            <li><a onclick="window.location.href='/db-user-dashboard'"><i class="fas fa-user"></i>Users</a>
-                <ul>
+            <li><a href='/db-user-dashboard'><i class="fas fa-user"></i>Users</a>
+                <!-- <ul>
                     <li>
                         <a href="/db-admin-created-users">Admin User</a>
                     </li>
@@ -16,19 +16,19 @@
                     <li>
                         <a href="/new-user">Create New user</a>
                     </li>
-                </ul>
+                </ul> -->
             </li>
 
             <%}%>
-            <li><a href="/db-add-package"><i class="fas fa-umbrella-beach"></i>Add Package</a></li>
+            <!-- <li><a href="/db-add-package"><i class="fas fa-umbrella-beach"></i>Add Package</a></li> -->
             <li>
-                <a onclick="window.location.href='/db-package-dashboard'"><i class="fas fa-hotel"></i></i>packages</a>
-                <ul>
+                <a href='/db-package-dashboard'><i class="fas fa-hotel"></i></i>packages</a>
+                <!-- <ul>
                     <li><a href="/db-all-packages">All Packages</a></li>
                     <li><a href="/db-active-packages">Active</a></li>
                     <li><a href="/db-pending-packages">Pending</a></li>
                     <li><a href="/db-expired-packages">Expired</a></li>
-                </ul>   
+                </ul>    -->
             </li>
             <li><a href="db-booking.html"><i class="fas fa-ticket-alt"></i> Booking & Enquiry</a></li>
             <li><a href="db-wishlist.html"><i class="far fa-heart"></i>Wishlist</a></li>

@@ -13,25 +13,25 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="dashboard-box user-form-wrap">
-                            <h4>User Edit Details</h4>
-                            <form class="form-horizontal" method="post" action="/edit-user/<%= editUser._id %>" enctype="multipart/form-data">
+                            <h4>Agent Edit Details</h4>
+                            <form class="form-horizontal" method="post" action="/edit-agent/<%= editAgent._id %>" enctype="multipart/form-data">
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label>First name</label>
-                                            <input name="firstName" class="form-control" value="<%= editUser.firstName || '' %>" type="text">
+                                            <input name="firstName" class="form-control" value="<%= editAgent.firstName || '' %>" type="text">
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label>Last name</label>
-                                            <input name="lastName" class="form-control" value="<%= editUser.lastName || '' %>" type="text">
+                                            <input name="lastName" class="form-control" value="<%= editAgent.lastName || '' %>" type="text">
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input name="email" class="form-control" value="<%= editUser.email || '' %>" type="email">
+                                            <input name="email" class="form-control" value="<%= editAgent.email || '' %>" type="email">
                                         </div>  
                                     </div>
                                     <div class="col-sm-6">
@@ -42,7 +42,7 @@
                                                     <select name="day">
                                                         <option value="">Day</option>
                                                         <% for (let i = 1; i <= 31; i++) { %>
-                                                            <option value="<%= i %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getDate() === i ? 'selected' : '' %>><%= i %></option>
+                                                            <option value="<%= i %>" <%= editAgent.dateOfBirth && new Date(editAgent.dateOfBirth).getDate() === i ? 'selected' : '' %>><%= i %></option>
                                                         <% } %>
                                                     
                                                     </select>
@@ -54,7 +54,7 @@
                                                         <option value="">Month</option>
                                                         <% const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; %>
                                                         <% months.forEach((month, index) => { %>
-                                                            <option value="<%= month %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getMonth() === index ? 'selected' : '' %>><%= month %></option>
+                                                            <option value="<%= month %>" <%= editAgent.dateOfBirth && new Date(editAgent.dateOfBirth).getMonth() === index ? 'selected' : '' %>><%= month %></option>
                                                         <% }); %>
                                                       
                                                     </select>
@@ -65,7 +65,7 @@
                                                     <select name="year">
                                                         <option value="">Year</option>
                                                         <% for (let i = 2025; i >= 1900; i--) { %>
-                                                            <option value="<%= i %>" <%= editUser.dateOfBirth && new Date(editUser.dateOfBirth).getFullYear() === i ? 'selected' : '' %>><%= i %></option>
+                                                            <option value="<%= i %>" <%= editAgent.dateOfBirth && new Date(editAgent.dateOfBirth).getFullYear() === i ? 'selected' : '' %>><%= i %></option>
                                                         <% } %>
                                                     </select>
                                                 </div>
@@ -77,17 +77,17 @@
                                             <label>Country Code</label>
                                             <select name="countryCode">
                                                 <option value="">Select Country Code</option>
-                                                <option value="+91" <%= editUser.countryCode === '+91' ? 'selected' : '' %>>+91</option>
-                                                <option value="+977" <%= editUser.countryCode === '+977' ? 'selected' : '' %>>+977</option>
-                                                <option value="+1" <%= editUser.countryCode === '+1' ? 'selected' : '' %>>+1</option>
-                                                <option value="+44" <%= editUser.countryCode === '+44' ? 'selected' : '' %>>+44</option>
+                                                <option value="+91" <%= editAgent.countryCode === '+91' ? 'selected' : '' %>>+91</option>
+                                                <option value="+977" <%= editAgent.countryCode === '+977' ? 'selected' : '' %>>+977</option>
+                                                <option value="+1" <%= editAgent.countryCode === '+1' ? 'selected' : '' %>>+1</option>
+                                                <option value="+44" <%= editAgent.countryCode === '+44' ? 'selected' : '' %>>+44</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label>Phone Number</label>
-                                            <input name="phone" id="input-phone" class="form-control" value="<%= editUser.phone || '' %>" placeholder="" type="text">
+                                            <input name="phone" id="input-phone" class="form-control" value="<%= editAgent.phone || '' %>" placeholder="" type="text">
                                         </div>
                                     </div>
                                     <div class="col-12">
@@ -98,9 +98,9 @@
                                             <label>Country</label>
                                             <select name="country">
                                                 <option value="">Select Country</option>
-                                                <option value="India" <%= editUser.country === 'India' ? 'selected' : '' %>>India</option>
-                                                <option value="Italy" <%= editUser.country === 'Italy' ? 'selected' : '' %>>Italy</option>
-                                                <option value="Japan" <%= editUser.country === 'Japan' ? 'selected' : '' %>>Japan</option>
+                                                <option value="India" <%= editAgent.country === 'India' ? 'selected' : '' %>>India</option>
+                                                <option value="Italy" <Agent.country === 'Italy' ? 'selected' : '' %>>Italy</option>
+                                                <option value="Japan" <%= editAgent.country === 'Japan' ? 'selected' : '' %>>Japan</option>
                                             </select>
                                         </div>
                                     </div>
@@ -109,9 +109,9 @@
                                             <label>State</label>
                                             <select name="state">
                                                 <option value="">Select State</option>
-                                                <option value="Punjab" <%= editUser.state === 'Punjab' ? 'selected' : '' %>>Punjab</option>
-                                                <option value="New York" <%= editUser.state === 'New York' ? 'selected' : '' %>>New York</option>
-                                                <option value="Mexico" <%= editUser.state === 'Mexico' ? 'selected' : '' %>>Mexico</option>
+                                                <option value="Punjab" <%= editAgent.state === 'Punjab' ? 'selected' : '' %>>Punjab</option>
+                                                <option value="New York" <%= editAgent.state === 'New York' ? 'selected' : '' %>>New York</option>
+                                                <option value="Mexico" <%= editAgent.state === 'Mexico' ? 'selected' : '' %>>Mexico</option>
                                             </select>
                                         </div>
                                     </div>
@@ -120,16 +120,16 @@
                                             <label>City</label>
                                             <select name="city">
                                                 <option value="">Select City</option>
-                                                <option value="Nawashahar" <%= editUser.city === 'Nawashahar' ? 'selected' : '' %>>Nawashahar</option>
-                                                <option value="Tokyo" <%= editUser.city === 'Tokyo' ? 'selected' : '' %>>Tokyo</option>
-                                                <option value="Paris" <%= editUser.city === 'Paris' ? 'selected' : '' %>>Paris</option>
+                                                <option value="Nawashahar" <%= editAgent.city === 'Nawashahar' ? 'selected' : '' %>>Nawashahar</option>
+                                                <option value="Tokyo" <%= editAgent.city === 'Tokyo' ? 'selected' : '' %>>Tokyo</option>
+                                                <option value="Paris" <%= editAgent.city === 'Paris' ? 'selected' : '' %>>Paris</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label>Address</label>
-                                            <input name="address" class="form-control" type="text" value="<%= editUser.address || '' %>">
+                                            <input name="address" class="form-control" type="text" value="<%= editAgent.address || '' %>">
                                         </div>
                                     </div>
                                     <div class="col-12">
@@ -142,10 +142,10 @@
                                               <input type="file" name="profilePic">
                                             </div>
                                           
-                                            <% if (editUser.profilePic) { %>
+                                            <% if (editAgent.profilePic) { %>
                                               <div class="current-img">
                                                 <p class="mb-1">Current Image</p>
-                                                <img src="/uploads/profiles/<%= editUser.profilePic %>" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
+                                                <img src="/uploads/profiles/<%= editAgent.profilePic %>" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
                                               </div>
                                             <% } %>
                                           </div>
@@ -156,7 +156,7 @@
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label>Please Tell Us About You</label>
-                                            <textarea class="form-control" id="message" name="description" placeholder=""><%= editUser.description || '' %></textarea>
+                                            <textarea class="form-control" id="message" name="description" placeholder=""><%= editAgent.description || '' %></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -174,12 +174,6 @@
     </div>
     <!-- end Container Wrapper -->
     <!-- *Scripts* -->
-    <script src="admin/assets/js/jquery-3.2.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="admin/assets/js/bootstrap.min.js"></script>
-    <script src="admin/assets/js/canvasjs.min.js"></script>
-    <script src="admin/assets/js/counterup.min.js"></script>
-    <script src="admin/assets/js/jquery.slicknav.js"></script>
-    <script src="admin/assets/js/dashboard-custom.js"></script>
+    <%- include('../partials/script.ejs') %>
 </body>
 </html>
