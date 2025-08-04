@@ -8,7 +8,7 @@
             <%- include('../partials/Sidebar') %>
             <div class="db-info-wrap db-add-tour-wrap p-4">
                 <div id="form-error" class="text-danger d-none mt-3"></div>
-                <form id="edit-package-form" action="/edit-package/<%= packageData._id %>" method="post" enctype="multipart/form-data">
+                <form id="edit-package-form" action="/edit-package/<%= packageData._id %>" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                     <div class="row">
                         <div class="col-lg-8 col-xl-9">
                             <!-- Basic Information -->
@@ -17,7 +17,8 @@
                                     <h4 class="mb-3">Basic Information</h4>
                                     <div class="form-group mb-3">
                                         <label for="title" class="form-label required-field">Title</label>
-                                        <input type="text" name="title" id="title" class="form-control" value="<%= packageData.title %>" required>
+                                        <input type="text" name="title" id="title" class="form-control" value="<%= packageData.title || '' %>" required>
+                                        <div class="invalid-feedback">Title is required.</div>
                                     </div>
                                     <div class="form-group mb-3">
                                         <label for="packageType" class="form-label required-field">Package Type</label>
@@ -29,10 +30,12 @@
                                             <option value="Wellness" <%= packageData.packageType === 'Wellness' ? 'selected' : '' %>>Wellness</option>
                                             <option value="Eco" <%= packageData.packageType === 'Eco' ? 'selected' : '' %>>Eco</option>
                                         </select>
+                                        <div class="invalid-feedback">Please select a valid package type.</div>
                                     </div>
                                     <div class="form-group mb-3">
                                         <label for="description" class="form-label required-field">Description</label>
-                                        <textarea name="description" id="description" class="form-control" rows="5" required><%= packageData.description %></textarea>
+                                        <textarea name="description" id="description" class="form-control" rows="5" required><%= packageData.description || '' %></textarea>
+                                        <div class="invalid-feedback">Description is required.</div>
                                     </div>
                                 </div>
                             </div>
@@ -49,14 +52,16 @@
                                                 <div class="departure-entry mb-3 d-flex align-items-center">
                                                     <div class="flex-grow-1 me-2">
                                                         <div class="form-group">
-                                                            <label for="departureLocation<%= index %>" class="form-label required-field">Departure Location</label>
-                                                            <input type="text" name="multipleDepartures[<%= index %>][location]" id="departureLocation<%= index %>" class="form-control" value="<%= dep.location %>" required>
+                                                            <label for="departureLocation<%= index %>" class="form-label">Departure Location</label>
+                                                            <input type="text" name="multipleDepartures[<%= index %>][location]" id="departureLocation<%= index %>" class="form-control" value="<%= dep.location || '' %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                            <div class="invalid-feedback">Departure location is required.</div>
                                                         </div>
                                                     </div>
                                                     <div class="me-2">
                                                         <div class="form-group">
-                                                            <label for="departureDateTime<%= index %>" class="form-label required-field">Departure Date and Time</label>
-                                                            <input type="datetime-local" name="multipleDepartures[<%= index %>][dateTime]" id="departureDateTime<%= index %>" class="form-control" value="<%= dep.dateTime ? new Date(dep.dateTime).toISOString().slice(0, 16) : '' %>" required>
+                                                            <label for="departureDateTime<%= index %>" class="form-label">Departure Date and Time</label>
+                                                            <input type="datetime-local" name="multipleDepartures[<%= index %>][dateTime]" id="departureDateTime<%= index %>" class="form-control" value="<%= dep.dateTime ? new Date(dep.dateTime).toISOString().slice(0, 16) : '' %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                            <div class="invalid-feedback">Valid date and time are required.</div>
                                                         </div>
                                                     </div>
                                                     <div>
@@ -68,14 +73,16 @@
                                             <div class="departure-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
                                                     <div class="form-group">
-                                                        <label for="departureLocation0" class="form-label required-field">Departure Location</label>
-                                                        <input type="text" name="multipleDepartures[0][location]" id="departureLocation0" class="form-control" required>
+                                                        <label for="departureLocation0" class="form-label">Departure Location</label>
+                                                        <input type="text" name="multipleDepartures[0][location]" id="departureLocation0" class="form-control" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Departure location is required.</div>
                                                     </div>
                                                 </div>
                                                 <div class="me-2">
                                                     <div class="form-group">
-                                                        <label for="departureDateTime0" class="form-label required-field">Departure Date and Time</label>
-                                                        <input type="datetime-local" name="multipleDepartures[0][dateTime]" id="departureDateTime0" class="form-control" required>
+                                                        <label for="departureDateTime0" class="form-label">Departure Date and Time</label>
+                                                        <input type="datetime-local" name="multipleDepartures[0][dateTime]" id="departureDateTime0" class="form-control" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Valid date and time are required.</div>
                                                     </div>
                                                 </div>
                                                 <div>
@@ -94,21 +101,24 @@
                                         <div class="col-sm-6 mb-3">
                                             <div class="form-group">
                                                 <label for="groupSize" class="form-label">Group Size</label>
-                                                <input type="number" name="groupSize" id="groupSize" class="form-control" value="<%= packageData.groupSize || '' %>" placeholder="No of Pax">
+                                                <input type="number" name="groupSize" id="groupSize" class="form-control" value="<%= packageData.groupSize || '' %>" placeholder="No of Pax" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                <div class="invalid-feedback">Valid group size is required.</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-6 mb-3">
                                             <div class="row">
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <label for="days" class="form-label">Trip Duration(Days)</label>
-                                                        <input type="number" name="tripDuration[days]" id="days" class="form-control" value="<%= packageData.tripDuration?.days || '' %>" placeholder="Days">
+                                                        <label for="days" class="form-label">Trip Duration (Days)</label>
+                                                        <input type="number" name="tripDuration[days]" id="days" class="form-control" value="<%= packageData.tripDuration?.days || '' %>" placeholder="Days" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Valid number of days is required.</div>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="form-group">
-                                                        <label for="nights" class="form-label">Trip Duration(Nights)</label>
-                                                        <input type="number" name="tripDuration[nights]" id="nights" class="form-control" value="<%= packageData.tripDuration?.nights || '' %>" placeholder="Nights">
+                                                        <label for="nights" class="form-label">Trip Duration (Nights)</label>
+                                                        <input type="number" name="tripDuration[nights]" id="nights" class="form-control" value="<%= packageData.tripDuration?.nights || '' %>" placeholder="Nights" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Valid number of nights is required.</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -116,29 +126,34 @@
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="category" class="form-label">Category</label>
-                                                <select name="category" id="category" class="form-control">
+                                                <select name="category" id="category" class="form-control" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                    <option value="" disabled <%= !packageData.category ? 'selected' : '' %>>Select category</option>
                                                     <option value="Adult" <%= packageData.category === 'Adult' ? 'selected' : '' %>>Adult</option>
                                                     <option value="Child" <%= packageData.category === 'Child' ? 'selected' : '' %>>Child</option>
                                                     <option value="Couple" <%= packageData.category === 'Couple' ? 'selected' : '' %>>Couple</option>
                                                 </select>
+                                                <div class="invalid-feedback">Please select a category.</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="regularPrice" class="form-label">Regular Price</label>
-                                                <input type="number" name="regularPrice" id="regularPrice" class="form-control" value="<%= packageData.regularPrice || '' %>">
+                                                <input type="number" name="regularPrice" id="regularPrice" class="form-control" value="<%= packageData.regularPrice || '' %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                <div class="invalid-feedback">Valid regular price is required.</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="salePrice" class="form-label">Sale Price</label>
                                                 <input type="number" name="salePrice" id="salePrice" class="form-control" value="<%= packageData.salePrice || '' %>">
+                                                <div class="invalid-feedback">Valid sale price is required.</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-3 mb-3">
                                             <div class="form-group">
                                                 <label for="discount" class="form-label">Discount</label>
                                                 <input type="number" name="discount" id="discount" class="form-control" value="<%= packageData.discount || '' %>">
+                                                <div class="invalid-feedback">Valid discount is required.</div>
                                             </div>
                                         </div>
                                     </div>
@@ -152,7 +167,8 @@
                                     </div>
                                     <div class="form-group mb-3">
                                         <label for="itineraryDescription" class="form-label">Itinerary Description</label>
-                                        <textarea name="itineraryDescription" id="itineraryDescription" class="form-control" rows="4"><%= packageData.itineraryDescription || '' %></textarea>
+                                        <textarea name="itineraryDescription" id="itineraryDescription" class="form-control" rows="4" <%= packageData.status === 'Active' ? 'required' : '' %>><%= packageData.itineraryDescription || '' %></textarea>
+                                        <div class="invalid-feedback">Itinerary description is required.</div>
                                     </div>
                                     <div id="itinerarySection">
                                         <div id="itinerary-days">
@@ -177,28 +193,33 @@
                                                                         <div class="row mt-2">
                                                                             <div class="form-group col-md-5">
                                                                                 <label>Title</label>
-                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][title]" class="form-control itinerary-title" type="text" value="<%= (activity.title || '').replace(/"/g, '&quot;') %>" required>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][title]" class="form-control itinerary-title" type="text" value="<%= (activity.title || '').replace(/"/g, '&quot;') %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                                <div class="invalid-feedback">Activity title is required.</div>
                                                                             </div>
                                                                             <div class="form-group col-md-7">
                                                                                 <label>Sub Title</label>
-                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][sub_title]" class="form-control itinerary-sub-title" type="text" value="<%= (activity.sub_title || '').replace(/"/g, '&quot;') %>" required>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][sub_title]" class="form-control itinerary-sub-title" type="text" value="<%= (activity.sub_title || '').replace(/"/g, '&quot;') %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                                <div class="invalid-feedback">Activity sub-title is required.</div>
                                                                             </div>
                                                                             <div class="form-group col-md-4">
                                                                                 <label>Start Time</label>
-                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][start_time]" class="form-control itinerary-start-time" type="time" value="<%= activity.start_time || '' %>" required>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][start_time]" class="form-control itinerary-start-time" type="time" value="<%= activity.start_time || '' %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                                <div class="invalid-feedback">Start time is required.</div>
                                                                             </div>
                                                                             <div class="form-group col-md-4">
                                                                                 <label>End Time</label>
-                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][end_time]" class="form-control itinerary-end-time" type="time" value="<%= activity.end_time || '' %>" required>
+                                                                                <input name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][end_time]" class="form-control itinerary-end-time" type="time" value="<%= activity.end_time || '' %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                                <div class="invalid-feedback">End time is required.</div>
                                                                             </div>
                                                                             <div class="form-group col-md-4">
                                                                                 <label>Type</label>
-                                                                                <select name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][type]" class="form-control itinerary-type" required>
+                                                                                <select name="itineraryDays[<%= dayIndex %>][activities][<%= activityIndex %>][type]" class="form-control itinerary-type" <%= packageData.status === 'Active' ? 'required' : '' %>>
                                                                                     <option value="" disabled <%= !activity.type ? 'selected' : '' %>>Select itinerary item type</option>
                                                                                     <% ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'].forEach(type => { %>
                                                                                         <option value="<%= type %>" <%= activity.type === type ? 'selected' : '' %>><%= type.toUpperCase() %></option>
                                                                                     <% }) %>
                                                                                 </select>
+                                                                                <div class="invalid-feedback">Please select a valid activity type.</div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -212,28 +233,33 @@
                                                                     <div class="row mt-2">
                                                                         <div class="form-group col-md-5">
                                                                             <label>Title</label>
-                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][title]" class="form-control itinerary-title" type="text" required>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][title]" class="form-control itinerary-title" type="text" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                            <div class="invalid-feedback">Activity title is required.</div>
                                                                         </div>
                                                                         <div class="form-group col-md-7">
                                                                             <label>Sub Title</label>
-                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][sub_title]" class="form-control itinerary-sub-title" type="text" required>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][sub_title]" class="form-control itinerary-sub-title" type="text" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                            <div class="invalid-feedback">Activity sub-title is required.</div>
                                                                         </div>
                                                                         <div class="form-group col-md-4">
                                                                             <label>Start Time</label>
-                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][start_time]" class="form-control itinerary-start-time" type="time" required>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][start_time]" class="form-control itinerary-start-time" type="time" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                            <div class="invalid-feedback">Start time is required.</div>
                                                                         </div>
                                                                         <div class="form-group col-md-4">
                                                                             <label>End Time</label>
-                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][end_time]" class="form-control itinerary-end-time" type="time" required>
+                                                                            <input name="itineraryDays[<%= dayIndex %>][activities][0][end_time]" class="form-control itinerary-end-time" type="time" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                                            <div class="invalid-feedback">End time is required.</div>
                                                                         </div>
                                                                         <div class="form-group col-md-4">
                                                                             <label>Type</label>
-                                                                            <select name="itineraryDays[<%= dayIndex %>][activities][0][type]" class="form-control itinerary-type" required>
+                                                                            <select name="itineraryDays[<%= dayIndex %>][activities][0][type]" class="form-control itinerary-type" <%= packageData.status === 'Active' ? 'required' : '' %>>
                                                                                 <option value="" disabled selected>Select itinerary item type</option>
                                                                                 <% ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'].forEach(type => { %>
                                                                                     <option value="<%= type %>"><%= type.toUpperCase() %></option>
                                                                                 <% }) %>
                                                                             </select>
+                                                                            <div class="invalid-feedback">Please select a valid activity type.</div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -243,6 +269,38 @@
                                                 <% }) %>
                                             <% } %>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Program Days -->
+                            <div class="dashboard-box mb-4 border rounded p-4 bg-white">
+                                <div class="custom-field-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Program Days</h4>
+                                    </div>
+                                    <div id="programDays">
+                                        <% if (packageData.programDays?.length) { %>
+                                            <% packageData.programDays.forEach((day, dayIndex) => { %>
+                                                <div class="program-day-entry mb-3" id="program-day-<%= dayIndex %>">
+                                                    <input type="hidden" name="programDays[<%= dayIndex %>][day]" value="<%= dayIndex + 1 %>">
+                                                    <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                                                        <strong class="d-inline" style="font-size: 18px">Day <%= dayIndex + 1 %></strong>
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <div class="form-group mb-3">
+                                                            <label for="programDayTitle<%= dayIndex %>" class="form-label">Title</label>
+                                                            <input type="text" name="programDays[<%= dayIndex %>][title]" id="programDayTitle<%= dayIndex %>" class="form-control" value="<%= (day.title || '').replace(/"/g, '&quot;') %>" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                            <div class="invalid-feedback">Program day title is required.</div>
+                                                        </div>
+                                                        <div class="form-group mb-3">
+                                                            <label for="programDayDescription<%= dayIndex %>" class="form-label">Description</label>
+                                                            <textarea name="programDays[<%= dayIndex %>][description]" id="programDayDescription<%= dayIndex %>" class="form-control" rows="4" <%= packageData.status === 'Active' ? 'required' : '' %>><%= day.description || '' %></textarea>
+                                                            <div class="invalid-feedback">Program day description is required.</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
@@ -258,7 +316,8 @@
                                             <% packageData.inclusions.forEach((inc, index) => { %>
                                                 <div class="inclusion-entry mb-3 d-flex align-items-center">
                                                     <div class="flex-grow-1 me-2">
-                                                        <input type="text" name="inclusions[<%= index %>]" class="form-control" value="<%= inc %>" placeholder="e.g., Meals">
+                                                        <input type="text" name="inclusions[<%= index %>]" class="form-control" value="<%= inc %>" placeholder="e.g., Meals" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Inclusion is required.</div>
                                                     </div>
                                                     <div>
                                                         <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer; display: <%= packageData.inclusions.length === 1 ? 'none' : 'inline-block' %>;"></i>
@@ -268,7 +327,8 @@
                                         <% } else { %>
                                             <div class="inclusion-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="inclusions[0]" class="form-control" placeholder="e.g., Meals">
+                                                    <input type="text" name="inclusions[0]" class="form-control" placeholder="e.g., Meals" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                    <div class="invalid-feedback">Inclusion is required.</div>
                                                 </div>
                                                 <div>
                                                     <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer; display: none;"></i>
@@ -290,7 +350,8 @@
                                             <% packageData.exclusions.forEach((exc, index) => { %>
                                                 <div class="exclusion-entry mb-3 d-flex align-items-center">
                                                     <div class="flex-grow-1 me-2">
-                                                        <input type="text" name="exclusions[<%= index %>]" class="form-control" value="<%= exc %>" placeholder="e.g., Airfare">
+                                                        <input type="text" name="exclusions[<%= index %>]" class="form-control" value="<%= exc %>" placeholder="e.g., Airfare" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Exclusion is required.</div>
                                                     </div>
                                                     <div>
                                                         <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer; display: <%= packageData.exclusions.length === 1 ? 'none' : 'inline-block' %>;"></i>
@@ -300,7 +361,8 @@
                                         <% } else { %>
                                             <div class="exclusion-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="exclusions[0]" class="form-control" placeholder="e.g., Airfare">
+                                                    <input type="text" name="exclusions[0]" class="form-control" placeholder="e.g., Airfare" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                    <div class="invalid-feedback">Exclusion is required.</div>
                                                 </div>
                                                 <div>
                                                     <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer; display: none;"></i>
@@ -322,7 +384,8 @@
                                             <% packageData.activityTypes.forEach((act, index) => { %>
                                                 <div class="activityType-entry mb-3 d-flex align-items-center">
                                                     <div class="flex-grow-1 me-2">
-                                                        <input type="text" name="activityTypes[<%= index %>]" class="form-control" value="<%= act %>" placeholder="e.g., Hiking">
+                                                        <input type="text" name="activityTypes[<%= index %>]" class="form-control" value="<%= act %>" placeholder="e.g., Hiking" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Activity type is required.</div>
                                                     </div>
                                                     <div>
                                                         <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer; display: <%= packageData.activityTypes.length === 1 ? 'none' : 'inline-block' %>;"></i>
@@ -332,7 +395,8 @@
                                         <% } else { %>
                                             <div class="activityType-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="activityTypes[0]" class="form-control" placeholder="e.g., Hiking">
+                                                    <input type="text" name="activityTypes[0]" class="form-control" placeholder="e.g., Hiking" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                    <div class="invalid-feedback">Activity type is required.</div>
                                                 </div>
                                                 <div>
                                                     <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer; display: none;"></i>
@@ -354,7 +418,8 @@
                                             <% packageData.highlights.forEach((hig, index) => { %>
                                                 <div class="highlight-entry mb-3 d-flex align-items-center">
                                                     <div class="flex-grow-1 me-2">
-                                                        <input type="text" name="highlights[<%= index %>]" class="form-control" value="<%= hig %>" placeholder="e.g., Scenic views">
+                                                        <input type="text" name="highlights[<%= index %>]" class="form-control" value="<%= hig %>" placeholder="e.g., Scenic views" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                        <div class="invalid-feedback">Highlight is required.</div>
                                                     </div>
                                                     <div>
                                                         <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer; display: <%= packageData.highlights.length === 1 ? 'none' : 'inline-block' %>;"></i>
@@ -364,7 +429,8 @@
                                         <% } else { %>
                                             <div class="highlight-entry mb-3 d-flex align-items-center">
                                                 <div class="flex-grow-1 me-2">
-                                                    <input type="text" name="highlights[0]" class="form-control" placeholder="e.g., Scenic views">
+                                                    <input type="text" name="highlights[0]" class="form-control" placeholder="e.g., Scenic views" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                                    <div class="invalid-feedback">Highlight is required.</div>
                                                 </div>
                                                 <div>
                                                     <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer; display: none;"></i>
@@ -385,14 +451,15 @@
                                             <div class="upload-input">
                                                 <div class="form-group">
                                                     <label for="gallery-input" class="upload-btn btn btn-success">Upload Images</label>
-                                                    <input type="file" id="gallery-input" name="gallery" multiple accept="image/*" class="d-none">
+                                                    <input type="file" id="gallery-input" name="gallery" multiple accept="image/*" class="d-none" <%= packageData.status === 'Active' && !packageData.gallery?.length ? 'required' : '' %>>
+                                                    <div class="invalid-feedback">At least one gallery image is required.</div>
                                                 </div>
                                             </div>
                                             <div id="gallery-preview" class="mt-3 row">
                                                 <% packageData.gallery?.forEach((img, index) => { %>
                                                     <div class="col-auto gallery-img-container">
                                                         <img src="/Uploads/gallery/<%= img %>" class="gallery-img" alt="Gallery Image">
-                                                        <input type="hidden" name="gallery[<%= index %>]" value="<%= img %>">
+                                                        <input type="hidden" name="existingGallery[<%= index %>]" value="<%= img %>">
                                                         <i class="fas fa-trash text-danger delete-gallery mt-1" style="font-size: 18px; cursor: pointer;"></i>
                                                     </div>
                                                 <% }) %>
@@ -408,11 +475,13 @@
                                 <div class="custom-field-wrap">
                                     <div class="form-group mb-3">
                                         <label for="location-search" class="form-label">Search Destination</label>
-                                        <input type="text" id="location-search" class="form-control" value="<%= packageData.destinationAddress || '' %>" placeholder="Search for a destination">
+                                        <input type="text" id="location-search" class="form-control" value="<%= packageData.destinationAddress || '' %>" placeholder="Search for a destination" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                        <div class="invalid-feedback">Please enter a destination.</div>
                                     </div>
                                     <div class="form-group mb-3">
                                         <label for="destinationCountry" class="form-label">Destination Country</label>
-                                        <input type="text" id="destinationCountry" name="destinationCountry" class="form-control" value="<%= packageData.destinationCountry || '' %>" placeholder="Enter destination country">
+                                        <input type="text" id="destinationCountry" name="destinationCountry" class="form-control" value="<%= packageData.destinationCountry || '' %>" placeholder="Enter destination country" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                        <div class="invalid-feedback">Destination country is required.</div>
                                     </div>
                                     <input type="hidden" name="latitude" id="latitude" value="<%= packageData.latitude || '' %>">
                                     <input type="hidden" name="longitude" id="longitude" value="<%= packageData.longitude || '' %>">
@@ -428,19 +497,19 @@
                                 <div class="custom-field-wrap db-cat-field-wrap">
                                     <h4 class="mb-3">Additional Categories</h4>
                                     <div id="category-list">
-                                        <% ['Hotel', 'Walking'].forEach(cat => { %>
+                                        <% ['Hotel', 'Walking', 'Adventure', 'Cultural'].forEach(cat => { %>
                                             <div class="form-group mb-2">
                                                 <label class="custom-input">
-                                                    <input type="checkbox" name="additionalCategories[]" value="<%= cat %>" <%= packageData.additionalCategories?.includes(cat) ? 'checked' : '' %>>
+                                                    <input type="checkbox" name="additionalCategories[]" value="<%= cat %>" <%= packageData.additionalCategories?.includes(cat) ? 'checked' : '' %> <%= packageData.status === 'Active' ? 'required' : '' %>>
                                                     <span class="custom-input-field"></span>
                                                     <%= cat %>
                                                 </label>
                                             </div>
                                         <% }) %>
-                                        <% packageData.additionalCategories?.filter(cat => !['Hotel', 'Walking'].includes(cat)).forEach(cat => { %>
+                                        <% packageData.additionalCategories?.filter(cat => !['Hotel', 'Walking', 'Adventure', 'Cultural'].includes(cat)).forEach(cat => { %>
                                             <div class="form-group mb-2">
                                                 <label class="custom-input">
-                                                    <input type="checkbox" name="additionalCategories[]" value="<%= cat %>" checked>
+                                                    <input type="checkbox" name="additionalCategories[]" value="<%= cat %>" checked <%= packageData.status === 'Active' ? 'required' : '' %>>
                                                     <span class="custom-input-field"></span>
                                                     <%= cat %>
                                                 </label>
@@ -454,6 +523,7 @@
                                             <button type="button" id="add-category-submit" class="btn btn-primary mt-2">Add</button>
                                         </div>
                                     </div>
+                                    <div class="invalid-feedback d-none" id="category-error">At least one category is required.</div>
                                 </div>
                             </div>
                             <!-- Keywords -->
@@ -462,7 +532,8 @@
                                     <h4 class="mb-3">Keywords</h4>
                                     <div class="form-group">
                                         <label for="keywords" class="form-label">Keywords</label>
-                                        <input type="text" name="keywords" id="keywords" class="form-control" value="<%= packageData.keywords?.join(', ') || '' %>" placeholder="Comma-separated keywords">
+                                        <input type="text" name="keywords" id="keywords" class="form-control" value="<%= packageData.keywords?.join(', ') || '' %>" placeholder="Comma-separated keywords" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                        <div class="invalid-feedback">At least one keyword is required.</div>
                                     </div>
                                 </div>
                             </div>
@@ -473,7 +544,8 @@
                                     <div class="upload-input">
                                         <div class="form-group">
                                             <label for="featured-input" class="upload-btn btn btn-success">Upload a Featured Image</label>
-                                            <input type="file" id="featured-input" name="featuredImage" accept="image/*" class="d-none">
+                                            <input type="file" id="featured-input" name="featuredImage" accept="image/*" class="d-none" <%= packageData.status === 'Active' && !packageData.featuredImage ? 'required' : '' %>>
+                                            <div class="invalid-feedback">Featured image is required.</div>
                                         </div>
                                     </div>
                                     <div id="featured-file-name" class="mt-2 text-dark">
@@ -491,16 +563,19 @@
                                     <div class="quote-entry mb-3">
                                         <div class="form-group">
                                             <label for="quote" class="form-label">Quote</label>
-                                            <input type="text" name="quote" id="quote" class="form-control" value="<%= packageData.quote || '' %>" placeholder="e.g., Explore the world">
+                                            <input type="text" name="quote" id="quote" class="form-control" value="<%= packageData.quote || '' %>" placeholder="e.g., Explore the world" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                            <div class="invalid-feedback">Quote is required.</div>
                                         </div>
                                     </div>
                                     <div class="form-group mt-3">
                                         <label for="difficultyLevel" class="form-label">Difficulty Level</label>
-                                        <select name="difficultyLevel" id="difficultyLevel" class="form-control">
+                                        <select name="difficultyLevel" id="difficultyLevel" class="form-control" <%= packageData.status === 'Active' ? 'required' : '' %>>
+                                            <option value="" disabled <%= !packageData.difficultyLevel ? 'selected' : '' %>>Select difficulty level</option>
                                             <option value="Easy" <%= packageData.difficultyLevel === 'Easy' ? 'selected' : '' %>>Easy</option>
                                             <option value="Moderate" <%= packageData.difficultyLevel === 'Moderate' ? 'selected' : '' %>>Moderate</option>
                                             <option value="Challenging" <%= packageData.difficultyLevel === 'Challenging' ? 'selected' : '' %>>Challenging</option>
                                         </select>
+                                        <div class="invalid-feedback">Please select a difficulty level.</div>
                                     </div>
                                 </div>
                             </div>
@@ -515,6 +590,7 @@
                                             <option value="Active" <%= packageData.status === 'Active' ? 'selected' : '' %>>Publish</option>
                                             <option value="Expired" <%= packageData.status === 'Expired' ? 'selected' : '' %>>Expired</option>
                                         </select>
+                                        <div class="invalid-feedback">Please select a status.</div>
                                     </div>
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-primary w-100">Save Package</button>
@@ -574,13 +650,13 @@
         .delete-departure:hover, .delete-inclusion:hover, .delete-exclusion:hover, .delete-activityType:hover, .delete-highlight:hover, .delete-itinerary-row:hover, .delete-gallery:hover {
             color: #b02a37 !important;
         }
-        .departure-entry, .inclusion-entry, .exclusion-entry, .activityType-entry, .highlight-entry {
+        .departure-entry, .inclusion-entry, .exclusion-entry, .activityType-entry, .highlight-entry, .program-day-entry {
             gap: 10px;
         }
-        .form-control:invalid {
+        .form-control:invalid, .form-select:invalid {
             border-color: #dc3545;
         }
-        .form-control:valid {
+        .form-control:valid, .form-select:valid {
             border-color: #28a745;
         }
         .gallery-img {
@@ -595,846 +671,1154 @@
             color: #dc3545;
             margin-left: 4px;
         }
-        .itinerary-activities {
+        .itinerary-activities, .program-day-entry {
             margin-left: 20px;
         }
-        .itinerary-item {
+        .itinerary-item, .program-day-entry {
             border: 1px solid #dee2e6;
             padding: 15px;
             border-radius: 4px;
         }
-        .form-control.is-invalid {
+        .form-control.is-invalid, .form-select.is-invalid {
             border-color: #dc3545 !important;
             background-image: none !important;
         }
-        .form-control.is-invalid:focus {
+        .form-control.is-invalid:focus, .form-select.is-invalid:focus {
             border-color: #dc3545 !important;
             box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+        }
+        .invalid-feedback {
+            display: none;
+        }
+        .was-validated .form-control:invalid, .was-validated .form-select:invalid {
+            border-color: #dc3545;
+            padding-right: calc(1.5em + 0.75rem);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+        .was-validated .form-control:invalid ~ .invalid-feedback,
+        .was-validated .form-select:invalid ~ .invalid-feedback {
+            display: block;
         }
     </style>
     <%- include('../partials/script.ejs') %>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Define toggleRequiredFields first to ensure it’s available for all calls
-            const toggleRequiredFields = () => {
-                const isPublish = statusSelect.value === 'Active';
-                const fields = [
-                    { id: 'groupSize', label: 'Group Size' },
-                    { id: 'days', label: 'Trip Duration(Days)' },
-                    { id: 'nights', label: 'Trip Duration(Nights)' },
-                    { id: 'category', label: 'Category' },
-                    { id: 'regularPrice', label: 'Regular Price' },
-                    { id: 'itineraryDescription', label: 'Itinerary Description' },
-                    { id: 'keywords', label: 'Keywords' },
-                    { id: 'difficultyLevel', label: 'Difficulty Level' },
-                    { id: 'location-search', label: 'Search Destination' },
-                    { id: 'destinationCountry', label: 'Destination Country' },
-                    { id: 'gallery-input', label: 'Upload Images' },
-                    { id: 'featured-input', label: 'Upload a Featured Image' },
-                    { id: 'quote', label: 'Quote' }
-                ];
-                fields.forEach(field => {
-                    const input = document.getElementById(field.id);
-                    const label = document.querySelector(`label[for="${field.id}"]`);
-                    if (input && label) {
-                        if (isPublish) {
-                            input.setAttribute('required', '');
-                            label.classList.add('required-field');
-                            if (field.id === 'keywords' && !input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                            if (field.id === 'destinationCountry' && !input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            label.classList.remove('required-field');
-                            if (field.id === 'keywords' || field.id === 'destinationCountry') {
-                                input.classList.remove('is-invalid');
-                            }
+  
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Define itinerary item types
+    const itineraryItemTypes = ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'];
+
+    // Define toggleRequiredFields
+    const toggleRequiredFields = () => {
+        const isPublish = statusSelect.value === 'Active';
+        const fields = [
+            { id: 'groupSize', label: 'Group Size' },
+            { id: 'days', label: 'Trip Duration (Days)' },
+            { id: 'nights', label: 'Trip Duration (Nights)' },
+            { id: 'category', label: 'Category' },
+            { id: 'regularPrice', label: 'Regular Price' },
+            { id: 'itineraryDescription', label: 'Itinerary Description' },
+            { id: 'keywords', label: 'Keywords' },
+            { id: 'difficultyLevel', label: 'Difficulty Level' },
+            { id: 'location-search', label: 'Search Destination' },
+            { id: 'destinationCountry', label: 'Destination Country' },
+            { id: 'gallery-input', label: 'Upload Images' },
+            { id: 'featured-input', label: 'Upload a Featured Image' },
+            { id: 'quote', label: 'Quote' }
+        ];
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const label = document.querySelector(`label[for="${field.id}"]`);
+            if (input && label) {
+                if (isPublish) {
+                    input.setAttribute('required', '');
+                    label.classList.add('required-field');
+                    if (!input.value.trim() && input.type !== 'file') {
+                        input.classList.add('is-invalid');
+                    } else if (input.type === 'file' && input.id === 'gallery-input' && !document.querySelectorAll('#gallery-preview .gallery-img-container').length && !input.files.length) {
+                        input.classList.add('is-invalid');
+                    } else if (input.type === 'file' && input.id === 'featured-input' && !document.querySelector('#featured-file-name').textContent.match(/\.(jpg|jpeg|png|gif)$/i) && !input.files.length) {
+                        input.classList.add('is-invalid');
+                    }
+                } else {
+                    input.removeAttribute('required');
+                    label.classList.remove('required-field');
+                    input.classList.remove('is-invalid');
+                }
+            } else {
+                console.warn(`Field or label not found: ${field.id}`);
+            }
+        });
+
+        // Handle dynamic containers with defensive checks
+        const dynamicContainers = [
+            { container: 'inclusions', name: 'inclusions', label: 'Inclusion' },
+            { container: 'exclusions', name: 'exclusions', label: 'Exclusion' },
+            { container: 'activityTypes', name: 'activityTypes', label: 'Activity Type' },
+            { container: 'highlights', name: 'highlights', label: 'Highlight' }
+        ];
+
+        dynamicContainers.forEach(({ container, name }) => {
+            const containerElement = document.getElementById(container);
+            if (!containerElement) {
+                console.warn(`Container not found: #${container}`);
+                return;
+            }
+            const entries = containerElement.querySelectorAll(`.${container.slice(0, -1)}-entry`);
+            entries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Entry not found for container: ${container}, index: ${index}`);
+                    return;
+                }
+                const inputs = entry.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (isPublish) {
+                        input.setAttribute('required', '');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
                         }
+                    } else {
+                        input.removeAttribute('required');
+                        input.classList.remove('is-invalid');
                     }
                 });
-                const dynamicContainers = [
-                    { container: 'inclusions', name: 'inclusions', label: 'Inclusion' },
-                    { container: 'exclusions', name: 'exclusions', label: 'Exclusion' },
-                    { container: 'activityTypes', name: 'activityTypes', label: 'Activity Type' },
-                    { container: 'highlights', name: 'highlights', label: 'Highlight' }
-                ];
-                dynamicContainers.forEach(({ container, name }) => {
-                    const entries = document.querySelectorAll(`#${container} .${container.slice(0, -1)}-entry`);
-                    entries.forEach((entry, index) => {
-                        const inputs = entry.querySelectorAll('input');
-                        inputs.forEach(input => {
-                            if (isPublish) {
-                                input.setAttribute('required', '');
-                                if (!input.value.trim()) {
-                                    input.classList.add('is-invalid');
-                                }
-                            } else {
-                                input.removeAttribute('required');
-                                input.classList.remove('is-invalid');
-                            }
-                        });
-                        const deleteBtn = entry.querySelector(`.delete-${container.slice(0, -1)}`);
-                        if (deleteBtn) {
-                            deleteBtn.style.display = entries.length === 1 ? 'none' : 'inline-block';
+                const deleteBtn = entry.querySelector(`.delete-${container.slice(0, -1)}`);
+                if (deleteBtn) {
+                    deleteBtn.style.display = entries.length === 1 ? 'none' : 'inline-block';
+                }
+            });
+        });
+
+        // Handle departures with defensive checks
+        const departuresContainer = document.getElementById('departures');
+        if (departuresContainer) {
+            const departureEntries = departuresContainer.querySelectorAll('.departure-entry');
+            departureEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Departure entry not found at index: ${index}`);
+                    return;
+                }
+                const inputs = entry.querySelectorAll('input');
+                const labels = entry.querySelectorAll('label.form-label');
+                inputs.forEach((input, i) => {
+                    if (isPublish) {
+                        input.setAttribute('required', '');
+                        if (labels[i]) labels[i].classList.add('required-field');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
                         }
-                    });
+                    } else {
+                        input.removeAttribute('required');
+                        if (labels[i]) labels[i].classList.remove('required-field');
+                        input.classList.remove('is-invalid');
+                    }
                 });
-                const departureEntries = document.querySelectorAll('#departures .departure-entry');
-                departureEntries.forEach((entry, index) => {
-                    const inputs = entry.querySelectorAll('input');
-                    const labels = entry.querySelectorAll('label.form-label');
-                    inputs.forEach((input, i) => {
-                        if (isPublish) {
-                            input.setAttribute('required', '');
-                            if (labels[i]) labels[i].classList.add('required-field');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            if (labels[i]) labels[i].classList.remove('required-field');
-                            input.classList.remove('is-invalid');
+                const deleteBtn = entry.querySelector('.delete-departure');
+                if (deleteBtn) {
+                    deleteBtn.style.display = departureEntries.length === 1 ? 'none' : 'inline-block';
+                }
+            });
+        } else {
+            console.warn('Departures container not found');
+        }
+
+        // Handle itinerary items with defensive checks
+        const itineraryDays = document.getElementById('itinerary-days');
+        if (itineraryDays) {
+            const itineraryItems = itineraryDays.querySelectorAll('.itinerary-item');
+            itineraryItems.forEach((item) => {
+                if (!item) {
+                    console.warn('Itinerary item not found');
+                    return;
+                }
+                const inputs = item.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (isPublish) {
+                        input.setAttribute('required', '');
+                        const inputLabel = input.closest('.form-group')?.querySelector('label');
+                        if (inputLabel) inputLabel.classList.add('required-field');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
                         }
-                    });
+                    } else {
+                        input.removeAttribute('required');
+                        const inputLabel = input.closest('.form-group')?.querySelector('label');
+                        if (inputLabel) inputLabel.classList.remove('required-field');
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                const deleteBtn = item.querySelector('.delete-itinerary-row');
+                if (deleteBtn) {
+                    deleteBtn.style.display = item.parentElement.querySelectorAll('.itinerary-item').length === 1 ? 'none' : 'inline-block';
+                }
+            });
+        } else {
+            console.warn('Itinerary days container not found');
+        }
+
+        // Handle program days with defensive checks
+        const programDays = document.getElementById('programDays');
+        if (programDays) {
+            const programDayEntries = programDays.querySelectorAll('.program-day-entry');
+            programDayEntries.forEach((entry) => {
+                if (!entry) {
+                    console.warn('Program day entry not found');
+                    return;
+                }
+                const inputs = entry.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    if (isPublish) {
+                        input.setAttribute('required', '');
+                        const inputLabel = input.closest('.form-group')?.querySelector('label');
+                        if (inputLabel) inputLabel.classList.add('required-field');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                        }
+                    } else {
+                        input.removeAttribute('required');
+                        const inputLabel = input.closest('.form-group')?.querySelector('label');
+                        if (inputLabel) inputLabel.classList.remove('required-field');
+                        input.classList.remove('is-invalid');
+                    }
+                });
+            });
+        } else {
+            console.warn('Program days container not found');
+        }
+
+        // Handle categories with defensive checks
+        const categoryList = document.getElementById('category-list');
+        const categoriesHeader = document.querySelector('.db-cat-field-wrap h4');
+        const categoryError = document.getElementById('category-error');
+        if (categoryList && categoriesHeader && categoryError) {
+            const categoryInputs = categoryList.querySelectorAll('input[type="checkbox"]');
+            if (isPublish && categoryInputs.length > 0) {
+                const isChecked = Array.from(categoryInputs).some(input => input.checked);
+                if (!isChecked) {
+                    categoryInputs.forEach(input => input.setAttribute('required', ''));
+                    categoriesHeader.classList.add('required-field');
+                    categoryError.classList.remove('d-none');
+                } else {
+                    categoryInputs.forEach(input => input.removeAttribute('required'));
+                    categoriesHeader.classList.remove('required-field');
+                    categoryError.classList.add('d-none');
+                }
+            } else {
+                categoryInputs.forEach(input => input.removeAttribute('required'));
+                categoriesHeader.classList.remove('required-field');
+                categoryError.classList.add('d-none');
+            }
+        } else {
+            console.warn('Category list, header, or error element not found');
+        }
+    };
+
+    // DOM element references
+    const daysInput = document.getElementById('days');
+    const nightsInput = document.getElementById('nights');
+    const totalDaysSpan = document.getElementById('total-days');
+    const itineraryDays = document.getElementById('itinerary-days');
+    const programDays = document.getElementById('programDays');
+    const addCategoryBtn = document.getElementById('add-category-btn');
+    const newCategoryInput = document.getElementById('new-category-input');
+    const newCategoryField = document.getElementById('new-category');
+    const addCategorySubmit = document.getElementById('add-category-submit');
+    const categoryList = document.getElementById('category-list');
+    const galleryInput = document.getElementById('gallery-input');
+    const galleryError = document.getElementById('gallery-error');
+    const galleryPreview = document.getElementById('gallery-preview');
+    const featuredInput = document.getElementById('featured-input');
+    const featuredFileName = document.getElementById('featured-file-name');
+    const form = document.getElementById('edit-package-form');
+    const formError = document.getElementById('form-error');
+    const locationSearch = document.getElementById('location-search');
+    const destinationCountryInput = document.getElementById('destinationCountry');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const destinationAddressInput = document.getElementById('destinationAddress');
+    const addDepartureLink = document.getElementById('add-departure');
+    const departuresContainer = document.getElementById('departures');
+    const addInclusionLink = document.getElementById('add-inclusion');
+    const inclusionsContainer = document.getElementById('inclusions');
+    const addExclusionLink = document.getElementById('add-exclusion');
+    const exclusionsContainer = document.getElementById('exclusions');
+    const addActivityTypeLink = document.getElementById('add-activityType');
+    const activityTypesContainer = document.getElementById('activityTypes');
+    const addHighlightLink = document.getElementById('add-highlight');
+    const highlightsContainer = document.getElementById('highlights');
+    const statusSelect = document.getElementById('status');
+    const keywordsInput = document.getElementById('keywords');
+    const OPENCAGE_API_KEY = '<%= opencageApiKey %>';
+
+    // Initialize Leaflet map
+    const map = L.map('map').setView([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    const marker = L.marker([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], { draggable: true }).addTo(map);
+
+    // Map click event
+    map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        marker.setLatLng([lat, lng]);
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    latitudeInput.value = lat;
+                    longitudeInput.value = lng;
+                    destinationAddressInput.value = data.results[0].formatted || '';
+                    destinationCountryInput.value = data.results[0].components?.country || '';
+                    if (statusSelect.value === 'Active' && !destinationCountryInput.value.trim()) {
+                        destinationCountryInput.classList.add('is-invalid');
+                    } else {
+                        destinationCountryInput.classList.remove('is-invalid');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Reverse geocoding error:', error);
+                latitudeInput.value = lat;
+                longitudeInput.value = lng;
+                destinationAddressInput.value = '';
+                destinationCountryInput.value = '';
+                if (statusSelect.value === 'Active') {
+                    destinationCountryInput.classList.add('is-invalid');
+                }
+            });
+    });
+
+    // Marker drag event
+    marker.on('dragend', (e) => {
+        const { lat, lng } = e.target.getLatLng();
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    latitudeInput.value = lat;
+                    longitudeInput.value = lng;
+                    destinationAddressInput.value = data.results[0].formatted || '';
+                    destinationCountryInput.value = data.results[0].components?.country || '';
+                    if (statusSelect.value === 'Active' && !destinationCountryInput.value.trim()) {
+                        destinationCountryInput.classList.add('is-invalid');
+                    } else {
+                        destinationCountryInput.classList.remove('is-invalid');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Reverse geocoding error:', error);
+                latitudeInput.value = lat;
+                longitudeInput.value = lng;
+                destinationAddressInput.value = '';
+                destinationCountryInput.value = '';
+                if (statusSelect.value === 'Active') {
+                    destinationCountryInput.classList.add('is-invalid');
+                }
+            });
+    });
+
+    // Location search
+    locationSearch.addEventListener('input', (e) => {
+        const query = e.target.value;
+        if (query.length < 3) return;
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${OPENCAGE_API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    const { lat, lng } = data.results[0].geometry;
+                    const formattedAddress = data.results[0].formatted;
+                    const country = data.results[0].components?.country || '';
+                    map.setView([lat, lng], 15);
+                    marker.setLatLng([lat, lng]);
+                    latitudeInput.value = lat;
+                    longitudeInput.value = lng;
+                    destinationAddressInput.value = formattedAddress || '';
+                    destinationCountryInput.value = country;
+                    if (statusSelect.value === 'Active' && !country.trim()) {
+                        destinationCountryInput.classList.add('is-invalid');
+                    } else {
+                        destinationCountryInput.classList.remove('is-invalid');
+                    }
+                }
+            })
+            .catch(error => console.error('Search error:', error));
+    });
+
+    // Function to set up event listeners for "Add Activity" buttons
+    function setupAddActivityListeners() {
+        const addButtons = document.querySelectorAll('.itineraryAdd');
+        addButtons.forEach(button => {
+            const dayIndex = button.id.split('-')[2]; // Extract day index from id="itinerary-add-{dayIndex}"
+            button.removeEventListener('click', handleAddActivity); // Prevent duplicate listeners
+            button.addEventListener('click', handleAddActivity);
+            function handleAddActivity(e) {
+                e.preventDefault();
+                console.log(`Add Activity button clicked for day: ${dayIndex}`);
+                addActivity(dayIndex);
+            }
+        });
+    }
+
+    // Itinerary handling
+    const updateItinerary = () => {
+        if (!itineraryDays || !programDays || !daysInput) {
+            console.warn('Itinerary or program days container or days input not found');
+            return;
+        }
+        const days = parseInt(daysInput.value) || 0;
+        totalDaysSpan.textContent = days;
+        itineraryDays.innerHTML = '';
+        programDays.innerHTML = '';
+        const itineraryData = <%- JSON.stringify(packageData.itineraryDays || []) %>;
+        const programData = <%- JSON.stringify(packageData.programDays || []) %>;
+
+        for (let i = 0; i < days; i++) {
+            const dayData = itineraryData[i] || { activities: [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }] };
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'd-flex flex-column mb-3';
+            dayDiv.id = `itinerary-${i}`;
+            dayDiv.innerHTML = `
+                <input type="hidden" name="itineraryDays[${i}][day]" value="${i + 1}">
+                <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                    <strong class="d-inline" style="font-size: 18px">Day ${i + 1}</strong>
+                    <div class="d-flex align-items-center">
+                        <span class="btn btn-outline-light btn-sm rounded-0 px-3 itineraryAdd" id="itinerary-add-${i}">Add Activity</span>
+                    </div>
+                </div>
+                <div id="itinerary-activities-${i}" class="mt-3 itinerary-activities">
+                    ${dayData.activities.map((activity, activityIndex) => `
+                        <div class="w-100 mt-3 itinerary-item" id="itinerary-item-${i}-${activityIndex}">
+                            <div class="d-flex justify-content-between">
+                                <strong>#${activityIndex + 1}</strong>
+                                <i id="delete-item-${i}-${activityIndex}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer; display: ${dayData.activities.length === 1 ? 'none' : 'inline-block'};"></i>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-5">
+                                    <label>Title</label>
+                                    <input name="itineraryDays[${i}][activities][${activityIndex}][title]" class="form-control itinerary-title" type="text" value="${(activity.title || '').replace(/"/g, '&quot;')}" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                                    <div class="invalid-feedback">Activity title is required.</div>
+                                </div>
+                                <div class="form-group col-md-7">
+                                    <label>Sub Title</label>
+                                    <input name="itineraryDays[${i}][activities][${activityIndex}][sub_title]" class="form-control itinerary-sub-title" type="text" value="${(activity.sub_title || '').replace(/"/g, '&quot;')}" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                                    <div class="invalid-feedback">Activity sub-title is required.</div>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Start Time</label>
+                                    <input name="itineraryDays[${i}][activities][${activityIndex}][start_time]" class="form-control itinerary-start-time" type="time" value="${activity.start_time || ''}" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                                    <div class="invalid-feedback">Start time is required.</div>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>End Time</label>
+                                    <input name="itineraryDays[${i}][activities][${activityIndex}][end_time]" class="form-control itinerary-end-time" type="time" value="${activity.end_time || ''}" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                                    <div class="invalid-feedback">End time is required.</div>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Type</label>
+                                    <select name="itineraryDays[${i}][activities][${activityIndex}][type]" class="form-control itinerary-type" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                                        <option value="" disabled ${!activity.type ? 'selected' : ''}>Select itinerary item type</option>
+                                        ${itineraryItemTypes.map(type => `<option value="${type}" ${activity.type === type ? 'selected' : ''}>${type.toUpperCase()}</option>`).join('')}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a valid activity type.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            itineraryDays.appendChild(dayDiv);
+            setupItineraryDeleteListener(i);
+            // Update program days
+            const programDayData = programData[i] || { title: '', description: '' };
+            const programDayDiv = document.createElement('div');
+            programDayDiv.className = 'program-day-entry mb-3';
+            programDayDiv.id = `program-day-${i}`;
+            programDayDiv.innerHTML = `
+                <input type="hidden" name="programDays[${i}][day]" value="${i + 1}">
+                <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                    <strong class="d-inline" style="font-size: 18px">Day ${i + 1}</strong>
+                </div>
+                <div class="mt-3">
+                    <div class="form-group mb-3">
+                        <label for="programDayTitle${i}" class="form-label">Title</label>
+                        <input type="text" name="programDays[${i}][title]" id="programDayTitle${i}" class="form-control" value="${(programDayData.title || '').replace(/"/g, '&quot;')}" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                        <div class="invalid-feedback">Program day title is required.</div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="programDayDescription${i}" class="form-label">Description</label>
+                        <textarea name="programDays[${i}][description]" id="programDayDescription${i}" class="form-control" rows="4" ${statusSelect.value === 'Active' ? 'required' : ''}>${programDayData.description || ''}</textarea>
+                        <div class="invalid-feedback">Program day description is required.</div>
+                    </div>
+                </div>
+            `;
+            programDays.appendChild(programDayDiv);
+        }
+        setupAddActivityListeners();
+        toggleRequiredFields();
+    };
+
+    function addActivity(dayIndex) {
+        console.log(`Adding activity for day: ${dayIndex}`);
+        const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+        if (!activitiesContainer) {
+            console.warn(`Activities container not found for day: ${dayIndex}`);
+            return;
+        }
+        const activityCount = activitiesContainer.querySelectorAll('.itinerary-item').length;
+        console.log(`Current activity count: ${activityCount}`);
+        const activityDiv = document.createElement('div');
+        activityDiv.className = 'w-100 mt-3 itinerary-item';
+        activityDiv.id = `itinerary-item-${dayIndex}-${activityCount}`;
+        activityDiv.innerHTML = `
+            <div class="d-flex justify-content-between">
+                <strong>#${activityCount + 1}</strong>
+                <i id="delete-item-${dayIndex}-${activityCount}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer;"></i>
+            </div>
+            <div class="row mt-2">
+                <div class="form-group col-md-5">
+                    <label>Title</label>
+                    <input name="itineraryDays[${dayIndex}][activities][${activityCount}][title]" class="form-control itinerary-title" type="text" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Activity title is required.</div>
+                </div>
+                <div class="form-group col-md-7">
+                    <label>Sub Title</label>
+                    <input name="itineraryDays[${dayIndex}][activities][${activityCount}][sub_title]" class="form-control itinerary-sub-title" type="text" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Activity sub-title is required.</div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Start Time</label>
+                    <input name="itineraryDays[${dayIndex}][activities][${activityCount}][start_time]" class="form-control itinerary-start-time" type="time" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Start time is required.</div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>End Time</label>
+                    <input name="itineraryDays[${dayIndex}][activities][${activityCount}][end_time]" class="form-control itinerary-end-time" type="time" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">End time is required.</div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Type</label>
+                    <select name="itineraryDays[${dayIndex}][activities][${activityCount}][type]" class="form-control itinerary-type" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                        <option value="" disabled selected>Select itinerary item type</option>
+                        ${itineraryItemTypes.map(type => `<option value="${type}">${type.toUpperCase()}</option>`).join('')}
+                    </select>
+                    <div class="invalid-feedback">Please select a valid activity type.</div>
+                </div>
+            </div>
+        `;
+        activitiesContainer.appendChild(activityDiv);
+        updateActivityIndices(dayIndex);
+        toggleRequiredFields();
+        console.log(`Activity added for day: ${dayIndex}, new count: ${activityCount + 1}`);
+    }
+
+    function setupItineraryDeleteListener(dayIndex) {
+        const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+        if (!activitiesContainer) {
+            console.warn(`Activities container not found for day: ${dayIndex}`);
+            return;
+        }
+        activitiesContainer.removeEventListener('click', handleItineraryDelete);
+        activitiesContainer.addEventListener('click', handleItineraryDelete);
+        function handleItineraryDelete(e) {
+            const btn = e.target.closest('.delete-itinerary-row');
+            if (btn && activitiesContainer.querySelectorAll('.itinerary-item').length > 1) {
+                e.preventDefault();
+                const activityDiv = btn.closest('.itinerary-item');
+                if (activityDiv) {
+                    activityDiv.remove();
+                    updateActivityIndices(dayIndex);
+                    toggleRequiredFields();
+                }
+            }
+        }
+    }
+
+    function updateActivityIndices(dayIndex) {
+        const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
+        if (!activitiesContainer) {
+            console.warn(`Activities container not found for day: ${dayIndex}`);
+            return;
+        }
+        const activities = activitiesContainer.querySelectorAll('.itinerary-item');
+        activities.forEach((activity, index) => {
+            activity.id = `itinerary-item-${dayIndex}-${index}`;
+            activity.querySelector('strong').textContent = `#${index + 1}`;
+            const inputs = activity.querySelectorAll('input, select');
+            inputs[0].name = `itineraryDays[${dayIndex}][activities][${index}][title]`;
+            inputs[1].name = `itineraryDays[${dayIndex}][activities][${index}][sub_title]`;
+            inputs[2].name = `itineraryDays[${dayIndex}][activities][${index}][start_time]`;
+            inputs[3].name = `itineraryDays[${dayIndex}][activities][${index}][end_time]`;
+            inputs[4].name = `itineraryDays[${dayIndex}][activities][${index}][type]`;
+            const deleteBtn = activity.querySelector('.delete-itinerary-row');
+            if (deleteBtn) {
+                deleteBtn.id = `delete-item-${dayIndex}-${index}`;
+                deleteBtn.style.display = activities.length === 1 ? 'none' : 'inline-block';
+            }
+            if (statusSelect.value === 'Active') {
+                inputs.forEach(input => {
+                    input.setAttribute('required', '');
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                    }
+                });
+            } else {
+                inputs.forEach(input => {
+                    input.removeAttribute('required');
+                    input.classList.remove('is-invalid');
+                });
+            }
+        });
+    }
+
+    let departureCount = <%= packageData.multipleDepartures?.length || 1 %>;
+    if (addDepartureLink && departuresContainer) {
+        addDepartureLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const departureDiv = document.createElement('div');
+            departureDiv.className = 'departure-entry mb-3 d-flex align-items-center';
+            departureDiv.innerHTML = `
+                <div class="flex-grow-1 me-2">
+                    <div class="form-group">
+                        <label for="departureLocation${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Location</label>
+                        <input type="text" name="multipleDepartures[${departureCount}][location]" id="departureLocation${departureCount}" class="form-control" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                        <div class="invalid-feedback">Departure location is required.</div>
+                    </div>
+                </div>
+                <div class="me-2">
+                    <div class="form-group">
+                        <label for="departureDateTime${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Date and Time</label>
+                        <input type="datetime-local" name="multipleDepartures[${departureCount}][dateTime]" id="departureDateTime${departureCount}" class="form-control" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                        <div class="invalid-feedback">Valid date and time are required.</div>
+                    </div>
+                </div>
+                <div>
+                    <i class="fas fa-trash text-danger delete-departure" style="font-size: 18px; cursor: pointer;"></i>
+                </div>
+            `;
+            departuresContainer.appendChild(departureDiv);
+            departureCount++;
+            updateDepartureIndices();
+            toggleRequiredFields();
+        });
+
+        function updateDepartureIndices() {
+            const departureEntries = departuresContainer.querySelectorAll('.departure-entry');
+            departureEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Departure entry not found at index: ${index}`);
+                    return;
+                }
+                const locationInput = entry.querySelector('input[name$="[location]"]');
+                const dateTimeInput = entry.querySelector('input[name$="[dateTime]"]');
+                const locationLabel = entry.querySelector('label[for^="departureLocation"]');
+                const dateTimeLabel = entry.querySelector('label[for^="departureDateTime"]');
+                if (locationInput && dateTimeInput && locationLabel && dateTimeLabel) {
+                    locationInput.name = `multipleDepartures[${index}][location]`;
+                    locationInput.id = `departureLocation${index}`;
+                    dateTimeInput.name = `multipleDepartures[${index}][dateTime]`;
+                    dateTimeInput.id = `departureDateTime${index}`;
+                    locationLabel.setAttribute('for', `departureLocation${index}`);
+                    dateTimeLabel.setAttribute('for', `departureDateTime${index}`);
                     const deleteBtn = entry.querySelector('.delete-departure');
                     if (deleteBtn) {
                         deleteBtn.style.display = departureEntries.length === 1 ? 'none' : 'inline-block';
                     }
-                });
-                const itineraryItems = document.querySelectorAll('.itinerary-item');
-                itineraryItems.forEach((item) => {
-                    const inputs = item.querySelectorAll('input, select');
-                    inputs.forEach(input => {
-                        if (isPublish) {
-                            input.setAttribute('required', '');
-                            const inputLabel = input.closest('.form-group').querySelector('label');
-                            if (inputLabel) inputLabel.classList.add('required-field');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            const inputLabel = input.closest('.form-group').querySelector('label');
-                            if (inputLabel) inputLabel.classList.remove('required-field');
-                            input.classList.remove('is-invalid');
+                    if (statusSelect.value === 'Active') {
+                        locationInput.setAttribute('required', '');
+                        dateTimeInput.setAttribute('required', '');
+                        locationLabel.classList.add('required-field');
+                        dateTimeLabel.classList.add('required-field');
+                        if (!locationInput.value.trim()) {
+                            locationInput.classList.add('is-invalid');
                         }
-                    });
-                    const deleteBtn = item.querySelector('.delete-itinerary-row');
-                    if (deleteBtn) {
-                        deleteBtn.style.display = item.parentElement.querySelectorAll('.itinerary-item').length === 1 ? 'none' : 'inline-block';
-                    }
-                });
-                const categoryInputs = document.querySelectorAll('#category-list input[type="checkbox"]');
-                const categoriesHeader = document.querySelector('.db-cat-field-wrap h4');
-                if (isPublish && categoryInputs.length > 0) {
-                    let isChecked = Array.from(categoryInputs).some(input => input.checked);
-                    categoryInputs.forEach(input => {
-                        if (!isChecked) {
-                            input.setAttribute('required', '');
-                        } else {
-                            input.removeAttribute('required');
+                        if (!dateTimeInput.value.trim()) {
+                            dateTimeInput.classList.add('is-invalid');
                         }
-                    });
-                    if (categoriesHeader) {
-                        categoriesHeader.classList.add('required-field');
+                    } else {
+                        locationInput.removeAttribute('required');
+                        dateTimeInput.removeAttribute('required');
+                        locationLabel.classList.remove('required-field');
+                        dateTimeLabel.classList.remove('required-field');
+                        locationInput.classList.remove('is-invalid');
+                        dateTimeInput.classList.remove('is-invalid');
                     }
                 } else {
-                    categoryInputs.forEach(input => input.removeAttribute('required'));
-                    if (categoriesHeader) {
-                        categoriesHeader.classList.remove('required-field');
-                    }
+                    console.warn(`Inputs or labels missing for departure entry at index: ${index}`);
                 }
-            };
-
-            const daysInput = document.getElementById('days');
-            const nightsInput = document.getElementById('nights');
-            const totalDaysSpan = document.getElementById('total-days');
-            const itineraryDays = document.getElementById('itinerary-days');
-            const addCategoryBtn = document.getElementById('add-category-btn');
-            const newCategoryInput = document.getElementById('new-category-input');
-            const newCategoryField = document.getElementById('new-category');
-            const addCategorySubmit = document.getElementById('add-category-submit');
-            const categoryList = document.getElementById('category-list');
-            const galleryInput = document.getElementById('gallery-input');
-            const galleryError = document.getElementById('gallery-error');
-            const galleryPreview = document.getElementById('gallery-preview');
-            const featuredInput = document.getElementById('featured-input');
-            const featuredFileName = document.getElementById('featured-file-name');
-            const form = document.getElementById('edit-package-form');
-            const formError = document.getElementById('form-error');
-            const locationSearch = document.getElementById('location-search');
-            const destinationCountryInput = document.getElementById('destinationCountry');
-            const latitudeInput = document.getElementById('latitude');
-            const longitudeInput = document.getElementById('longitude');
-            const destinationAddressInput = document.getElementById('destinationAddress');
-            const addDepartureLink = document.getElementById('add-departure');
-            const departuresContainer = document.getElementById('departures');
-            const addInclusionLink = document.getElementById('add-inclusion');
-            const inclusionsContainer = document.getElementById('inclusions');
-            const addExclusionLink = document.getElementById('add-exclusion');
-            const exclusionsContainer = document.getElementById('exclusions');
-            const addActivityTypeLink = document.getElementById('add-activityType');
-            const activityTypesContainer = document.getElementById('activityTypes');
-            const addHighlightLink = document.getElementById('add-highlight');
-            const highlightsContainer = document.getElementById('highlights');
-            const statusSelect = document.getElementById('status');
-            const keywordsInput = document.getElementById('keywords');
-            const OPENCAGE_API_KEY = '<%= opencageApiKey %>';
-            const map = L.map('map').setView([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            const marker = L.marker([<%= packageData.latitude || 0 %>, <%= packageData.longitude || 0 %>], { draggable: true }).addTo(map);
-
-            map.on('click', (e) => {
-                const { lat, lng } = e.latlng;
-                marker.setLatLng([lat, lng]);
-                fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.results && data.results.length > 0) {
-                            latitudeInput.value = lat;
-                            longitudeInput.value = lng;
-                            destinationAddressInput.value = data.results[0].formatted || '';
-                            destinationCountryInput.value = data.results[0].components?.country || '';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Reverse geocoding error:', error);
-                        latitudeInput.value = lat;
-                        longitudeInput.value = lng;
-                        destinationAddressInput.value = '';
-                        destinationCountryInput.value = '';
-                    });
             });
+        }
 
-            marker.on('dragend', (e) => {
-                const { lat, lng } = e.target.getLatLng();
-                fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.results && data.results.length > 0) {
-                            latitudeInput.value = lat;
-                            longitudeInput.value = lng;
-                            destinationAddressInput.value = data.results[0].formatted || '';
-                            destinationCountryInput.value = data.results[0].components?.country || '';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Reverse geocoding error:', error);
-                        latitudeInput.value = lat;
-                        longitudeInput.value = lng;
-                        destinationAddressInput.value = '';
-                        destinationCountryInput.value = '';
-                    });
-            });
-
-            locationSearch.addEventListener('input', (e) => {
-                const query = e.target.value;
-                if (query.length < 3) return;
-                fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${OPENCAGE_API_KEY}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.results && data.results.length > 0) {
-                            const { lat, lng } = data.results[0].geometry;
-                            const formattedAddress = data.results[0].formatted;
-                            const country = data.results[0].components?.country || '';
-                            map.setView([lat, lng], 15);
-                            marker.setLatLng([lat, lng]);
-                            latitudeInput.value = lat;
-                            longitudeInput.value = lng;
-                            destinationAddressInput.value = formattedAddress || '';
-                            destinationCountryInput.value = country;
-                        }
-                    })
-                    .catch(error => console.error('Search error:', error));
-            });
-
-            const itineraryItemTypes = ['sightseeing', 'activity', 'meal', 'transport', 'accommodation'];
-
-            const updateItinerary = () => {
-                const days = parseInt(daysInput.value) || 0;
-                totalDaysSpan.textContent = days;
-                itineraryDays.innerHTML = '';
-                const itineraryData = <%- JSON.stringify(packageData.itineraryDays || []) %>;
-
-                for (let i = 0; i < days; i++) {
-                    const dayData = itineraryData[i] || { activities: [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }] };
-                    const dayDiv = document.createElement('div');
-                    dayDiv.className = 'd-flex flex-column mb-3';
-                    dayDiv.id = `itinerary-${i}`;
-                    dayDiv.innerHTML = `
-                        <input type="hidden" name="itineraryDays[${i}][day]" value="${i + 1}">
-                        <div class="d-flex justify-content-between align-items-center bg-dark p-3 text-white">
-                            <strong class="d-inline" style="font-size: 18px">Day ${i + 1}</strong>
-                            <div class="d-flex align-items-center">
-                                <span class="btn btn-outline-light btn-sm rounded-0 px-3 itineraryAdd" id="itinerary-add-${i}">Add Activity</span>
-                            </div>
-                        </div>
-                        <div id="itinerary-activities-${i}" class="mt-3 itinerary-activities">
-                            ${dayData.activities.map((activity, activityIndex) => `
-                                <div class="w-100 mt-3 itinerary-item" id="itinerary-item-${i}-${activityIndex}">
-                                    <div class="d-flex justify-content-between">
-                                        <strong>#${activityIndex + 1}</strong>
-                                        <i id="delete-item-${i}-${activityIndex}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer; display: ${dayData.activities.length === 1 ? 'none' : 'inline-block'};"></i>
-                                    </div>
-                                    <div class="row mt-2">
-                                        <div class="form-group col-md-5">
-                                            <label>Title</label>
-                                            <input name="itineraryDays[${i}][activities][${activityIndex}][title]" class="form-control itinerary-title" type="text" value="${(activity.title || '').replace(/"/g, '&quot;')}" required>
-                                        </div>
-                                        <div class="form-group col-md-7">
-                                            <label>Sub Title</label>
-                                            <input name="itineraryDays[${i}][activities][${activityIndex}][sub_title]" class="form-control itinerary-sub-title" type="text" value="${(activity.sub_title || '').replace(/"/g, '&quot;')}" required>
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label>Start Time</label>
-                                            <input name="itineraryDays[${i}][activities][${activityIndex}][start_time]" class="form-control itinerary-start-time" type="time" value="${activity.start_time || ''}" required>
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label>End Time</label>
-                                            <input name="itineraryDays[${i}][activities][${activityIndex}][end_time]" class="form-control itinerary-end-time" type="time" value="${activity.end_time || ''}" required>
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label>Type</label>
-                                            <select name="itineraryDays[${i}][activities][${activityIndex}][type]" class="form-control itinerary-type" required>
-                                                <option value="" disabled ${!activity.type ? 'selected' : ''}>Select itinerary item type</option>
-                                                ${itineraryItemTypes.map(type => `<option value="${type}" ${activity.type === type ? 'selected' : ''}>${type.toUpperCase()}</option>`).join('')}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                    itineraryDays.appendChild(dayDiv);
-                    dayDiv.querySelector(`#itinerary-add-${i}`).addEventListener('click', (e) => {
-                        e.preventDefault();
-                        addActivity(i);
-                    });
-                    setupItineraryDeleteListener(i);
-                }
-                toggleRequiredFields();
-            };
-
-            daysInput.addEventListener('input', updateItinerary);
-            nightsInput.addEventListener('input', updateItinerary);
-
-            function addActivity(dayIndex) {
-                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
-                const activityCount = activitiesContainer.querySelectorAll('.itinerary-item').length;
-                const activityDiv = document.createElement('div');
-                activityDiv.className = 'w-100 mt-3 itinerary-item';
-                activityDiv.id = `itinerary-item-${dayIndex}-${activityCount}`;
-                activityDiv.innerHTML = `
-                    <div class="d-flex justify-content-between">
-                        <strong>#${activityCount + 1}</strong>
-                        <i id="delete-item-${dayIndex}-${activityCount}" class="fas fa-trash text-danger delete-itinerary-row" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="form-group col-md-5">
-                            <label>Title</label>
-                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][title]" class="form-control itinerary-title" type="text" required>
-                        </div>
-                        <div class="form-group col-md-7">
-                            <label>Sub Title</label>
-                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][sub_title]" class="form-control itinerary-sub-title" type="text" required>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label>Start Time</label>
-                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][start_time]" class="form-control itinerary-start-time" type="time" required>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label>End Time</label>
-                            <input name="itineraryDays[${dayIndex}][activities][${activityCount}][end_time]" class="form-control itinerary-end-time" type="time" required>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label>Type</label>
-                            <select name="itineraryDays[${dayIndex}][activities][${activityCount}][type]" class="form-control itinerary-type" required>
-                                <option value="" disabled selected>Select itinerary item type</option>
-                                ${itineraryItemTypes.map(type => `<option value="${type}">${type.toUpperCase()}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                `;
-                activitiesContainer.appendChild(activityDiv);
-                updateActivityIndices(dayIndex);
-                toggleRequiredFields();
-            }
-
-            function setupItineraryDeleteListener(dayIndex) {
-                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
-                if (!activitiesContainer) return;
-                activitiesContainer.removeEventListener('click', handleItineraryDelete);
-                activitiesContainer.addEventListener('click', handleItineraryDelete);
-                function handleItineraryDelete(e) {
-                    const btn = e.target.closest('.delete-itinerary-row');
-                    if (btn && activitiesContainer.querySelectorAll('.itinerary-item').length > 1) {
-                        e.preventDefault();
-                        const activityDiv = btn.closest('.itinerary-item');
-                        if (activityDiv) {
-                            activityDiv.remove();
-                            updateActivityIndices(dayIndex);
-                            toggleRequiredFields();
-                        }
-                    }
-                }
-            }
-
-            function updateActivityIndices(dayIndex) {
-                const activitiesContainer = document.getElementById(`itinerary-activities-${dayIndex}`);
-                if (!activitiesContainer) return;
-                const activities = activitiesContainer.querySelectorAll('.itinerary-item');
-                activities.forEach((activity, index) => {
-                    activity.id = `itinerary-item-${dayIndex}-${index}`;
-                    activity.querySelector('strong').textContent = `#${index + 1}`;
-                    const inputs = activity.querySelectorAll('input, select');
-                    inputs[0].name = `itineraryDays[${dayIndex}][activities][${index}][title]`;
-                    inputs[1].name = `itineraryDays[${dayIndex}][activities][${index}][sub_title]`;
-                    inputs[2].name = `itineraryDays[${dayIndex}][activities][${index}][start_time]`;
-                    inputs[3].name = `itineraryDays[${dayIndex}][activities][${index}][end_time]`;
-                    inputs[4].name = `itineraryDays[${dayIndex}][activities][${index}][type]`;
-                    const deleteBtn = activity.querySelector('.delete-itinerary-row');
-                    if (deleteBtn) {
-                        deleteBtn.id = `delete-item-${dayIndex}-${index}`;
-                        deleteBtn.style.display = activities.length === 1 ? 'none' : 'inline-block';
-                    }
-                });
-            }
-
-            let departureCount = <%= packageData.multipleDepartures?.length || 1 %>;
-            addDepartureLink.addEventListener('click', (e) => {
+        departuresContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-departure');
+            if (btn && departuresContainer.querySelectorAll('.departure-entry').length > 1) {
                 e.preventDefault();
-                const departureDiv = document.createElement('div');
-                departureDiv.className = 'departure-entry mb-3 d-flex align-items-center';
-                departureDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <div class="form-group">
-                            <label for="departureLocation${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Location</label>
-                            <input type="text" name="multipleDepartures[${departureCount}][location]" id="departureLocation${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
-                        </div>
-                    </div>
-                    <div class="me-2">
-                        <div class="form-group">
-                            <label for="departureDateTime${departureCount}" class="form-label${statusSelect.value === 'Active' ? ' required-field' : ''}">Departure Date and Time</label>
-                            <input type="datetime-local" name="multipleDepartures[${departureCount}][dateTime]" id="departureDateTime${departureCount}" class="form-control"${statusSelect.value === 'Active' ? ' required' : ''}>
-                        </div>
-                    </div>
-                    <div>
-                        <i class="fas fa-trash text-danger delete-departure" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                `;
-                departuresContainer.appendChild(departureDiv);
-                departureCount++;
+                btn.closest('.departure-entry').remove();
                 updateDepartureIndices();
                 toggleRequiredFields();
-            });
+            }
+        });
+    } else {
+        console.warn('Add departure link or departures container not found');
+    }
 
-            departuresContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-departure');
-                if (btn && departuresContainer.querySelectorAll('.departure-entry').length > 1) {
-                    e.preventDefault();
-                    btn.closest('.departure-entry').remove();
-                    departureCount--;
-                    updateDepartureIndices();
-                    toggleRequiredFields();
+    let inclusionCount = <%= packageData.inclusions?.length || 1 %>;
+    if (addInclusionLink && inclusionsContainer) {
+        addInclusionLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const inclusionDiv = document.createElement('div');
+            inclusionDiv.className = 'inclusion-entry mb-3 d-flex align-items-center';
+            inclusionDiv.innerHTML = `
+                <div class="flex-grow-1 me-2">
+                    <input type="text" name="inclusions[${inclusionCount}]" class="form-control" placeholder="e.g., Meals" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Inclusion is required.</div>
+                </div>
+                <div>
+                    <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer;"></i>
+                </div>
+            `;
+            inclusionsContainer.appendChild(inclusionDiv);
+            inclusionCount++;
+            updateInclusionIndices();
+            toggleRequiredFields();
+        });
+
+        function updateInclusionIndices() {
+            const inclusionEntries = inclusionsContainer.querySelectorAll('.inclusion-entry');
+            inclusionEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Inclusion entry not found at index: ${index}`);
+                    return;
+                }
+                const input = entry.querySelector('input');
+                if (input) {
+                    input.name = `inclusions[${index}]`;
+                    const deleteBtn = entry.querySelector('.delete-inclusion');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = inclusionEntries.length === 1 ? 'none' : 'inline-block';
+                    }
+                    if (statusSelect.value === 'Active') {
+                        input.setAttribute('required', '');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                        }
+                    } else {
+                        input.removeAttribute('required');
+                        input.classList.remove('is-invalid');
+                    }
+                } else {
+                    console.warn(`Input not found for inclusion entry at index: ${index}`);
                 }
             });
+        }
 
-            function updateDepartureIndices() {
-                const departures = departuresContainer.querySelectorAll('.departure-entry');
-                departures.forEach((dep, index) => {
-                    const locationInput = dep.querySelector('input[type="text"]');
-                    const dateTimeInput = dep.querySelector('input[type="datetime-local"]');
-                    const locationLabel = dep.querySelector('label[for^="departureLocation"]');
-                    const dateTimeLabel = dep.querySelector('label[for^="departureDateTime"]');
-                    if (locationInput && dateTimeInput && locationLabel && dateTimeLabel) {
-                        locationInput.name = `multipleDepartures[${index}][location]`;
-                        dateTimeInput.name = `multipleDepartures[${index}][dateTime]`;
-                        locationInput.id = `departureLocation${index}`;
-                        dateTimeInput.id = `departureDateTime${index}`;
-                        locationLabel.setAttribute('for', `departureLocation${index}`);
-                        dateTimeLabel.setAttribute('for', `departureDateTime${index}`);
-                        const deleteBtn = dep.querySelector('.delete-departure');
-                        if (deleteBtn) {
-                            deleteBtn.style.display = departures.length === 1 ? 'none' : 'inline-block';
-                        }
-                    }
-                });
-            }
-
-            let inclusionCount = <%= packageData.inclusions?.length || 1 %>;
-            addInclusionLink.addEventListener('click', (e) => {
+        inclusionsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-inclusion');
+            if (btn && inclusionsContainer.querySelectorAll('.inclusion-entry').length > 1) {
                 e.preventDefault();
-                const inclusionDiv = document.createElement('div');
-                inclusionDiv.className = 'inclusion-entry mb-3 d-flex align-items-center';
-                inclusionDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <input type="text" name="inclusions[${inclusionCount}]" class="form-control" placeholder="e.g., Meals">
-                    </div>
-                    <div>
-                        <i class="fas fa-trash text-danger delete-inclusion" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                `;
-                inclusionsContainer.appendChild(inclusionDiv);
-                inclusionCount++;
+                btn.closest('.inclusion-entry').remove();
                 updateInclusionIndices();
                 toggleRequiredFields();
-            });
+            }
+        });
+    } else {
+        console.warn('Add inclusion link or inclusions container not found');
+    }
 
-            inclusionsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-inclusion');
-                if (btn && inclusionsContainer.querySelectorAll('.inclusion-entry').length > 1) {
-                    e.preventDefault();
-                    btn.closest('.inclusion-entry').remove();
-                    inclusionCount--;
-                    updateInclusionIndices();
-                    toggleRequiredFields();
+    let exclusionCount = <%= packageData.exclusions?.length || 1 %>;
+    if (addExclusionLink && exclusionsContainer) {
+        addExclusionLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const exclusionDiv = document.createElement('div');
+            exclusionDiv.className = 'exclusion-entry mb-3 d-flex align-items-center';
+            exclusionDiv.innerHTML = `
+                <div class="flex-grow-1 me-2">
+                    <input type="text" name="exclusions[${exclusionCount}]" class="form-control" placeholder="e.g., Airfare" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Exclusion is required.</div>
+                </div>
+                <div>
+                    <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer;"></i>
+                </div>
+            `;
+            exclusionsContainer.appendChild(exclusionDiv);
+            exclusionCount++;
+            updateExclusionIndices();
+            toggleRequiredFields();
+        });
+
+        function updateExclusionIndices() {
+            const exclusionEntries = exclusionsContainer.querySelectorAll('.exclusion-entry');
+            exclusionEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Exclusion entry not found at index: ${index}`);
+                    return;
+                }
+                const input = entry.querySelector('input');
+                if (input) {
+                    input.name = `exclusions[${index}]`;
+                    const deleteBtn = entry.querySelector('.delete-exclusion');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = exclusionEntries.length === 1 ? 'none' : 'inline-block';
+                    }
+                    if (statusSelect.value === 'Active') {
+                        input.setAttribute('required', '');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                        }
+                    } else {
+                        input.removeAttribute('required');
+                        input.classList.remove('is-invalid');
+                    }
+                } else {
+                    console.warn(`Input not found for exclusion entry at index: ${index}`);
                 }
             });
+        }
 
-            function updateInclusionIndices() {
-                const inclusions = inclusionsContainer.querySelectorAll('.inclusion-entry');
-                inclusions.forEach((inc, index) => {
-                    const input = inc.querySelector('input');
-                    if (input) {
-                        input.name = `inclusions[${index}]`;
-                        const deleteBtn = inc.querySelector('.delete-inclusion');
-                        if (deleteBtn) {
-                            deleteBtn.style.display = inclusions.length === 1 ? 'none' : 'inline-block';
-                        }
-                        if (statusSelect.value === 'Active') {
-                            input.setAttribute('required', '');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            input.classList.remove('is-invalid');
-                        }
-                    }
-                });
-            }
-
-            let exclusionCount = <%= packageData.exclusions?.length || 1 %>;
-            addExclusionLink.addEventListener('click', (e) => {
+        exclusionsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-exclusion');
+            if (btn && exclusionsContainer.querySelectorAll('.exclusion-entry').length > 1) {
                 e.preventDefault();
-                const exclusionDiv = document.createElement('div');
-                exclusionDiv.className = 'exclusion-entry mb-3 d-flex align-items-center';
-                exclusionDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <input type="text" name="exclusions[${exclusionCount}]" class="form-control" placeholder="e.g., Airfare">
-                    </div>
-                    <div>
-                        <i class="fas fa-trash text-danger delete-exclusion" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                `;
-                exclusionsContainer.appendChild(exclusionDiv);
-                exclusionCount++;
+                btn.closest('.exclusion-entry').remove();
                 updateExclusionIndices();
                 toggleRequiredFields();
-            });
+            }
+        });
+    } else {
+        console.warn('Add exclusion link or exclusions container not found');
+    }
 
-            exclusionsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-exclusion');
-                if (btn && exclusionsContainer.querySelectorAll('.exclusion-entry').length > 1) {
-                    e.preventDefault();
-                    btn.closest('.exclusion-entry').remove();
-                    exclusionCount--;
-                    updateExclusionIndices();
-                    toggleRequiredFields();
+    let activityTypeCount = <%= packageData.activityTypes?.length || 1 %>;
+    if (addActivityTypeLink && activityTypesContainer) {
+        addActivityTypeLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const activityTypeDiv = document.createElement('div');
+            activityTypeDiv.className = 'activityType-entry mb-3 d-flex align-items-center';
+            activityTypeDiv.innerHTML = `
+                <div class="flex-grow-1 me-2">
+                    <input type="text" name="activityTypes[${activityTypeCount}]" class="form-control" placeholder="e.g., Hiking" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Activity type is required.</div>
+                </div>
+                <div>
+                    <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer;"></i>
+                </div>
+            `;
+            activityTypesContainer.appendChild(activityTypeDiv);
+            activityTypeCount++;
+            updateActivityTypeIndices();
+            toggleRequiredFields();
+        });
+
+        function updateActivityTypeIndices() {
+            const activityTypeEntries = activityTypesContainer.querySelectorAll('.activityType-entry');
+            activityTypeEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Activity type entry not found at index: ${index}`);
+                    return;
+                }
+                const input = entry.querySelector('input');
+                if (input) {
+                    input.name = `activityTypes[${index}]`;
+                    const deleteBtn = entry.querySelector('.delete-activityType');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = activityTypeEntries.length === 1 ? 'none' : 'inline-block';
+                    }
+                    if (statusSelect.value === 'Active') {
+                        input.setAttribute('required', '');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                        }
+                    } else {
+                        input.removeAttribute('required');
+                        input.classList.remove('is-invalid');
+                    }
+                } else {
+                    console.warn(`Input not found for activity type entry at index: ${index}`);
                 }
             });
+        }
 
-            function updateExclusionIndices() {
-                const exclusions = exclusionsContainer.querySelectorAll('.exclusion-entry');
-                exclusions.forEach((exc, index) => {
-                    const input = exc.querySelector('input');
-                    if (input) {
-                        input.name = `exclusions[${index}]`;
-                        const deleteBtn = exc.querySelector('.delete-exclusion');
-                        if (deleteBtn) {
-                            deleteBtn.style.display = exclusions.length === 1 ? 'none' : 'inline-block';
-                        }
-                        if (statusSelect.value === 'Active') {
-                            input.setAttribute('required', '');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            input.classList.remove('is-invalid');
-                        }
-                    }
-                });
-            }
-
-            let activityTypeCount = <%= packageData.activityTypes?.length || 1 %>;
-            addActivityTypeLink.addEventListener('click', (e) => {
+        activityTypesContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-activityType');
+            if (btn && activityTypesContainer.querySelectorAll('.activityType-entry').length > 1) {
                 e.preventDefault();
-                const activityTypeDiv = document.createElement('div');
-                activityTypeDiv.className = 'activityType-entry mb-3 d-flex align-items-center';
-                activityTypeDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <input type="text" name="activityTypes[${activityTypeCount}]" class="form-control" placeholder="e.g., Hiking">
-                    </div>
-                    <div>
-                        <i class="fas fa-trash text-danger delete-activityType" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                `;
-                activityTypesContainer.appendChild(activityTypeDiv);
-                activityTypeCount++;
+                btn.closest('.activityType-entry').remove();
                 updateActivityTypeIndices();
                 toggleRequiredFields();
-            });
+            }
+        });
+    } else {
+        console.warn('Add activity type link or activity types container not found');
+    }
 
-            activityTypesContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-activityType');
-                if (btn && activityTypesContainer.querySelectorAll('.activityType-entry').length > 1) {
-                    e.preventDefault();
-                    btn.closest('.activityType-entry').remove();
-                    activityTypeCount--;
-                    updateActivityTypeIndices();
-                    toggleRequiredFields();
+    let highlightCount = <%= packageData.highlights?.length || 1 %>;
+    if (addHighlightLink && highlightsContainer) {
+        addHighlightLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const highlightDiv = document.createElement('div');
+            highlightDiv.className = 'highlight-entry mb-3 d-flex align-items-center';
+            highlightDiv.innerHTML = `
+                <div class="flex-grow-1 me-2">
+                    <input type="text" name="highlights[${highlightCount}]" class="form-control" placeholder="e.g., Scenic views" ${statusSelect.value === 'Active' ? 'required' : ''}>
+                    <div class="invalid-feedback">Highlight is required.</div>
+                </div>
+                <div>
+                    <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer;"></i>
+                </div>
+            `;
+            highlightsContainer.appendChild(highlightDiv);
+            highlightCount++;
+            updateHighlightIndices();
+            toggleRequiredFields();
+        });
+
+        function updateHighlightIndices() {
+            const highlightEntries = highlightsContainer.querySelectorAll('.highlight-entry');
+            highlightEntries.forEach((entry, index) => {
+                if (!entry) {
+                    console.warn(`Highlight entry not found at index: ${index}`);
+                    return;
+                }
+                const input = entry.querySelector('input');
+                if (input) {
+                    input.name = `highlights[${index}]`;
+                    const deleteBtn = entry.querySelector('.delete-highlight');
+                    if (deleteBtn) {
+                        deleteBtn.style.display = highlightEntries.length === 1 ? 'none' : 'inline-block';
+                    }
+                    if (statusSelect.value === 'Active') {
+                        input.setAttribute('required', '');
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                        }
+                    } else {
+                        input.removeAttribute('required');
+                        input.classList.remove('is-invalid');
+                    }
+                } else {
+                    console.warn(`Input not found for highlight entry at index: ${index}`);
                 }
             });
+        }
 
-            function updateActivityTypeIndices() {
-                const activityTypes = activityTypesContainer.querySelectorAll('.activityType-entry');
-                activityTypes.forEach((act, index) => {
-                    const input = act.querySelector('input');
-                    if (input) {
-                        input.name = `activityTypes[${index}]`;
-                        const deleteBtn = act.querySelector('.delete-activityType');
-                        if (deleteBtn) {
-                            deleteBtn.style.display = activityTypes.length === 1 ? 'none' : 'inline-block';
-                        }
-                        if (statusSelect.value === 'Active') {
-                            input.setAttribute('required', '');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            input.classList.remove('is-invalid');
-                        }
-                    }
-                });
-            }
-
-            let highlightCount = <%= packageData.highlights?.length || 1 %>;
-            addHighlightLink.addEventListener('click', (e) => {
+        highlightsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-highlight');
+            if (btn && highlightsContainer.querySelectorAll('.highlight-entry').length > 1) {
                 e.preventDefault();
-                const highlightDiv = document.createElement('div');
-                highlightDiv.className = 'highlight-entry mb-3 d-flex align-items-center';
-                highlightDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <input type="text" name="highlights[${highlightCount}]" class="form-control" placeholder="e.g., Scenic views">
-                    </div>
-                    <div>
-                        <i class="fas fa-trash text-danger delete-highlight" style="font-size: 18px; cursor: pointer;"></i>
-                    </div>
-                `;
-                highlightsContainer.appendChild(highlightDiv);
-                highlightCount++;
+                btn.closest('.highlight-entry').remove();
                 updateHighlightIndices();
                 toggleRequiredFields();
-            });
+            }
+        });
+    } else {
+        console.warn('Add highlight link or highlights container not found');
+    }
 
-            highlightsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-highlight');
-                if (btn && highlightsContainer.querySelectorAll('.highlight-entry').length > 1) {
-                    e.preventDefault();
-                    btn.closest('.highlight-entry').remove();
-                    highlightCount--;
-                    updateHighlightIndices();
+    if (addCategoryBtn && newCategoryInput && newCategoryField && addCategorySubmit && categoryList) {
+        addCategoryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newCategoryInput.classList.toggle('d-none');
+            newCategoryField.focus();
+        });
+
+        addCategorySubmit.addEventListener('click', (e) => {
+            e.preventDefault();
+            const newCategory = newCategoryField.value.trim();
+            if (newCategory) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'form-group mb-2';
+                categoryDiv.innerHTML = `
+                    <label class="custom-input">
+                        <input type="checkbox" name="additionalCategories[]" value="${newCategory.replace(/"/g, '&quot;')}" ${statusSelect.value === 'Active' ? 'required' : ''} checked>
+                        <span class="custom-input-field"></span>
+                        ${newCategory}
+                    </label>
+                `;
+                categoryList.appendChild(categoryDiv);
+                newCategoryField.value = '';
+                newCategoryInput.classList.add('d-none');
+                toggleRequiredFields();
+            }
+        });
+    } else {
+        console.warn('Category-related elements not found');
+    }
+
+    if (galleryInput && galleryError && galleryPreview) {
+        galleryInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            const existingImages = galleryPreview.querySelectorAll('.gallery-img-container').length;
+            const totalImages = existingImages + files.length;
+            if (totalImages > 8) {
+                galleryError.classList.remove('d-none');
+                galleryInput.classList.add('is-invalid');
+                e.target.value = '';
+                return;
+            }
+            galleryError.classList.add('d-none');
+            galleryInput.classList.remove('is-invalid');
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'col-auto gallery-img-container';
+                    imgContainer.innerHTML = `
+                        <img src="${event.target.result}" class="gallery-img" alt="Gallery Image">
+                        <i class="fas fa-trash text-danger delete-gallery mt-1" style="font-size: 18px; cursor: pointer;"></i>
+                    `;
+                    galleryPreview.appendChild(imgContainer);
                     toggleRequiredFields();
-                }
-            });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-            function updateHighlightIndices() {
-                const highlights = highlightsContainer.querySelectorAll('.highlight-entry');
-                highlights.forEach((hig, index) => {
-                    const input = hig.querySelector('input');
-                    if (input) {
-                        input.name = `highlights[${index}]`;
-                        const deleteBtn = hig.querySelector('.delete-highlight');
-                        if (deleteBtn) {
-                            deleteBtn.style.display = highlights.length === 1 ? 'none' : 'inline-block';
-                        }
-                        if (statusSelect.value === 'Active') {
-                            input.setAttribute('required', '');
-                            if (!input.value.trim()) {
-                                input.classList.add('is-invalid');
-                            }
-                        } else {
-                            input.removeAttribute('required');
-                            input.classList.remove('is-invalid');
-                        }
-                    }
-                });
+        galleryPreview.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-gallery');
+            if (btn) {
+                e.preventDefault();
+                const imgContainer = btn.closest('.gallery-img-container');
+                const existingImageInput = imgContainer.querySelector('input[name^="existingGallery"]');
+                if (existingImageInput && form) {
+                    const deletedImagesInput = document.createElement('input');
+                    deletedImagesInput.type = 'hidden';
+                    deletedImagesInput.name = 'deletedImages[]';
+                    deletedImagesInput.value = existingImageInput.value;
+                    form.appendChild(deletedImagesInput);
+                }
+                imgContainer.remove();
+                toggleRequiredFields();
+            }
+        });
+    } else {
+        console.warn('Gallery-related elements not found');
+    }
+
+    if (featuredInput && featuredFileName) {
+        featuredInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                featuredFileName.textContent = file.name;
+                featuredInput.classList.remove('is-invalid');
+            } else {
+                featuredFileName.textContent = '<%= packageData.featuredImage ? packageData.featuredImage : "No file selected" %>';
+                if (statusSelect.value === 'Active' && !featuredFileName.textContent.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                    featuredInput.classList.add('is-invalid');
+                }
+            }
+        });
+    } else {
+        console.warn('Featured input or file name element not found');
+    }
+
+    if (statusSelect) {
+        statusSelect.addEventListener('change', toggleRequiredFields);
+    } else {
+        console.warn('Status select element not found');
+    }
+
+    if (form && formError) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const isPublish = statusSelect.value === 'Active';
+            form.classList.add('was-validated');
+
+            // Validate program days
+            const programDayEntries = programDays?.querySelectorAll('.program-day-entry') || [];
+            const days = parseInt(daysInput?.value) || 0;
+            if (isPublish && programDayEntries.length !== days) {
+                formError.textContent = `Program days must match the number of trip duration days (${days}).`;
+                formError.classList.remove('d-none');
+                return;
             }
 
-            addCategoryBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                newCategoryInput.classList.toggle('d-none');
-            });
+            // Validate gallery images
+            const totalImages = galleryPreview?.querySelectorAll('.gallery-img-container').length + (galleryInput?.files.length || 0);
+            if (isPublish && totalImages === 0) {
+                galleryInput?.classList.add('is-invalid');
+                formError.textContent = 'At least one gallery image is required for published packages.';
+                formError.classList.remove('d-none');
+                return;
+            }
+            if (totalImages > 8) {
+                galleryError?.classList.remove('d-none');
+                galleryInput?.classList.add('is-invalid');
+                formError.textContent = 'Maximum 8 gallery images allowed.';
+                formError.classList.remove('d-none');
+                return;
+            }
 
-            addCategorySubmit.addEventListener('click', () => {
-                const newCategory = newCategoryField.value.trim();
-                if (newCategory) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'form-group mb-2';
-                    categoryDiv.innerHTML = `
-                        <label class="custom-input">
-                            <input type="checkbox" name="additionalCategories[]" value="${newCategory}" checked>
-                            <span class="custom-input-field"></span>
-                            ${newCategory}
-                        </label>
-                    `;
-                    categoryList.appendChild(categoryDiv);
-                    if (statusSelect.value === 'Active') {
-                        const categoriesHeader = document.querySelector('.db-cat-field-wrap h4');
-                        if (categoriesHeader) {
-                            categoriesHeader.classList.add('required-field');
-                        }
-                        const newInput = categoryDiv.querySelector('input');
-                        if (!Array.from(document.querySelectorAll('#category-list input[type="checkbox"]')).some(input => input.checked && input !== newInput)) {
-                            newInput.setAttribute('required', '');
-                        }
-                    }
-                    newCategoryField.value = '';
-                    newCategoryInput.classList.add('d-none');
-                    toggleRequiredFields();
-                }
-            });
+            // Validate categories
+            const categoryInputs = categoryList?.querySelectorAll('input[type="checkbox"]') || [];
+            if (isPublish && categoryInputs.length > 0 && !Array.from(categoryInputs).some(input => input.checked)) {
+                categoryInputs.forEach(input => input.setAttribute('required', ''));
+                document.querySelector('.db-cat-field-wrap h4')?.classList.add('required-field');
+                categoryError?.classList.remove('d-none');
+                formError.textContent = 'At least one additional category is required for published packages.';
+                formError.classList.remove('d-none');
+                return;
+            }
 
-            galleryInput.addEventListener('change', () => {
-                const existingImages = document.querySelectorAll('input[name^="gallery"]').length;
-                const newImages = galleryInput.files.length;
-                if (existingImages + newImages > 8) {
-                    galleryError.classList.remove('d-none');
-                    galleryInput.value = '';
-                } else {
-                    galleryError.classList.add('d-none');
-                    Array.from(galleryInput.files).forEach((file, index) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const col = document.createElement('div');
-                            col.className = 'col-auto';
-                            col.innerHTML = `
-                                <img src="${e.target.result}" class="gallery-img" alt="Preview">
-                                <i class="fas fa-trash text-danger delete-gallery mt-1" style="font-size: 18px; cursor: pointer;"></i>
-                            `;
-                            galleryPreview.appendChild(col);
-                            col.querySelector('.delete-gallery').addEventListener('click', (e) => {
-                                e.preventDefault();
-                                col.remove();
-                                const dt = new DataTransfer();
-                                Array.from(galleryInput.files).forEach((f, i) => {
-                                    if (i !== index) dt.items.add(f);
-                                });
-                                galleryInput.files = dt.files;
-                                toggleRequiredFields();
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                }
-            });
-
-            galleryPreview.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-gallery');
-                if (btn) {
-                    e.preventDefault();
-                    const container = btn.closest('.col-auto');
-                    const imageName = container.querySelector('input[name^="gallery"]')?.value;
-                    if (imageName) {
-                        const deletedImagesInput = document.createElement('input');
-                        deletedImagesInput.type = 'hidden';
-                        deletedImagesInput.name = 'deletedImages[]';
-                        deletedImagesInput.value = imageName;
-                        form.appendChild(deletedImagesInput);
-                    }
-                    container.remove();
-                    toggleRequiredFields();
-                }
-            });
-
-            featuredInput.addEventListener('change', () => {
-                featuredFileName.textContent = featuredInput.files[0]?.name || 'No file selected';
-            });
-
-            statusSelect.addEventListener('change', toggleRequiredFields);
-
-            keywordsInput.addEventListener('input', () => {
-                if (statusSelect.value === 'Active') {
-                    if (keywordsInput.value.trim()) {
-                        keywordsInput.classList.remove('is-invalid');
-                    } else {
-                        keywordsInput.classList.add('is-invalid');
-                    }
-                } else {
-                    keywordsInput.classList.remove('is-invalid');
-                }
-            });
-
-            destinationCountryInput.addEventListener('input', () => {
-                if (statusSelect.value === 'Active') {
-                    if (destinationCountryInput.value.trim()) {
-                        destinationCountryInput.classList.remove('is-invalid');
-                    } else {
-                        destinationCountryInput.classList.add('is-invalid');
-                    }
-                } else {
-                    destinationCountryInput.classList.remove('is-invalid');
-                }
-            });
-
-            categoryList.addEventListener('change', (e) => {
-                if (statusSelect.value === 'Active') {
-                    toggleRequiredFields();
-                }
-            });
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                toggleRequiredFields();
+      
                 const formData = new FormData(form);
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
-                        body: formData,
+                        body: formData
                     });
                     const result = await response.json();
                     if (response.ok) {
                         window.location.href = '/db-all-packages';
                     } else {
+                        formError.textContent = result.message || 'An error occurred while saving the package.';
                         formError.classList.remove('d-none');
-                        formError.textContent = result.error || 'Failed to submit form';
+                        if (result.errors) {
+                            result.errors.forEach(error => {
+                                const field = document.querySelector(`[name="${error.param}"]`);
+                                if (field) {
+                                    field.classList.add('is-invalid');
+                                    const feedback = field.nextElementSibling;
+                                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                                        feedback.textContent = error.msg;
+                                    }
+                                }
+                            });
+                        }
                     }
                 } catch (error) {
+                    console.error('Form submission error:', error);
+                    formError.textContent = 'An error occurred while saving the package. Please try again.';
                     formError.classList.remove('d-none');
-                    formError.textContent = 'Submission error: ' + error.message;
                 }
-            });
 
-            form.classList.add('needs-validation');
-            form.setAttribute('novalidate', '');
-            toggleRequiredFields();
-            updateDepartureIndices();
-            updateInclusionIndices();
-            updateExclusionIndices();
-            updateActivityTypeIndices();
-            updateHighlightIndices();
-            updateItinerary();
         });
-    </script>
+    } else {
+        console.warn('Form or form error element not found');
+    }
+
+    // Initialize event listeners for existing itinerary days
+    const existingDays = <%- JSON.stringify(packageData.itineraryDays || []) %>;
+    existingDays.forEach((_, index) => {
+        setupItineraryDeleteListener(index);
+    });
+    setupAddActivityListeners();
+
+    if (daysInput && nightsInput) {
+        daysInput.addEventListener('input', updateItinerary);
+        nightsInput.addEventListener('input', updateItinerary);
+    } else {
+        console.warn('Days or nights input not found');
+    }
+
+    // Initialize validation
+    toggleRequiredFields();
+});
+  </script> 
 </body>
 </html>

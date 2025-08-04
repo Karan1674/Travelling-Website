@@ -28,6 +28,12 @@ const packageSchema = new mongoose.Schema({
       type: { type: String }
     }]
   }],
+  programDescription: { type: String },
+  programDays: [{
+    day: { type: Number },
+    title: { type: String },
+    description: { type: String }
+  }],
   inclusions: [{ type: String }],
   exclusions: [{ type: String }],
   activityTypes: [{ type: String }],
@@ -43,7 +49,9 @@ const packageSchema = new mongoose.Schema({
   gallery: [{ type: String }],
   featuredImage: { type: String },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
-  status: { type: String, enum: ['Pending', 'Active', 'Expired'], required: true }
+  status: { type: String, enum: ['Pending', 'Active', 'Expired'], required: true },
+
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Package', packageSchema);

@@ -2751,13 +2751,13 @@ input[type=submit]:focus {
   position: relative;
   font-size: 15px;
 }
-.rating-start:before {
+/* .rating-start:before {
   color: #ccd6df;
   content: "\f005\f005\f005\f005\f005";
   display: block;
   font-family: "Font Awesome 5 free";
   font-weight: 900;
-}
+} */
 .rating-start span {
   display: block;
   left: 0;
@@ -4946,7 +4946,7 @@ procduct details css
   line-height: 1.1;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 20px 25px;
+  padding: 20px 20px;
 }
 .nav-tabs .nav-link:hover, .nav-tabs .nav-link:focus, .nav-tabs .nav-link.active {
   color: #F56960;

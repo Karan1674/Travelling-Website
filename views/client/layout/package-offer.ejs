@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<style>
+    /* Reuse styling from tour-packages.ejs */
+    .special-item .special-img {
+        width: 365px;
+        height: 305px;
+        overflow: hidden;
+    }
+    .special-item .special-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .review-area {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .review-text {
+        font-size: 0.9rem;
+        color: #555555;
+    }
+    .rating-start {
+        font-size: 1rem;
+        color: #ccc;
+        display: inline-flex;
+    }
+    .rating-start i {
+        margin: 0 2px;
+    }
+    .rating-start .filled {
+        color: #f5c518; /* Gold color for filled stars */
+    }
+    .wishlist-toggle {
+        color: #dc3545;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .wishlist-toggle:hover {
+        text-decoration: underline;
+    }
+    .badge-dis {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+    .badge-dis span {
+        font-size: 0.9rem;
+    }
+    .special-content {
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+    }
+    .meta-cat a {
+        color: #007bff;
+        text-decoration: none;
+    }
+    .meta-cat a:hover {
+        text-decoration: underline;
+    }
+    .package-price del {
+        color: #999;
+        margin-right: 10px;
+    }
+    .package-price ins {
+        color: #dc3545;
+        text-decoration: none;
+    }
+</style>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar.ejs') %>
+        <main id="content" class="site-main">
+            <!-- Inner Banner -->
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Package Offer</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <!-- Package Offer Section -->
+            <section class="package-offer-wrap">
+                <div class="special-section">
+                    <div class="container">
+                        <div class="special-inner">
+                            <div class="row">
+                                <% if (packages.length === 0) { %>
+                                    <div class="col-12 text-center">
+                                        <h3>No Package Offers Available</h3>
+                                        <p>Currently, there are no discounted tour packages available. Please check back later or explore all packages.</p>
+                                        <a href="/tour-packages" class="button-text">Explore Packages</a>
+                                    </div>
+                                <% } else { %>
+                                    <% packages.forEach(function(package) { %>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="special-item">
+                                                <figure class="special-img">
+                                                    <a href="/package-detail/<%= package._id %>">
+                                                        <img src="/Uploads/gallery/<%= package.featuredImage || 'default.jpg' %>" alt="<%= package.title %>">
+                                                    </a>
+                                                </figure>
+                                                <div class="badge-dis">
+                                                    <span><strong><%= package.discount %>%</strong> off</span>
+                                                </div>
+                                                <div class="special-content">
+                                                    <div class="meta-cat">
+                                                        <a href="#"><%= package.destinationCountry || 'N/A' %></a>
+                                                    </div>
+                                                    <h3>
+                                                        <a href="/package-detail/<%= package._id %>"><%= package.title %></a>
+                                                    </h3>
+                                                    <div class="review-area">
+                                                        <span class="review-text">(<%= package.reviewCount || 0 %> reviews)</span>
+                                                        <div class="rating-start" title="Rated <%= package.averageRating || 0 %> out of 5">
+                                                            <% for (let i = 1; i <= 5; i++) { %>
+                                                                <i class="fas fa-star <%= i <= Math.round(package.averageRating || 0) ? 'filled' : '' %>"></i>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="package-price">
+                                                        Price:
+                                                        <del>$<%= package.regularPrice %></del>
+                                                        <ins>$<%= package.salePrice %></ins>
+                                                    </div>
+                                                    <div class="btn-wrap" style="display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 15px;">
+                                                        <a href="/booking/<%= package._id %>" class="button-text width-6" style="display: inline-flex; align-items: center;">
+                                                            Book Now <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+                                                        </a>
+                                                        <a href="#" class="wishlist-toggle button-text width-6" data-package-id="<%= package._id %>" data-is-wishlisted="<%= package.isWishlisted %>" style="display: inline-flex; align-items: center; ">
+                                                            <%= package.isWishlisted ? 'Remove' : 'Wish List' %>
+                                                            <i class="<%= package.isWishlisted ? 'fas fa-heart' : 'far fa-heart' %>" style="margin-left: 8px;"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Contact Section -->
+                <div class="contact-section">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="contact-img" style="background-image: url(/assets/images/img24.jpg);"></div>
+                            </div>
+                            <div class="col-lg-8">
+                                <div class="contact-details-wrap">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="contact-details">
+                                                <div class="contact-icon">
+                                                    <img src="/assets/images/icon12.png" alt="">
+                                                </div>
+                                                <ul>
+                                                    <li><a href="#">support@gmail.com</a></li>
+                                                    <li><a href="#">info@domain.com</a></li>
+                                                    <li><a href="#">name@company.com</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="contact-details">
+                                                <div class="contact-icon">
+                                                    <img src="/assets/images/icon13.png" alt="">
+                                                </div>
+                                                <ul>
+                                                    <li><a href="#">+132 (599) 254 669</a></li>
+                                                    <li><a href="#">+123 (669) 255 587</a></li>
+                                                    <li><a href="#">+01 (977) 2599 12</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="contact-details">
+                                                <div class="contact-icon">
+                                                    <img src="/assets/images/icon14.png" alt="">
+                                                </div>
+                                                <ul>
+                                                    <li>3146 Koontz, California</li>
+                                                    <li>Quze.24 Second floor</li>
+                                                    <li>36 Street, Melbourne</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="contact-btn-wrap">
+                                    <h3>LET'S JOIN US FOR MORE UPDATE !!</h3>
+                                    <a href="#" class="button-primary">LEARN MORE</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <%- include('../partials/Footer.ejs') %>
+    </div>
+    <%- include('../partials/Script.ejs') %>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle wishlist toggle
+            document.querySelectorAll('.wishlist-toggle').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const packageId = button.getAttribute('data-package-id');
+                    const isWishlisted = button.getAttribute('data-is-wishlisted') === 'true';
+                    const action = isWishlisted ? 'remove' : 'add';
+
+                    try {
+                        const response = await fetch(`/wishlist/${action}/${packageId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            button.setAttribute('data-is-wishlisted', !isWishlisted);
+                            button.innerHTML = isWishlisted 
+                                ? 'Wish List<i class="far fa-heart"></i>' 
+                                : 'Remove<i class="fas fa-heart"></i>';
+                        } 
+                    } catch (error) {
+                        console.error(`Error ${action}ing package to wishlist:`, error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

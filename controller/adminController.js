@@ -297,10 +297,10 @@ export const editAgent = async (req, res) => {
 
 export const getAgentDetails = async (req, res) => {
     try {
-        
-        const agentId  = req.query.agentId;
-        const adminId = req.id; 
-        const isAdmin = req.isAdmin; 
+
+        const agentId = req.query.agentId;
+        const adminId = req.id;
+        const isAdmin = req.isAdmin;
 
         // Check if admin ID is present
         if (!adminId) {
@@ -328,8 +328,8 @@ export const getAgentDetails = async (req, res) => {
             return res.redirect('/db-admin-created-agents')
         }
 
-      
-        res.render('admin/layout/agentDetail', { user: adminData , isAdmin, agent });
+
+        res.render('admin/layout/agentDetail', { user: adminData, isAdmin, agent });
     } catch (error) {
         console.error("Error fetching agent details:", error);
 
@@ -379,10 +379,10 @@ export const deleteAgent = async (req, res) => {
 
 export const getSignedInUsers = async (req, res) => {
     try {
-        const adminId = req.id; 
-        const isAdmin = req.isAdmin; 
+        const adminId = req.id;
+        const isAdmin = req.isAdmin;
         const { search = '', page = 1 } = req.query;
-        const limit = 10; 
+        const limit = 10;
 
         // Check if admin ID is present
         if (!adminId) {
@@ -406,15 +406,15 @@ export const getSignedInUsers = async (req, res) => {
         // Build search query
         const searchQuery = search
             ? {
-                  $or: [
-                      { firstName: { $regex: search, $options: 'i' } },
-                      { lastName: { $regex: search, $options: 'i' } },
-                      { email: { $regex: search, $options: 'i' } },
-                  ],
-              }
+                $or: [
+                    { firstName: { $regex: search, $options: 'i' } },
+                    { lastName: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                ],
+            }
             : {};
 
-        
+
         const users = await userModel
             .find(searchQuery)
             .skip((page - 1) * limit)
@@ -430,7 +430,7 @@ export const getSignedInUsers = async (req, res) => {
             currentPage: parseInt(page),
             totalPages: totalPages || 1,
             isAdmin,
-            user:adminData
+            user: adminData
         });
     } catch (error) {
         console.error("Error fetching signed-in users:", error);
@@ -467,10 +467,83 @@ export const getUserDetails = async (req, res) => {
             return res.render('user-details', { userDetail: null });
         }
 
-        res.render('admin/layout/user-details', { userDetail,isAdmin,user:adminData });
+        res.render('admin/layout/user-details', { userDetail, isAdmin, user: adminData });
     } catch (error) {
         console.error("Error fetching user details:", error);
         res.redirect('/loginPage')
+    }
+};
+
+
+
+// Render add package page
+export const addPackagePage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if (!userId) {
+            return res.status(400).send('User ID not available');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            return res.status(400).redirect('/loginPage');
+        }
+
+        res.render('admin/layout/addPackages', {
+            isAdmin,
+            user: userData,
+            opencageApiKey: process.env.OPENCAGE_API_KEY,
+        });
+    } catch (error) {
+        console.error('Error rendering add package page:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Render edit package page
+export const editPackagePage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        if (!userId) {
+            return res.status(400).send('User ID not available');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            return res.status(400).redirect('/loginPage');
+        }
+
+        const packageData = await packageModel.findById(req.params.id);
+        if (!packageData) {
+            return res.status(404).send('Package not found');
+        }
+
+        // Ensure itineraryDays has the correct structure
+        packageData.itineraryDays = packageData.itineraryDays || [];
+        packageData.itineraryDays = packageData.itineraryDays.map((day, index) => ({
+            day: day.day || index + 1,
+            activities: Array.isArray(day.activities) ? day.activities : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
+        }));
+
+        res.render('admin/layout/editPackage', {
+            packageData,
+            isAdmin,
+            user: userData,
+            opencageApiKey: process.env.OPENCAGE_API_KEY
+        });
+    } catch (error) {
+        console.error('Error rendering edit package page:', error);
+        res.status(500).send('Server error');
     }
 };
 
@@ -529,6 +602,15 @@ const validatePackage = (data, isActive) => {
                 }
             });
         }
+        if (!data.programDays || !Array.isArray(data.programDays) || data.programDays.length === 0) {
+            errors.push('At least one program day is required');
+        } else {
+            data.programDays.forEach((day, index) => {
+                if (!day.day || isNaN(day.day) || day.day <= 0) errors.push(`Program Day ${index + 1}: Valid day number is required`);
+                if (!day.title) errors.push(`Program Day ${index + 1}: Title is required`);
+                if (!day.description) errors.push(`Program Day ${index + 1}: Description is required`);
+            });
+        }
         if (!data.inclusions || !Array.isArray(data.inclusions) || data.inclusions.length === 0) errors.push('At least one inclusion is required');
         if (!data.exclusions || !Array.isArray(data.exclusions) || data.exclusions.length === 0) errors.push('At least one exclusion is required');
         if (!data.activityTypes || !Array.isArray(data.activityTypes) || data.activityTypes.length === 0) errors.push('At least one activity type is required');
@@ -555,322 +637,376 @@ const validatePackage = (data, isActive) => {
     return errors;
 };
 
-// Render add package page
-export const addPackagePage = async (req, res) => {
-    try {
-        const userId = req.id;
-        const isAdmin = req.isAdmin;
-        if (!userId) {
-            return res.status(400).send('User ID not available');
-        }
-
-        let userData = await adminModel.findById(userId);
-        if (!userData) {
-            userData = await agentModel.findById(userId);
-        }
-
-        if (!userData) {
-            return res.status(400).redirect('/loginPage');
-        }
-
-        res.render('admin/layout/addPackages', {
-            isAdmin,
-            user: userData,
-            opencageApiKey: process.env.OPENCAGE_API_KEY,
-        });
-    } catch (error) {
-        console.error('Error rendering add package page:', error);
-        res.status(500).send('Server error');
-    }
-};
-
 // Handle add package submission
 export const addPackage = async (req, res) => {
     try {
-        const data = req.body;
-        let adminId;
-        if (req.isAdmin) {
-            adminId = req.id;
-        } else {
-            const userData = await agentModel.findById(req.id);
-            if (userData) {
+        // Apply multer middleware
+    
+
+            const data = req.body;
+
+            // Determine adminId
+            let adminId;
+            if (req.isAdmin) {
+                adminId = req.id;
+            } else {
+                const userData = await agentModel.findById(req.id);
+                if (!userData) {
+                    return res.status(400).json({ error: 'Agent not found' });
+                }
                 adminId = userData.admin;
             }
-        }
-        if (!adminId) {
-            return res.status(400).json({ error: 'Admin ID not found' });
-        }
-        data.adminId = adminId;
-        data.status = data.status || 'Pending';
-
-        // Early validation for multipleDepartures dateTime
-        if (data.multipleDepartures) {
-            const departures = Array.isArray(data.multipleDepartures) ? data.multipleDepartures : [data.multipleDepartures];
-            for (let i = 0; i < departures.length; i++) {
-                const dep = departures[i];
-                if (!dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
-                    return res.status(400).json({ error: `Departure ${i + 1}: Valid date and time is required` });
-                }
+            if (!adminId) {
+                return res.status(400).json({ error: 'Admin ID not found' });
             }
-            data.multipleDepartures = departures.map(dep => ({
-                location: dep.location,
-                dateTime: new Date(dep.dateTime)
-            }));
-        } else {
-            data.multipleDepartures = [];
-        }
+            data.adminId = adminId;
+            data.status = data.status || 'Pending';
 
-        // Parse itineraryDays
-        if (data.itineraryDays) {
-            const itineraryDays = Array.isArray(data.itineraryDays) ? data.itineraryDays : [];
-            data.itineraryDays = itineraryDays.map((day, index) => ({
-                day: index + 1,
-                activities: Array.isArray(day.activities) ? day.activities.map(act => ({
-                    title: act.title || '',
-                    sub_title: act.sub_title || '',
-                    start_time: act.start_time || '',
-                    end_time: act.end_time || '',
-                    type: act.type || ''
-                })) : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
-            }));
-        } else {
-            data.itineraryDays = [];
-        }
+            // Parse multipleDepartures
+            if (data.multipleDepartures) {
+                let departures = data.multipleDepartures;
+                if (typeof departures === 'string') {
+                    try {
+                        departures = JSON.parse(departures);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid multipleDepartures format' });
+                    }
+                }
+                if (!Array.isArray(departures)) {
+                    departures = [departures];
+                }
+                for (let i = 0; i < departures.length; i++) {
+                    const dep = departures[i];
+                    if (!dep.location || !dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
+                        return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required` });
+                    }
+                }
+                data.multipleDepartures = departures.map(dep => ({
+                    location: dep.location,
+                    dateTime: new Date(dep.dateTime)
+                }));
+            } else {
+                data.multipleDepartures = [];
+            }
 
-        // Parse arrays
-        data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : [data.inclusions]).filter(i => i) : [];
-        data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : [data.exclusions]).filter(e => e) : [];
-        data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : [data.activityTypes]).filter(a => a) : [];
-        data.highlights = data.highlights ? (Array.isArray(data.highlights) ? data.highlights : [data.highlights]).filter(h => h) : [];
-        data.additionalCategories = data.additionalCategories ? (Array.isArray(data.additionalCategories) ? data.additionalCategories : [data.additionalCategories]).filter(c => c) : [];
-        if (data.additionalCategoriesInput) {
-            data.additionalCategories.push(...data.additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
-        }
-        data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
-        data.tripDuration = {
-            days: Number(data.tripDuration.days) || 0,
-            nights: Number(data.tripDuration.nights) || 0
-        };
-        data.groupSize = Number(data.groupSize) || undefined;
-        data.regularPrice = Number(data.regularPrice) || undefined;
-        data.salePrice = Number(data.salePrice) || undefined;
-        data.discount = Number(data.discount) || undefined;
-        data.latitude = Number(data.latitude) || undefined;
-        data.longitude = Number(data.longitude) || undefined;
-        data.destinationAddress = data.destinationAddress || undefined;
-        data.destinationCountry = data.destinationCountry || undefined;
+            // Parse itineraryDays
+            if (data.itineraryDays) {
+                let itineraryDays = data.itineraryDays;
+                if (typeof itineraryDays === 'string') {
+                    try {
+                        itineraryDays = JSON.parse(itineraryDays);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid itineraryDays format' });
+                    }
+                }
+                if (!Array.isArray(itineraryDays)) {
+                    itineraryDays = [itineraryDays];
+                }
+                data.itineraryDays = itineraryDays.map((day, index) => ({
+                    day: Number(day.day) || index + 1,
+                    activities: Array.isArray(day.activities) ? day.activities.map(act => ({
+                        title: act.title || '',
+                        sub_title: act.sub_title || '',
+                        start_time: act.start_time || '',
+                        end_time: act.end_time || '',
+                        type: act.type || ''
+                    })) : []
+                }));
+            } else {
+                data.itineraryDays = [];
+            }
 
-        // Handle file uploads
-        const uploadsDir = join(__dirname, '../Uploads/gallery');
-        let gallery = [];
-        if (req.files && req.files['gallery']) {
-            gallery = req.files['gallery'].map(file => file.filename);
-        }
-        let featuredImage = '';
-        if (req.files && req.files['featuredImage']) {
-            featuredImage = req.files['featuredImage'][0].filename;
-        }
-        data.gallery = gallery;
-        data.featuredImage = featuredImage;
+            // Parse programDays
+            if (data.programDays) {
+                let programDays = data.programDays;
+                if (typeof programDays === 'string') {
+                    try {
+                        programDays = JSON.parse(programDays);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid programDays format' });
+                    }
+                }
+                if (!Array.isArray(programDays)) {
+                    programDays = [programDays];
+                }
+                data.programDays = programDays.map((day, index) => ({
+                    day: Number(day.day) || index + 1,
+                    title: day.title || '',
+                    description: day.description || ''
+                }));
+            } else {
+                data.programDays = [];
+            }
 
-        // Validate data
-        const validationErrors = validatePackage(data, data.status === 'Active');
-        if (validationErrors.length > 0) {
-            return res.status(400).json({ error: validationErrors.join(', ') });
-        }
+            // Parse arrays
+            data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : JSON.parse(data.inclusions || '[]')).filter(i => i) : [];
+            data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : JSON.parse(data.exclusions || '[]')).filter(e => e) : [];
+            data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : JSON.parse(data.activityTypes || '[]')).filter(a => a) : [];
+            data.highlights = data.highlights ? (Array.isArray(data.highlights) ? data.highlights : JSON.parse(data.highlights || '[]')).filter(h => h) : [];
+            data.additionalCategories = data.additionalCategories ? (Array.isArray(data.additionalCategories) ? data.additionalCategories : JSON.parse(data.additionalCategories || '[]')).filter(c => c) : [];
+            if (data.additionalCategoriesInput) {
+                data.additionalCategories.push(...data.additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+                delete data.additionalCategoriesInput;
+            }
+            data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
 
-        // Remove undefined fields
-        Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+            // Parse numeric fields
+            data.tripDuration = {
+                days: Number(data.tripDuration?.days) || 0,
+                nights: Number(data.tripDuration?.nights) || 0
+            };
+            data.groupSize = Number(data.groupSize) || undefined;
+            data.regularPrice = Number(data.regularPrice) || undefined;
+            data.salePrice = Number(data.salePrice) || undefined;
+            data.discount = Number(data.discount) || undefined;
+            data.latitude = Number(data.latitude) || undefined;
+            data.longitude = Number(data.longitude) || undefined;
+            data.destinationAddress = data.destinationAddress || undefined;
+            data.destinationCountry = data.destinationCountry || undefined;
 
-        const newPackage = new packageModel(data);
-        await newPackage.save();
-        return res.status(200).json({ message: 'Package created successfully' });
+            // Handle file uploads
+            let gallery = [];
+            if (req.files && req.files['gallery']) {
+                gallery = req.files['gallery'].map(file => file.filename);
+            }
+            let featuredImage = '';
+            if (req.files && req.files['featuredImage']) {
+                featuredImage = req.files['featuredImage'][0].filename;
+            }
+            data.gallery = gallery;
+            data.featuredImage = featuredImage;
+
+            // Validate data
+            const validationErrors = validatePackage(data, data.status === 'Active');
+            if (validationErrors.length > 0) {
+                return res.status(400).json({ error: validationErrors.join(', ') });
+            }
+
+            // Remove undefined fields
+            Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+
+            // Save package
+            const newPackage = new packageModel(data);
+            await newPackage.save();
+            return res.status(200).json({ message: 'Package created successfully', packageId: newPackage._id });
+
     } catch (error) {
         console.error('Error adding package:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
 
-// Render edit package page
-export const editPackagePage = async (req, res) => {
-    try {
-        const userId = req.id;
-        const isAdmin = req.isAdmin;
-        if (!userId) {
-            return res.status(400).send('User ID not available');
-        }
-
-        let userData = await adminModel.findById(userId);
-        if (!userData) {
-            userData = await agentModel.findById(userId);
-        }
-
-        if (!userData) {
-            return res.status(400).redirect('/loginPage');
-        }
-
-        const packageData = await packageModel.findById(req.params.id);
-        if (!packageData) {
-            return res.status(404).send('Package not found');
-        }
-
-        // Ensure itineraryDays has the correct structure
-        packageData.itineraryDays = packageData.itineraryDays || [];
-        packageData.itineraryDays = packageData.itineraryDays.map((day, index) => ({
-            day: day.day || index + 1,
-            activities: Array.isArray(day.activities) ? day.activities : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
-        }));
-
-        res.render('admin/layout/editPackage', {
-            packageData,
-            isAdmin,
-            user: userData,
-            opencageApiKey: process.env.OPENCAGE_API_KEY
-        });
-    } catch (error) {
-        console.error('Error rendering edit package page:', error);
-        res.status(500).send('Server error');
-    }
-};
-
 // Handle edit package submission
-
 export const editPackage = async (req, res) => {
     try {
-        const { id } = req.params;
-        const data = req.body;
+            const { id } = req.params;
+            if (!id) {
+                return res.status(400).json({ error: 'Invalid package ID' });
+            }
 
-        let adminId;
-        if (req.isAdmin) {
-            adminId = req.id;
-        } else {
-            const userData = await agentModel.findById(req.id);
-            if (userData) {
+            const data = req.body;
+console.log(data)
+            // Determine adminId
+            let adminId;
+            if (req.isAdmin) {
+                adminId = req.id;
+            } else {
+                const userData = await agentModel.findById(req.id);
+                if (!userData) {
+                    return res.status(400).json({ error: 'Agent not found' });
+                }
                 adminId = userData.admin;
             }
-        }
-        if (!adminId) {
-            return res.status(400).json({ error: 'Admin ID not found' });
-        }
-        data.adminId = adminId;
-        data.status = data.status || 'Pending';
-
-        // Early validation for multipleDepartures dateTime
-        if (data.multipleDepartures) {
-            const departures = Array.isArray(data.multipleDepartures) ? data.multipleDepartures : [data.multipleDepartures];
-            for (let i = 0; i < departures.length; i++) {
-                const dep = departures[i];
-                if (!dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
-                    return res.status(400).json({ error: `Departure ${i + 1}: Valid date and time is required` });
-                }
+            if (!adminId) {
+                return res.status(400).json({ error: 'Admin ID not found' });
             }
-            data.multipleDepartures = departures.map(dep => ({
-                location: dep.location,
-                dateTime: new Date(dep.dateTime)
-            }));
-        } else {
-            data.multipleDepartures = [];
-        }
+            data.adminId = adminId;
+            data.status = data.status || 'Pending';
 
-        // Parse itineraryDays
-        if (data.itineraryDays) {
-            const itineraryDays = Array.isArray(data.itineraryDays) ? data.itineraryDays : [];
-            data.itineraryDays = itineraryDays.map((day, index) => ({
-                day: index + 1,
-                activities: Array.isArray(day.activities) ? day.activities.map(act => ({
-                    title: act.title || '',
-                    sub_title: act.sub_title || '',
-                    start_time: act.start_time || '',
-                    end_time: act.end_time || '',
-                    type: act.type || ''
-                })) : [{ title: '', sub_title: '', start_time: '', end_time: '', type: '' }]
-            }));
-        } else {
-            data.itineraryDays = [];
-        }
-
-        // Parse arrays
-        data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : [data.inclusions]).filter(i => i) : [];
-        data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : [data.exclusions]).filter(e => e) : [];
-        data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : [data.activityTypes]).filter(a => a) : [];
-        data.highlights = data.highlights ? (Array.isArray(data.highlights) ? data.highlights : [data.highlights]).filter(h => h) : [];
-        data.additionalCategories = data.additionalCategories ? (Array.isArray(data.additionalCategories) ? data.additionalCategories : [data.additionalCategories]).filter(c => c) : [];
-        if (data.additionalCategoriesInput) {
-            data.additionalCategories.push(...data.additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
-        }
-        data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
-        data.tripDuration = {
-            days: Number(data.tripDuration.days) || 0,
-            nights: Number(data.tripDuration.nights) || 0
-        };
-        data.groupSize = Number(data.groupSize) || undefined;
-        data.regularPrice = Number(data.regularPrice) || undefined;
-        data.salePrice = Number(data.salePrice) || undefined;
-        data.discount = Number(data.discount) || undefined;
-        data.latitude = Number(data.latitude) || undefined;
-        data.longitude = Number(data.longitude) || undefined;
-        data.destinationAddress = data.destinationAddress || undefined;
-        data.destinationCountry = data.destinationCountry || undefined;
-
-        // Fetch existing package
-        const existingPackage = await packageModel.findById(id);
-        if (!existingPackage) {
-            return res.status(404).json({ error: 'Package not found' });
-        }
-
-        // Handle gallery updates
-        const uploadsDir = join(__dirname, '../Uploads/gallery');
-        let gallery = existingPackage.gallery || [];
-        if (data.deletedImages) {
-            const imagesToDelete = Array.isArray(data.deletedImages) ? data.deletedImages : data.deletedImages.split(',').map(img => img.trim());
-            for (const image of imagesToDelete) {
-                if (gallery.includes(image)) {
+            // Parse multipleDepartures
+            if (data.multipleDepartures) {
+                let departures = data.multipleDepartures;
+                if (typeof departures === 'string') {
                     try {
-                        await fs.unlink(join(uploadsDir, image));
-                    } catch (err) {
-                        console.error(`Failed to delete image ${image}:`, err);
+                        departures = JSON.parse(departures);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid multipleDepartures format' });
                     }
                 }
-            }
-            gallery = gallery.filter(image => !imagesToDelete.includes(image));
-        }
-
-        if (req.files && req.files['gallery']) {
-            const newImages = req.files['gallery'].map(file => file.filename);
-            gallery = [...gallery, ...newImages].slice(0, 8);
-        }
-
-        // Handle featured image
-        let featuredImage = existingPackage.featuredImage;
-        if (req.files && req.files['featuredImage']) {
-            if (featuredImage) {
-                try {
-                    await fs.unlink(join(uploadsDir, featuredImage));
-                } catch (err) {
-                    console.error(`Failed to delete featured image ${featuredImage}:`, err);
+                if (!Array.isArray(departures)) {
+                    departures = [departures];
                 }
+                for (let i = 0; i < departures.length; i++) {
+                    const dep = departures[i];
+                    if (!dep.location || !dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
+                        return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required` });
+                    }
+                }
+                data.multipleDepartures = departures.map(dep => ({
+                    location: dep.location,
+                    dateTime: new Date(dep.dateTime)
+                }));
+            } else {
+                data.multipleDepartures = [];
             }
-            featuredImage = req.files['featuredImage'][0].filename;
-        }
 
-        data.gallery = gallery;
-        data.featuredImage = featuredImage;
+            // Parse itineraryDays
+            if (data.itineraryDays) {
+                let itineraryDays = data.itineraryDays;
+                if (typeof itineraryDays === 'string') {
+                    try {
+                        itineraryDays = JSON.parse(itineraryDays);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid itineraryDays format' });
+                    }
+                }
+                if (!Array.isArray(itineraryDays)) {
+                    itineraryDays = [itineraryDays];
+                }
+                data.itineraryDays = itineraryDays.map((day, index) => ({
+                    day: Number(day.day) || index + 1,
+                    activities: Array.isArray(day.activities) ? day.activities.map(act => ({
+                        title: act.title || '',
+                        sub_title: act.sub_title || '',
+                        start_time: act.start_time || '',
+                        end_time: act.end_time || '',
+                        type: act.type || ''
+                    })) : []
+                }));
+            } else {
+                data.itineraryDays = [];
+            }
 
-        // Validate data
-        const validationErrors = validatePackage(data, data.status === 'Active');
-        if (validationErrors.length > 0) {
-            return res.status(400).json({ error: validationErrors.join(', ') });
-        }
+            // Parse programDays
+            if (data.programDays) {
+                let programDays = data.programDays;
+                if (typeof programDays === 'string') {
+                    try {
+                        programDays = JSON.parse(programDays);
+                    } catch (e) {
+                        return res.status(400).json({ error: 'Invalid programDays format' });
+                    }
+                }
+                if (!Array.isArray(programDays)) {
+                    programDays = [programDays];
+                }
+                data.programDays = programDays.map((day, index) => ({
+                    day: Number(day.day) || index + 1,
+                    title: day.title || '',
+                    description: day.description || ''
+                }));
+            } else {
+                data.programDays = [];
+            }
 
-        // Remove undefined fields
-        Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+            // Parse arrays
+            data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : JSON.parse(data.inclusions || '[]')).filter(i => i) : [];
+            data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : JSON.parse(data.exclusions || '[]')).filter(e => e) : [];
+            data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : JSON.parse(data.activityTypes || '[]')).filter(a => a) : [];
+            data.highlights = data.highlights ? (Array.isArray(data.highlights) ? data.highlights : JSON.parse(data.highlights || '[]')).filter(h => h) : [];
+            data.additionalCategories = data.additionalCategories ? (Array.isArray(data.additionalCategories) ? data.additionalCategories : JSON.parse(data.additionalCategories || '[]')).filter(c => c) : [];
+            if (data.additionalCategoriesInput) {
+                data.additionalCategories.push(...data.additionalCategoriesInput.split(',').map(c => c.trim()).filter(c => c));
+                delete data.additionalCategoriesInput;
+            }
+            data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
 
-        const updatedPackage = await packageModel.findByIdAndUpdate(id, data, { new: true });
-        if (!updatedPackage) {
-            return res.status(404).json({ error: 'Package not found' });
-        }
+            // Parse numeric fields
+            data.tripDuration = {
+                days: Number(data.tripDuration?.days) || 0,
+                nights: Number(data.tripDuration?.nights) || 0
+            };
+            data.groupSize = Number(data.groupSize) || undefined;
+            data.regularPrice = Number(data.regularPrice) || undefined;
+            data.salePrice = Number(data.salePrice) || undefined;
+            data.discount = Number(data.discount) || undefined;
+            data.latitude = Number(data.latitude) || undefined;
+            data.longitude = Number(data.longitude) || undefined;
+            data.destinationAddress = data.destinationAddress || undefined;
+            data.destinationCountry = data.destinationCountry || undefined;
 
-        return res.status(200).json({ message: 'Package updated successfully' });
+            // Fetch existing package
+            const existingPackage = await packageModel.findById(id);
+            if (!existingPackage) {
+                return res.status(404).json({ error: 'Package not found' });
+            }
+
+            // Handle gallery updates
+            let gallery = existingPackage.gallery || [];
+            if (data.deletedImages) {
+                let imagesToDelete = data.deletedImages;
+                if (typeof imagesToDelete === 'string') {
+                    imagesToDelete = imagesToDelete.split(',').map(img => img.trim()).filter(img => img);
+                }
+                for (const image of imagesToDelete) {
+                    if (gallery.includes(image)) {
+                        try {
+                            await fs.unlink(join(uploadsDir, image));
+                            console.log(`Deleted image: ${image}`);
+                        } catch (err) {
+                            console.error(`Failed to delete image ${image}:`, err);
+                        }
+                    }
+                }
+                gallery = gallery.filter(image => !imagesToDelete.includes(image));
+            }
+
+            if (req.files && req.files['gallery']) {
+                const newImages = req.files['gallery'].map(file => file.filename);
+                gallery = [...gallery, ...newImages].slice(0, 8); // Enforce max 8 images
+            }
+
+            // Handle featured image
+            let featuredImage = existingPackage.featuredImage;
+            if (req.files && req.files['featuredImage']) {
+                if (featuredImage) {
+                    try {
+                        await fs.unlink(join(uploadsDir, featuredImage));
+                        console.log(`Deleted featured image: ${featuredImage}`);
+                    } catch (err) {
+                        console.error(`Failed to delete featured image ${featuredImage}:`, err);
+                    }
+                }
+                featuredImage = req.files['featuredImage'][0].filename;
+            }
+
+            data.gallery = gallery;
+            data.featuredImage = featuredImage;
+
+            // Validate data
+            const validationErrors = validatePackage(data, data.status === 'Active');
+            if (validationErrors.length > 0) {
+                // Clean up uploaded files if validation fails
+                if (req.files && req.files['gallery']) {
+                    for (const file of req.files['gallery']) {
+                        try {
+                            await fs.unlink(join(uploadsDir, file.filename));
+                        } catch (err) {
+                            console.error(`Failed to clean up gallery image ${file.filename}:`, err);
+                        }
+                    }
+                }
+                if (req.files && req.files['featuredImage']) {
+                    try {
+                        await fs.unlink(join(uploadsDir, req.files['featuredImage'][0].filename));
+                    } catch (err) {
+                        console.error(`Failed to clean up featured image ${req.files['featuredImage'][0].filename}:`, err);
+                    }
+                }
+                return res.status(400).json({ error: validationErrors.join(', ') });
+            }
+
+            // Remove undefined fields
+            Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+
+            // Update package
+            const updatedPackage = await packageModel.findByIdAndUpdate(id, data, { new: true });
+            if (!updatedPackage) {
+                return res.status(404).json({ error: 'Package not found' });
+            }
+
+            return res.status(200).json({ message: 'Package updated successfully', packageId: updatedPackage._id });
+
     } catch (error) {
         console.error('Error updating package:', error);
         res.status(500).json({ error: 'Server error' });
