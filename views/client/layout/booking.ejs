@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header')%>
+<body>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar')%>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Booking</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="step-section booking-section">
+                <div class="container">
+                    <div class="step-link-wrap">
+                        <% if(isShow) { %>
+                            <div class="step-item active">
+                                Your cart
+                                <a href="#" class="step-icon"></a>
+                            </div>
+                        <% } %>
+                        <div class="step-item active">
+                            Your Details
+                            <a href="#" class="step-icon"></a>
+                        </div>
+                        <div class="step-item">
+                            Finish
+                            <a href="#" class="step-icon"></a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 right-sidebar">
+                            <div class="booking-form-wrap">
+                                <form action="<%= isShow ? '/packageCart/confirm' : '/bookPackage/confirm' %>" method="POST" id="booking-form">
+                                    <input type="hidden" name="client_secret" id="client-secret" value="">
+                                    <% if (!isShow) { %>
+                                        <input type="hidden" name="packageId" value="<%= cart && cart.items && cart.items[0] && cart.items[0].packageId && cart.items[0].packageId._id ? cart.items[0].packageId._id : '' %>">
+                                        <input type="hidden" name="quantity" value="<%= cart && cart.items && cart.items[0] && cart.items[0].quantity ? cart.items[0].quantity : 1 %>">
+                                    <% } %>
+                                    <div class="booking-content">
+                                        <div class="form-title">
+                                            <span>1</span>
+                                            <h3>Your Details</h3>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>First name*</label>
+                                                    <input type="text" class="form-control" name="firstname" value="<%= user && user.firstName ? user.firstName : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Last name*</label>
+                                                    <input type="text" class="form-control" name="lastname" value="<%= user && user.lastName ? user.lastName : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Email*</label>
+                                                    <input type="email" class="form-control" name="email" value="<%= user && user.email ? user.email : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Confirm Email*</label>
+                                                    <input type="email" class="form-control" name="confirm_email" value="<%= user && user.email ? user.email : '' %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Phone*</label>
+                                                    <input type="text" class="form-control" name="phone" value="<%= user && user.phone ? user.phone : '' %>" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="booking-content">
+                                        <div class="form-title">
+                                            <span>2</span>
+                                            <h3>Payment Information</h3>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label>Name on card*</label>
+                                                    <input type="text" class="form-control" name="firstname_booking" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="row align-items-center">
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label>Card Details*</label>
+                                                            <div id="card-element" class="form-control" style="padding: 10px;"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <img src="/assets/images/cards.png" alt="Cards" style="max-width: 200px;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <div id="card-errors" role="alert" style="color: red; margin-top: 10px;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="booking-content">
+                                        <div class="form-title">
+                                            <span>3</span>
+                                            <h3>Billing Address</h3>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <label>Country*</label>
+                                                    <select class="form-control" name="country" id="country" required>
+                                                        <option value="" selected>Select your country</option>
+                                                        <option value="US">United States</option>
+                                                        <option value="CA">Canada</option>
+                                                        <option value="GB">United Aesthetics
+                                                        <!-- Add more ISO 3166-1 alpha-2 codes as needed -->
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Street line 1*</label>
+                                                    <input type="text" name="street_1" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Street line 2</label>
+                                                    <input type="text" name="street_2" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-12">
+                                                <div class="form-group">
+                                                    <label>City*</label>
+                                                    <input type="text" name="city" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6">
+                                                <div class="form-group">
+                                                    <label>State*</label>
+                                                    <input type="text" name="state" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Postal code</label>
+                                                    <input type="text" id="postal_code" name="postal_code" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12 col-sm-12">
+                                                <div class="form-group">
+                                                    <label>Additional Information</label>
+                                                    <textarea rows="6" name="notes" class="form-control" placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-policy">
+                                        <h3>Cancellation policy</h3>
+                                        <div class="form-group">
+                                            <label class="checkbox-list">
+                                                <input type="checkbox" name="accept_terms" required>
+                                                <span class="custom-checkbox"></span>
+                                                I accept terms and conditions and general policy.
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="button-primary" id="submit-button">
+                                            <span class="button-text">Book Now</span>
+                                            <span class="button-loading" style="display: none;">
+                                                <i class="fas fa-spinner fa-spin"></i> Processing...
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <aside class="sidebar">
+                                <div class="widget-bg widget-table-summary">
+                                    <h4 class="bg-title">Summary</h4>
+                                    <table>
+                                        <tbody>
+                                            <% 
+                                                let subtotal = 0;
+                                                let tax = 0;
+                                                let total = 0;
+                                                if (cart && cart.items && Array.isArray(cart.items) && cart.items.length > 0) {
+                                                    subtotal = cart.items.reduce((sum, item) => {
+                                                        if (item && item.packageId && (item.packageId.salePrice || item.packageId.regularPrice) && item.quantity) {
+                                                            return sum + item.quantity * (item.packageId.salePrice || item.packageId.regularPrice);
+                                                        }
+                                                        return sum;
+                                                    }, 0);
+                                                    tax = subtotal * 0.13;
+                                                    total = subtotal + 34 + 34 + tax;
+                                                    cart.items.forEach(item => { 
+                                                        if (item && item.packageId && item.packageId.title) { %>
+                                                            <tr>
+                                                                <td><strong><%= item.packageId.title %></strong></td>
+                                                                <td class="text-right">
+                                                                    $<%= (item.quantity * (item.packageId.salePrice || item.packageId.regularPrice)).toFixed(2) %>
+                                                                    (x<%= item.quantity %>)
+                                                                </td>
+                                                            </tr>
+                                                        <% }
+                                                    });
+                                                } else { %>
+                                                    <tr>
+                                                        <td colspan="2">No items in cart</td>
+                                                    </tr>
+                                                <% } %>
+                                            <tr>
+                                                <td><strong>Dedicated tour guide</strong></td>
+                                                <td class="text-right">$34.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Insurance</strong></td>
+                                                <td class="text-right">$34.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Tax (13%)</strong></td>
+                                                <td class="text-right">$<%= tax.toFixed(2) %></td>
+                                            </tr>
+                                            <tr class="total">
+                                                <td><strong>Total cost</strong></td>
+                                                <td class="text-right"><strong>$<%= total.toFixed(2) %></strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="widget-bg widget-support-wrap">
+                                    <div class="icon">
+                                        <i class="fas fa-phone-volume"></i>
+                                    </div>
+                                    <div class="support-content">
+                                        <h5>HELP AND SUPPORT</h5>
+                                        <a href="tel:+1123488900" class="phone">+11 234 889 00</a>
+                                        <small>Monday to Friday 9.00am - 7.30pm</small>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../partials/Footer')%>
+    </div>
+    <%- include('../partials/Script')%>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        .button-primary {
+            position: relative;
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button-primary:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .button-loading .fa-spinner {
+            margin-right: 8px;
+        }
+    </style>
+    <script>
+        const stripe = Stripe('<%= stripeKey %>');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#32325d',
+                    '::placeholder': {
+                        color: '#aab7c4'
+                    }
+                }
+            }
+        });
+        cardElement.mount('#card-element');
+
+        const form = document.getElementById('booking-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.querySelector('.button-text');
+        const buttonLoading = document.querySelector('.button-loading');
+        const cardErrors = document.getElementById('card-errors');
+        const isShow = <%= isShow %>;
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            submitButton.disabled = true;
+            buttonText.style.display = 'none';
+            buttonLoading.style.display = 'inline-flex';
+            cardErrors.textContent = '';
+
+            // Validate email
+            const email = form.querySelector('input[name="email"]').value;
+            const confirmEmail = form.querySelector('input[name="confirm_email"]').value;
+            if (email !== confirmEmail) {
+                cardErrors.textContent = 'Emails do not match';
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                buttonLoading.style.display = 'none';
+                return;
+            }
+
+            // Create payment intent
+            try {
+                console.log('Creating payment intent for email:', email);
+                const paymentIntentUrl = isShow ? '/packageCart/create-payment-intent' : '/bookPackage/create-payment-intent';
+                const requestBody = isShow ? { email } : {
+                    email,
+                    packageId: form.querySelector('input[name="packageId"]').value,
+                    quantity: form.querySelector('input[name="quantity"]').value
+                };
+                const response = await fetch(paymentIntentUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                const { clientSecret, error } = await response.json();
+
+                if (error) {
+                    console.error('Payment intent error:', error);
+                    cardErrors.textContent = error.message;
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonLoading.style.display = 'none';
+                    return;
+                }
+
+                // Confirm card payment
+                console.log('Confirming payment with clientSecret:', clientSecret);
+                const result = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: form.querySelector('input[name="firstname_booking"]').value,
+                            email,
+                            phone: form.querySelector('input[name="phone"]').value,
+                            address: {
+                                line1: form.querySelector('input[name="street_1"]').value,
+                                line2: form.querySelector('input[name="street_2"]').value || '',
+                                city: form.querySelector('input[name="city"]').value,
+                                state: form.querySelector('input[name="state"]').value,
+                                postal_code: form.querySelector('input[name="postal_code"]').value || '',
+                                country: form.querySelector('select[name="country"]').value
+                            }
+                        }
+                    }
+                });
+
+                if (result.error) {
+                    console.error('Card confirmation error:', result.error);
+                    cardErrors.textContent = result.error.message;
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonLoading.style.display = 'none';
+                    return;
+                }
+
+                // Set client_secret for form submission
+                document.getElementById('client-secret').value = clientSecret;
+                console.log('Submitting form with client_secret:', clientSecret);
+
+                // Submit form
+                form.submit();
+            } catch (error) {
+                console.error('Submission error:', error);
+                cardErrors.textContent = 'An error occurred. Please try again.';
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                buttonLoading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

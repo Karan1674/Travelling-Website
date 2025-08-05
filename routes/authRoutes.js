@@ -1,6 +1,6 @@
 const express = require('express');
 const { adminRegister, loginPage,signupUser,getSignupPage, loginUserOrAdmin, logoutUser, forgetPasswordPage, forgetPassword, resetPasswordPage, resetPassword, homePage } = require('../controller/authController');
-const { isAuthenicated } = require('../middleware/isAuthenicated');
+const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { uploadProfilePic } = require('../middleware/multer');
 
 const router = express.Router();
@@ -14,7 +14,7 @@ router.post('/signupUser', uploadProfilePic.single('profilePic'),signupUser);
 
 router.get('/loginPage', loginPage)
 router.post('/loginUserOrAdmin', loginUserOrAdmin)
-router.get('/logout', isAuthenicated, logoutUser)
+router.get('/logout', isAuthenticated, logoutUser)
 router.get('/forgetPasswordPage', forgetPasswordPage);
 router.post('/forgetPassword', forgetPassword);
 router.get('/reset-password', resetPasswordPage);

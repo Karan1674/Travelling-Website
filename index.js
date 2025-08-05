@@ -13,6 +13,9 @@ const adminRoutes = require('./routes/adminRoute');
 const authRoutes = require('./routes/authRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 
+
+
+
 app.use(cookieParser());
 
 

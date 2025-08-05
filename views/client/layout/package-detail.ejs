@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <%- include('../partials/Header') %>
 
 <style>
@@ -11,6 +12,7 @@
         overflow: hidden;
         transition: all 0.3s ease;
     }
+
     .accordion-header {
         cursor: pointer;
         padding: 1.2rem 1.5rem;
@@ -18,9 +20,11 @@
         border-bottom: none;
         transition: background-color 0.3s ease;
     }
+
     .accordion-header:hover {
         background-color: #e9ecef;
     }
+
     .accordion-header h3 {
         margin: 0;
         font-size: 1.25rem;
@@ -30,19 +34,23 @@
         align-items: center;
         gap: 0.75rem;
     }
+
     .accordion-header i {
         font-size: 1.1rem;
         color: #007bff;
     }
+
     .accordion-header .toggle-icon {
         margin-left: auto;
         font-size: 1rem;
         color: #007bff;
         transition: transform 0.3s ease;
     }
+
     .accordion-header[aria-expanded="true"] .toggle-icon {
         transform: rotate(180deg);
     }
+
     .accordion-body {
         padding: 1.5rem;
         background-color: #ffffff;
@@ -55,11 +63,13 @@
     .itinerary-timeline-wrap {
         padding: 1rem 0;
     }
+
     .timeline {
         position: relative;
         padding-left: 2.5rem;
         margin: 0;
     }
+
     .timeline::before {
         content: '';
         position: absolute;
@@ -70,11 +80,13 @@
         background: linear-gradient(to bottom, #007bff, #6c757d);
         border-radius: 3px;
     }
+
     .timeline-item {
         position: relative;
         margin-bottom: 2rem;
         padding-left: 1.75rem;
     }
+
     .timeline-item::before {
         content: '';
         position: absolute;
@@ -86,15 +98,18 @@
         border-radius: 50%;
         border: 3px solid #ffffff;
     }
+
     .activity-card {
         background: #ffffff;
         padding: 1rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         transition: box-shadow 0.3s ease;
     }
+
     .activity-card:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+
     .activity-card h5 {
         font-size: 1.1rem;
         font-weight: 600;
@@ -104,12 +119,14 @@
         align-items: center;
         gap: 0.5rem;
     }
+
     .activity-subtitle {
         font-size: 0.95rem;
         color: #555555;
         margin: 0 0 0.75rem;
         font-style: italic;
     }
+
     .activity-time {
         font-size: 0.9rem;
         color: #007bff;
@@ -118,6 +135,7 @@
         align-items: center;
         gap: 0.5rem;
     }
+
     .activity-type {
         display: inline-flex;
         align-items: center;
@@ -136,6 +154,7 @@
         position: relative;
         margin: 0;
     }
+
     .itinerary-timeline-wrap ul::before {
         content: '';
         position: absolute;
@@ -146,11 +165,13 @@
         background: linear-gradient(to bottom, #007bff, #6c757d);
         border-radius: 3px;
     }
+
     .itinerary-timeline-wrap ul li {
         position: relative;
         margin-bottom: 2rem;
         padding-left: 1.75rem;
     }
+
     .itinerary-timeline-wrap ul li::before {
         content: '';
         position: absolute;
@@ -162,30 +183,36 @@
         border-radius: 50%;
         border: 3px solid #ffffff;
     }
+
     .timeline-content {
         background: #ffffff;
         padding: 1rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         transition: box-shadow 0.3s ease;
     }
+
     .timeline-content:hover {
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
+
     .day-count {
         font-size: 1rem;
         font-weight: 600;
         color: #007bff;
         margin-bottom: 0.5rem;
     }
+
     .day-count span {
         font-size: 1.2rem;
     }
+
     .timeline-content h4 {
         font-size: 1.1rem;
         font-weight: 600;
         color: #1a1a1a;
         margin: 0 0 0.75rem;
     }
+
     .timeline-content p {
         font-size: 1rem;
         color: #333333;
@@ -193,45 +220,49 @@
         margin: 0;
     }
 
-
-
- 
     .rating-start {
         font-size: 1rem;
         color: #ccc;
-        display: inline-flex; /* Horizontal layout for review display */
-        /* display: flex; flex-direction: column; align-items: flex-start; */ /* Uncomment for column-wise */
+        display: inline-flex;
     }
+
     .rating-start i {
-        margin: 0 2px; /* Horizontal spacing */
-        /* margin: 2px 0; */ /* Uncomment for vertical spacing */
+        margin: 0 2px;
     }
+
     .rating-start .filled {
         color: #f5c518;
     }
+
     .rating-data .filled {
         color: #ffffff;
     }
+
     .reply {
         font-size: 0.9rem;
         color: #007bff;
         text-decoration: none;
     }
+
     .reply:hover {
         text-decoration: underline;
     }
+
     .comment-form-wrap {
         margin-top: 2rem;
     }
+
     .comment-form {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
     }
+
     .comment-form p {
         flex: 1 1 100%;
         margin: 0;
     }
+
     .comment-form input[type="text"],
     .comment-form input[type="email"],
     .comment-form textarea {
@@ -241,9 +272,11 @@
         border-radius: 4px;
         font-size: 1rem;
     }
+
     .comment-form textarea {
         resize: vertical;
     }
+
     .comment-form input[type="submit"] {
         background-color: #007bff;
         color: #ffffff;
@@ -253,115 +286,214 @@
         cursor: pointer;
         transition: background-color 0.3s ease;
     }
+
     .comment-form input[type="submit"]:hover {
         background-color: #0056b3;
     }
+
     .rate-wrap {
         margin-bottom: 1rem;
     }
+
     .package-rate {
         display: flex;
         flex-direction: row;
         align-items: flex-start;
         cursor: pointer;
     }
+
     .package-rate input[type="radio"] {
         display: none;
     }
+
     .package-rate label {
         font-size: 1.2rem;
         color: #ccc;
         cursor: pointer;
         margin: 2px 0;
     }
+
     .package-rate label.filled {
-        color: #f5c518; /* Gold color for selected/hovered stars */
+        color: #f5c518;
     }
+
     .review-message {
         display: none;
         margin-top: 1rem;
         padding: 0.75rem;
         border-radius: 4px;
     }
+
     .review-message.success {
         background-color: #d4edda;
         color: #155724;
     }
+
     .review-message.error {
         background-color: #f8d7da;
         color: #721c24;
+    }
+
+    .submit-btn button.button-primary {
+        margin-left: 10px;
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* New Quote Section Styling */
+    .quote-wrap {
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .quote-wrap blockquote {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: #333333;
+        margin: 0 0 1.5rem;
+        line-height: 1.6;
+    }
+
+    .quote-wrap cite {
+        font-size: 0.9rem;
+        color: #555555;
+        font-style: normal;
+        display: block;
+        margin-bottom: 1.5rem;
+    }
+
+    .quote-wrap .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .quote-wrap .button-primary {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .quote-wrap .button-primary.book-now {
+        background-color: #007bff;
+        color: #ffffff;
+    }
+
+    .quote-wrap .button-primary.book-now:hover {
+        background-color: #0056b3;
+    }
+
+    .quote-wrap .button-primary.add-to-cart {
+        background-color: #28a745;
+        color: #ffffff;
+    }
+
+    .quote-wrap .button-primary.add-to-cart:hover {
+        background-color: #218838;
     }
 </style>
 </head>
 
 <body>
-<%- include('../partials/Loader') %>
-<div id="page" class="full-page">
-    <%- include('../partials/Navbar') %>
-    <main id="content" class="site-main">
-        <!-- Inner Banner -->
-        <section class="inner-banner-wrap">
-            <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
-                <div class="container">
-                    <div class="inner-banner-content">
-                        <h1 class="inner-title"><%= package ? package.title : 'Package Not Found' %></h1>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <!-- Inner Banner -->
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">
+                                <%= package ? package.title : 'Package Not Found' %>
+                            </h1>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="inner-shape"></div>
-        </section>
+                <div class="inner-shape"></div>
+            </section>
 
-        <!-- Package Detail Section -->
-        <div class="single-tour-section">
-            <div class="container">
-                <% if (package) { %>
+            <!-- Package Detail Section -->
+            <div class="single-tour-section">
+                <div class="container">
+                    <% if (package) { %>
                     <div class="row">
                         <div class="col-lg-8">
                             <div class="single-tour-inner">
-                                <h2><%= package.title || 'Untitled Package' %></h2>
+                                <h2>
+                                    <%= package.title || 'Untitled Package' %>
+                                </h2>
                                 <figure class="feature-image">
-                                    <img src="<%= package.featuredImage ? '/Uploads/gallery/' + package.featuredImage : '/assets/images/default.jpg' %>" alt="<%= package.title || 'Package Image' %>">
+                                    <img src="<%= package.featuredImage ? '/Uploads/gallery/' + package.featuredImage : '/assets/images/default.jpg' %>"
+                                        alt="<%= package.title || 'Package Image' %>">
                                     <div class="package-meta text-center">
                                         <ul>
-                                            <li><i class="far fa-clock"></i> <%= package.tripDuration?.days || 0 %> days / <%= package.tripDuration?.nights || 0 %> night</li>
-                                            <li><i class="fas fa-user-friends"></i> People: <%= package.groupSize || 'N/A' %></li>
-                                            <li><i class="fas fa-map-marked-alt"></i> <%= package.destinationCountry || 'N/A' %></li>
+                                            <li><i class="far fa-clock"></i>
+                                                <%= package.tripDuration?.days || 0 %> days / <%= package.tripDuration?.nights || 0 %> night
+                                            </li>
+                                            <li><i class="fas fa-user-friends"></i> People: <%= package.groupSize || 'N/A' %>
+                                            </li>
+                                            <li><i class="fas fa-map-marked-alt"></i>
+                                                <%= package.destinationCountry || 'N/A' %>
+                                            </li>
                                         </ul>
                                     </div>
                                 </figure>
                                 <div class="tab-container">
                                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                                         <li class="nav-item">
-                                            <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">DESCRIPTION</a>
+                                            <a class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                                               href="#overview" role="tab" aria-controls="overview"
+                                               aria-selected="true">DESCRIPTION</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="program-tab" data-bs-toggle="tab" href="#program" role="tab" aria-controls="program" aria-selected="false">PROGRAM</a>
+                                            <a class="nav-link" id="program-tab" data-bs-toggle="tab"
+                                               href="#program" role="tab" aria-controls="program"
+                                               aria-selected="false">PROGRAM</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="itinerary-overview-tab" data-bs-toggle="tab" href="#itinerary-overview" role="tab" aria-controls="itinerary-overview" aria-selected="false">ITINERARY</a>
+                                            <a class="nav-link" id="itinerary-overview-tab" data-bs-toggle="tab"
+                                               href="#itinerary-overview" role="tab" aria-controls="itinerary-overview"
+                                               aria-selected="false">ITINERARY</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="additional-info-tab" data-bs-toggle="tab" href="#additional-info" role="tab" aria-controls="additional-info" aria-selected="false">ADDITIONAL INFO</a>
+                                            <a class="nav-link" id="additional-info-tab" data-bs-toggle="tab"
+                                               href="#additional-info" role="tab" aria-controls="additional-info"
+                                               aria-selected="false">ADDITIONAL INFO</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="review-tab" data-bs-toggle="tab" href="#review" role="tab" aria-controls="review" aria-selected="false">REVIEW</a>
+                                            <a class="nav-link" id="review-tab" data-bs-toggle="tab"
+                                               href="#review" role="tab" aria-controls="review"
+                                               aria-selected="false">REVIEW</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="map-tab" data-bs-toggle="tab" href="#map" role="tab" aria-controls="map" aria-selected="false">MAP</a>
+                                            <a class="nav-link" id="map-tab" data-bs-toggle="tab"
+                                               href="#map" role="tab" aria-controls="map"
+                                               aria-selected="false">MAP</a>
                                         </li>
                                     </ul>
                                     <div class="tab-content" id="myTabContent">
                                         <!-- Description Tab -->
-                                        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                                        <div class="tab-pane fade show active" id="overview"
+                                             role="tabpanel" aria-labelledby="overview-tab">
                                             <div class="overview-content">
-                                                <p><%= package.description || 'No description available.' %></p>
+                                                <p>
+                                                    <%= package.description || 'No description available.' %>
+                                                </p>
                                             </div>
                                         </div>
                                         <!-- Program Tab (Itinerary Overview) -->
-                                        <div class="tab-pane fade" id="program" role="tabpanel" aria-labelledby="program-tab">
+                                        <div class="tab-pane fade" id="program" role="tabpanel"
+                                             aria-labelledby="program-tab">
                                             <div class="itinerary-content">
                                                 <h3>Itinerary Overview <span>( <%= package.tripDuration?.days || 4 %> days )</span></h3>
-                                                <p><%= package.itineraryDescription || 'Dolores maiores dicta dolore. Natoque placeat libero sunt sagittis debitis? Egestas non non qui quos, semper aperiam lacinia eum nam! Pede beatae. Soluta, convallis irure accusamus voluptatum ornare saepe cupidatat.' %></p>
+                                                <p>
+                                                    <%= package.itineraryDescription || 'Dolores maiores dicta dolore. Natoque placeat libero sunt sagittis debitis? Egestas non non qui quos, semper aperiam lacinia eum nam! Pede beatae. Soluta, convallis irure accusamus voluptatum ornare saepe cupidatat.' %>
+                                                </p>
                                             </div>
                                             <div class="itinerary-timeline-wrap">
                                                 <ul>
@@ -397,181 +529,258 @@
                                             </div>
                                         </div>
                                         <!-- Detailed Itinerary Tab -->
-                                        <div class="tab-pane fade" id="itinerary-overview" role="tabpanel" aria-labelledby="itinerary-overview-tab">
+                                        <div class="tab-pane fade" id="itinerary-overview" role="tabpanel"
+                                             aria-labelledby="itinerary-overview-tab">
                                             <div class="itinerary-content">
-                                                <h3 class="mb-3">Detailed Itinerary <span class="text-muted fs-5">(<%= package.tripDuration?.days || 0 %> days)</span></h3>
-                                                <p class="text-muted mb-4"><%= package.itineraryDescription || 'Explore the highlights of this amazing journey.' %></p>
+                                                <h3 class="mb-3">Detailed Itinerary <span
+                                                        class="text-muted fs-5">(<%= package.tripDuration?.days || 0 %>
+                                                        days)</span></h3>
+                                                <p class="text-muted mb-4">
+                                                    <%= package.itineraryDescription || 'Explore the highlights of this amazing journey.' %>
+                                                </p>
                                             </div>
                                             <div class="itinerary-timeline-wrap w-100">
                                                 <% if (package.itineraryDays && package.itineraryDays.length > 0) { %>
-                                                    <div class="accordion accordion-flush" id="itineraryAccordion">
-                                                        <% package.itineraryDays.forEach((day, index) => { %>
-                                                            <div class="accordion-item">
-                                                                <div class="accordion-header" id="dayHeading<%= index %>" data-bs-toggle="collapse" data-bs-target="#dayCollapse<%= index %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" aria-controls="dayCollapse<%= index %>">
-                                                                    <h3><i class="fas fa-calendar-day"></i> Day <%= day.day || (index + 1) %> <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                                </div>
-                                                                <div id="dayCollapse<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" aria-labelledby="dayHeading<%= index %>" data-bs-parent="#itineraryAccordion">
-                                                                    <div class="accordion-body">
-                                                                        <% if (day.activities && day.activities.length > 0) { %>
-                                                                            <div class="timeline">
-                                                                                <% day.activities.forEach(activity => { %>
-                                                                                    <div class="timeline-item">
-                                                                                        <div class="activity-card">
-                                                                                            <h5><i class="fas fa-map-pin"></i> <%= activity.title || 'Activity' %></h5>
-                                                                                            <p class="activity-subtitle"><%= activity.sub_title || 'No subtitle' %></p>
-                                                                                            <p class="activity-time">
-                                                                                                <i class="far fa-clock"></i>
-                                                                                                <%= activity.start_time || 'N/A' %> - <%= activity.end_time || 'N/A' %>
-                                                                                            </p>
-                                                                                            <% if (activity.type) { %>
-                                                                                                <span class="activity-type"><i class="fas fa-tag"></i> <%= activity.type %></span>
-                                                                                            <% } %>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                <% }) %>
-                                                                            </div>
-                                                                        <% } else { %>
-                                                                            <p class="text-muted">No activities scheduled for this day.</p>
-                                                                        <% } %>
+                                                <div class="accordion accordion-flush" id="itineraryAccordion">
+                                                    <% package.itineraryDays.forEach((day, index) => { %>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="dayHeading<%= index %>"
+                                                             data-bs-toggle="collapse"
+                                                             data-bs-target="#dayCollapse<%= index %>"
+                                                             aria-expanded="<%= index === 0 ? 'true' : 'false' %>"
+                                                             aria-controls="dayCollapse<%= index %>">
+                                                            <h3><i class="fas fa-calendar-day"></i> Day <%= day.day || (index + 1) %>
+                                                                <i class="fas fa-chevron-down toggle-icon"></i>
+                                                            </h3>
+                                                        </div>
+                                                        <div id="dayCollapse<%= index %>"
+                                                             class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
+                                                             aria-labelledby="dayHeading<%= index %>"
+                                                             data-bs-parent="#itineraryAccordion">
+                                                            <div class="accordion-body">
+                                                                <% if (day.activities && day.activities.length > 0) { %>
+                                                                <div class="timeline">
+                                                                    <% day.activities.forEach(activity => { %>
+                                                                    <div class="timeline-item">
+                                                                        <div class="activity-card">
+                                                                            <h5><i class="fas fa-map-pin"></i>
+                                                                                <%= activity.title || 'Activity' %>
+                                                                            </h5>
+                                                                            <p class="activity-subtitle">
+                                                                                <%= activity.sub_title || 'No subtitle' %>
+                                                                            </p>
+                                                                            <p class="activity-time">
+                                                                                <i class="far fa-clock"></i>
+                                                                                <%= activity.start_time || 'N/A' %> -
+                                                                                <%= activity.end_time || 'N/A' %>
+                                                                            </p>
+                                                                            <% if (activity.type) { %>
+                                                                            <span class="activity-type"><i
+                                                                                    class="fas fa-tag"></i>
+                                                                                <%= activity.type %>
+                                                                            </span>
+                                                                            <% } %>
+                                                                        </div>
                                                                     </div>
+                                                                    <% }) %>
                                                                 </div>
+                                                                <% } else { %>
+                                                                <p class="text-muted">No activities scheduled for this day.</p>
+                                                                <% } %>
                                                             </div>
-                                                        <% }) %>
+                                                        </div>
                                                     </div>
+                                                    <% }) %>
+                                                </div>
                                                 <% } else { %>
-                                                    <p class="text-muted">No itinerary details available.</p>
+                                                <p class="text-muted">No itinerary details available.</p>
                                                 <% } %>
                                             </div>
                                         </div>
                                         <!-- Additional Info Tab -->
-                                        <div class="tab-pane fade" id="additional-info" role="tabpanel" aria-labelledby="additional-info-tab">
+                                        <div class="tab-pane fade" id="additional-info" role="tabpanel"
+                                             aria-labelledby="additional-info-tab">
                                             <div class="additional-info-content">
                                                 <h3 class="mb-4">Additional Information</h3>
                                                 <div class="accordion accordion-flush" id="additionalInfoAccordion">
                                                     <% if (package.inclusions && package.inclusions.length > 0) { %>
-                                                        <div class="accordion-item">
-                                                            <div class="accordion-header" id="inclusionsHeading" data-bs-toggle="collapse" data-bs-target="#inclusionsCollapse" aria-expanded="true" aria-controls="inclusionsCollapse">
-                                                                <h3><i class="fas fa-check-circle"></i> Inclusions <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                            </div>
-                                                            <div id="inclusionsCollapse" class="accordion-collapse collapse show" aria-labelledby="inclusionsHeading" data-bs-parent="#additionalInfoAccordion">
-                                                                <div class="accordion-body">
-                                                                    <ul class="info-list">
-                                                                        <% package.inclusions.forEach(item => { %>
-                                                                            <li><i class="fas fa-check"></i> <%= item %></li>
-                                                                        <% }) %>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    <% } %>
-                                                    <% if (package.exclusions && package.exclusions.length > 0) { %>
-                                                        <div class="accordion-item">
-                                                            <div class="accordion-header" id="exclusionsHeading" data-bs-toggle="collapse" data-bs-target="#exclusionsCollapse" aria-expanded="false" aria-controls="exclusionsCollapse">
-                                                                <h3><i class="fas fa-times-circle"></i> Exclusions <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                            </div>
-                                                            <div id="exclusionsCollapse" class="accordion-collapse collapse" aria-labelledby="exclusionsHeading" data-bs-parent="#additionalInfoAccordion">
-                                                                <div class="accordion-body">
-                                                                    <ul class="info-list">
-                                                                        <% package.exclusions.forEach(item => { %>
-                                                                            <li><i class="fas fa-times"></i> <%= item %></li>
-                                                                        <% }) %>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    <% } %>
-                                                    <% if (package.highlights && package.highlights.length > 0) { %>
-                                                        <div class="accordion-item">
-                                                            <div class="accordion-header" id="highlightsHeading" data-bs-toggle="collapse" data-bs-target="#highlightsCollapse" aria-expanded="false" aria-controls="highlightsCollapse">
-                                                                <h3><i class="fas fa-star"></i> Highlights <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                            </div>
-                                                            <div id="highlightsCollapse" class="accordion-collapse collapse" aria-labelledby="highlightsHeading" data-bs-parent="#additionalInfoAccordion">
-                                                                <div class="accordion-body">
-                                                                    <ul class="info-list">
-                                                                        <% package.highlights.forEach(highlight => { %>
-                                                                            <li><i class="fas fa-star"></i> <%= highlight %></li>
-                                                                        <% }) %>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    <% } %>
                                                     <div class="accordion-item">
-                                                        <div class="accordion-header" id="detailsHeading" data-bs-toggle="collapse" data-bs-target="#detailsCollapse" aria-expanded="false" aria-controls="detailsCollapse">
-                                                            <h3><i class="fas fa-info-circle"></i> Details <i class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        <div class="accordion-header" id="inclusionsHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#inclusionsCollapse"
+                                                             aria-expanded="true" aria-controls="inclusionsCollapse">
+                                                            <h3><i class="fas fa-check-circle"></i> Inclusions <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
                                                         </div>
-                                                        <div id="detailsCollapse" class="accordion-collapse collapse" aria-labelledby="detailsHeading" data-bs-parent="#additionalInfoAccordion">
+                                                        <div id="inclusionsCollapse"
+                                                             class="accordion-collapse collapse show"
+                                                             aria-labelledby="inclusionsHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
                                                             <div class="accordion-body">
                                                                 <ul class="info-list">
-                                                                    <li><i class="fas fa-info-circle"></i> <strong>Type:</strong> <%= package.packageType || 'N/A' %></li>
-                                                                    <li><i class="fas fa-info-circle"></i> <strong>Category:</strong> <%= package.category || 'N/A' %></li>
-                                                                    <li><i class="fas fa-info-circle"></i> <strong>Difficulty Level:</strong> <%= package.difficultyLevel || 'N/A' %></li>
-                                                                    <li><i class="fas fa-info-circle"></i> <strong>Group Size:</strong> <%= package.groupSize || 'N/A' %></li>
-                                                                    <li><i class="fas fa-info-circle"></i> <strong>Destination:</strong> <%= package.destinationAddress ? `${package.destinationAddress}, ${package.destinationCountry}` : package.destinationCountry || 'N/A' %></li>
+                                                                    <% package.inclusions.forEach(item => { %>
+                                                                    <li><i class="fas fa-check"></i>
+                                                                        <%= item %>
+                                                                    </li>
+                                                                    <% }) %>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                                    <% if (package.exclusions && package.exclusions.length > 0) { %>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="exclusionsHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#exclusionsCollapse"
+                                                             aria-expanded="false" aria-controls="exclusionsCollapse">
+                                                            <h3><i class="fas fa-times-circle"></i> Exclusions <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="exclusionsCollapse"
+                                                             class="accordion-collapse collapse"
+                                                             aria-labelledby="exclusionsHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <ul class="info-list">
+                                                                    <% package.exclusions.forEach(item => { %>
+                                                                    <li><i class="fas fa-times"></i>
+                                                                        <%= item %>
+                                                                    </li>
+                                                                    <% }) %>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                                    <% if (package.highlights && package.highlights.length > 0) { %>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="highlightsHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#highlightsCollapse"
+                                                             aria-expanded="false" aria-controls="highlightsCollapse">
+                                                            <h3><i class="fas fa-star"></i> Highlights <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="highlightsCollapse"
+                                                             class="accordion-collapse collapse"
+                                                             aria-labelledby="highlightsHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <ul class="info-list">
+                                                                    <% package.highlights.forEach(highlight => { %>
+                                                                    <li><i class="fas fa-star"></i>
+                                                                        <%= highlight %>
+                                                                    </li>
+                                                                    <% }) %>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="detailsHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#detailsCollapse"
+                                                             aria-expanded="false" aria-controls="detailsCollapse">
+                                                            <h3><i class="fas fa-info-circle"></i> Details <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="detailsCollapse" class="accordion-collapse collapse"
+                                                             aria-labelledby="detailsHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <ul class="info-list">
+                                                                    <li><i class="fas fa-info-circle"></i>
+                                                                        <strong>Type:</strong>
+                                                                        <%= package.packageType || 'N/A' %>
+                                                                    </li>
+                                                                    <li><i class="fas fa-info-circle"></i>
+                                                                        <strong>Category:</strong>
+                                                                        <%= package.category || 'N/A' %>
+                                                                    </li>
+                                                                    <li><i class="fas fa-info-circle"></i>
+                                                                        <strong>Difficulty Level:</strong>
+                                                                        <%= package.difficultyLevel || 'N/A' %>
+                                                                    </li>
+                                                                    <li><i class="fas fa-info-circle"></i>
+                                                                        <strong>Group Size:</strong>
+                                                                        <%= package.groupSize || 'N/A' %>
+                                                                    </li>
+                                                                    <li><i class="fas fa-info-circle"></i>
+                                                                        <strong>Destination:</strong>
+                                                                        <%= package.destinationAddress ? `${package.destinationAddress}, ${package.destinationCountry}` : package.destinationCountry || 'N/A' %>
+                                                                    </li>
                                                                 </ul>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <% if (package.multipleDepartures && package.multipleDepartures.length > 0) { %>
-                                                        <div class="accordion-item">
-                                                            <div class="accordion-header" id="departuresHeading" data-bs-toggle="collapse" data-bs-target="#departuresCollapse" aria-expanded="false" aria-controls="departuresCollapse">
-                                                                <h3><i class="fas fa-calendar-alt"></i> Departure Dates And Locations <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                            </div>
-                                                            <div id="departuresCollapse" class="accordion-collapse collapse" aria-labelledby="departuresHeading" data-bs-parent="#additionalInfoAccordion">
-                                                                <div class="accordion-body">
-                                                                    <ul class="info-list">
-                                                                        <% package.multipleDepartures.forEach(departure => { %>
-                                                                            <li><i class="fas fa-calendar-check"></i> <%= departure.dateTime.toDateString() %> - <%= departure.location %></li>
-                                                                        <% }) %>
-                                                                    </ul>
-                                                                </div>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="departuresHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#departuresCollapse"
+                                                             aria-expanded="false" aria-controls="departuresCollapse">
+                                                            <h3><i class="fas fa-calendar-alt"></i> Departure Dates And
+                                                                Locations <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="departuresCollapse"
+                                                             class="accordion-collapse collapse"
+                                                             aria-labelledby="departuresHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <ul class="info-list">
+                                                                    <% package.multipleDepartures.forEach(departure => { %>
+                                                                    <li><i class="fas fa-calendar-check"></i>
+                                                                        <%= departure.dateTime.toDateString() %> - <%= departure.location %>
+                                                                    </li>
+                                                                    <% }) %>
+                                                                </ul>
                                                             </div>
                                                         </div>
+                                                    </div>
                                                     <% } %>
                                                     <% if (package.quote) { %>
-                                                        <div class="accordion-item">
-                                                            <div class="accordion-header" id="quoteHeading" data-bs-toggle="collapse" data-bs-target="#quoteCollapse" aria-expanded="false" aria-controls="quoteCollapse">
-                                                                <h3><i class="fas fa-quote-left"></i> Quote <i class="fas fa-chevron-down toggle-icon"></i></h3>
-                                                            </div>
-                                                            <div id="quoteCollapse" class="accordion-collapse collapse" aria-labelledby="quoteHeading" data-bs-parent="#additionalInfoAccordion">
-                                                                <div class="accordion-body">
-                                                                    <blockquote class="quote-block">
-                                                                        <p>"<%= package.quote %>"</p>
-                                                                    </blockquote>
-                                                                </div>
+                                                    <div class="accordion-item">
+                                                        <div class="accordion-header" id="quoteHeading"
+                                                             data-bs-toggle="collapse" data-bs-target="#quoteCollapse"
+                                                             aria-expanded="false" aria-controls="quoteCollapse">
+                                                            <h3><i class="fas fa-quote-left"></i> Quote <i
+                                                                    class="fas fa-chevron-down toggle-icon"></i></h3>
+                                                        </div>
+                                                        <div id="quoteCollapse" class="accordion-collapse collapse"
+                                                             aria-labelledby="quoteHeading"
+                                                             data-bs-parent="#additionalInfoAccordion">
+                                                            <div class="accordion-body">
+                                                                <blockquote class="quote-block">
+                                                                    <p>"<%= package.quote %>"</p>
+                                                                </blockquote>
                                                             </div>
                                                         </div>
+                                                    </div>
                                                     <% } %>
                                                 </div>
                                             </div>
                                         </div>
                                         <!-- Review Tab -->
-                                        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+                                        <div class="tab-pane fade" id="review" role="tabpanel"
+                                             aria-labelledby="review-tab">
                                             <div class="summary-review">
                                                 <div class="review-score">
                                                     <span id="average-rating">
-                                                        <%= reviews && reviews.length > 0 ? 
-                                                            (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : 
-                                                            '0' %>
+                                                        <%= reviews && reviews.length > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : '0' %>
                                                     </span>
                                                 </div>
                                                 <div class="review-score-content">
                                                     <h3>
-                                                        <%= reviews && reviews.length > 0 ? 
-                                                            (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length >= 4 ? 'Excellent' : 
-                                                            reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length >= 3 ? 'Good' : 'Average') : 
-                                                            'No Reviews' %>
+                                                        <%= reviews && reviews.length > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length >= 4 ? 'Excellent' : reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length >= 3 ? 'Good' : 'Average') : 'No Reviews' %>
                                                         <span id="review-count">( Based on <%= reviews ? reviews.length : 0 %> reviews )</span>
                                                     </h3>
                                                     <p>Tincidunt iaculis pede mus lobortis hendrerit eveniet impedit aenean mauris qui, pharetra rem doloremque laboris euismod deserunt non, cupiditate, vestibulum.</p>
                                                 </div>
                                             </div>
                                             <div class="comment-area">
-                                                <h3 class="comment-title" id="review-title"><%= reviews ? reviews.length : 0 %> Reviews</h3>
+                                                <h3 class="comment-title" id="review-title">
+                                                    <%= reviews ? reviews.length : 0 %> Reviews
+                                                </h3>
                                                 <div class="comment-area-inner">
-                                                    <ol id="review-list">
-                                                       
-                                                    </ol>
+                                                    <ol id="review-list"></ol>
                                                 </div>
                                                 <div class="comment-form-wrap">
                                                     <h3 class="comment-title">Leave a Review</h3>
@@ -579,8 +788,10 @@
                                                         <input type="hidden" name="packageId" value="<%= package._id %>">
                                                         <div class="full-width rate-wrap">
                                                             <label>Your rating</label>
-                                                            <div class="package-rate" aria-label="Select a rating from 1 to 5 stars">
-                                                                <input type="radio" id="star1" name="rating" value="1" required>
+                                                            <div class="package-rate"
+                                                                 aria-label="Select a rating from 1 to 5 stars">
+                                                                <input type="radio" id="star1" name="rating" value="1"
+                                                                       required>
                                                                 <label for="star1" class="fas fa-star"></label>
                                                                 <input type="radio" id="star2" name="rating" value="2">
                                                                 <label for="star2" class="fas fa-star"></label>
@@ -593,16 +804,21 @@
                                                             </div>
                                                         </div>
                                                         <p>
-                                                            <input type="text" name="name" placeholder="Name" value="<%= user ? user.firstName + ' ' + user.lastName : '' %>" required>
+                                                            <input type="text" name="name" placeholder="Name"
+                                                                   value="<%= user ? user.firstName + ' ' + user.lastName : '' %>"
+                                                                   required>
                                                         </p>
                                                         <p>
-                                                            <input type="email" name="email" placeholder="Email" value="<%= user ? user.email : '' %>" required>
+                                                            <input type="email" name="email" placeholder="Email"
+                                                                   value="<%= user ? user.email : '' %>" required>
                                                         </p>
                                                         <p>
-                                                            <input type="text" name="subject" placeholder="Subject" required>
+                                                            <input type="text" name="subject" placeholder="Subject"
+                                                                   required>
                                                         </p>
                                                         <p>
-                                                            <textarea rows="6" name="comment" placeholder="Your review" required></textarea>
+                                                            <textarea rows="6" name="comment" placeholder="Your review"
+                                                                      required></textarea>
                                                         </p>
                                                         <p>
                                                             <input type="submit" value="Submit">
@@ -615,25 +831,27 @@
                                         <!-- Map Tab -->
                                         <div class="tab-pane fade" id="map" role="tabpanel" aria-labelledby="map-tab">
                                             <div class="map-area">
-                                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000!2d<%= package.longitude || 0 %>!3d<%= package.latitude || 0 %>!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z<%= package.latitude || 0 %>%2C<%= package.longitude || 0 %>!5e0!3m2!1sen!2snp!4v1579777829477!5m2!1sen!2snp" height="450" allowfullscreen="" loading="lazy"></iframe>
+                                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000!2d<%= package.longitude || 0 %>!3d<%= package.latitude || 0 %>!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z<%= package.latitude || 0 %>%2C<%= package.longitude || 0 %>!5e0!3m2!1sen!2snp!4v1579777829477!5m2!1sen!2snp"
+                                                        height="450" allowfullscreen="" loading="lazy"></iframe>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- Gallery -->
                                 <% if (package.gallery && package.gallery.length > 0) { %>
-                                    <div class="single-tour-gallery">
-                                        <h3>GALLERY / PHOTOS</h3>
-                                        <div class="single-tour-slider">
-                                            <% package.gallery.forEach(image => { %>
-                                                <div class="single-tour-item">
-                                                    <figure class="feature-image">
-                                                        <img src="<%= image ? '/Uploads/gallery/' + image : '/assets/images/default.jpg' %>" alt="<%= package.title || 'Gallery Image' %>">
-                                                    </figure>
-                                                </div>
-                                            <% }) %>
+                                <div class="single-tour-gallery">
+                                    <h3>GALLERY / PHOTOS</h3>
+                                    <div class="single-tour-slider">
+                                        <% package.gallery.forEach(image => { %>
+                                        <div class="single-tour-item">
+                                            <figure class="feature-image">
+                                                <img src="<%= image ? '/Uploads/gallery/' + image : '/assets/images/default.jpg' %>"
+                                                     alt="<%= package.title || 'Gallery Image' %>">
+                                            </figure>
                                         </div>
+                                        <% }) %>
                                     </div>
+                                </div>
                                 <% } %>
                             </div>
                         </div>
@@ -641,116 +859,62 @@
                             <div class="sidebar">
                                 <div class="package-price">
                                     <h5 class="price">
-                                        <span>$<%= package.salePrice || package.regularPrice || 'N/A' %></span> / per person
+                                        <span>$<%= package.salePrice || package.regularPrice || 'N/A' %></span> / per
+                                        person
                                     </h5>
                                     <% if (package.discount && package.salePrice < package.regularPrice) { %>
-                                        <p class="text-muted">Regular Price: <span class="text-decoration-line-through">$<%= package.regularPrice %></span> (<%= package.discount %>% OFF)</p>
+                                    <p class="text-muted">Regular Price: <span
+                                            class="text-decoration-line-through">$<%= package.regularPrice %></span> (<%=
+                                            package.discount %>% OFF)</p>
                                     <% } %>
                                     <div class="start-wrap">
-                                        <div class="rating-start rating-data" title="Rated <%= reviews && reviews.length > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : 0 %> out of 5">
+                                        <div class="rating-start rating-data"
+                                             title="Rated <%= reviews && reviews.length > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : 0 %> out of 5">
                                             <% for (let i = 1; i <= 5; i++) { %>
-                                                <i class="fas fa-star <%= i <= (reviews && reviews.length > 0 ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length) : 0) ? 'filled' : '' %>"></i>
+                                            <i class="fas fa-star <%= i <= (reviews && reviews.length > 0 ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length) : 0) ? 'filled' : '' %>"></i>
                                             <% } %>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="widget-bg booking-form-wrap">
-                                    <h4 class="bg-title">Booking</h4>
-                                    <form class="booking-form" action="/booking/<%= package._id %>" method="POST">
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <div class="form-group">
-                                                    <input name="name_booking" type="text" placeholder="Full Name" value="<%= user ? user.name : '' %>" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-12">
-                                                <div class="form-group">
-                                                    <input name="email_booking" type="email" placeholder="Email" value="<%= user ? user.email : '' %>" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-12">
-                                                <div class="form-group">
-                                                    <input name="phone_booking" type="text" placeholder="Phone Number">
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-12">
-                                                <div class="form-group">
-                                                    <select name="departure_date" required>
-                                                        <option value="">Select Departure Date</option>
-                                                        <% (package.multipleDepartures || []).forEach(departure => { %>
-                                                            <option value="<%= departure.dateTime %>"><%= departure.dateTime.toDateString() %> - <%= departure.location %></option>
-                                                        <% }) %>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-12">
-                                                <h4>Add Options</h4>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-group">
-                                                    <label class="checkbox-list">
-                                                        <input type="checkbox" name="options" value="Tour guide">
-                                                        <span class="custom-checkbox"></span>
-                                                        Tour guide
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-group">
-                                                    <label class="checkbox-list">
-                                                        <input type="checkbox" name="options" value="Insurance">
-                                                        <span class="custom-checkbox"></span>
-                                                        Insurance
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-group">
-                                                    <label class="checkbox-list">
-                                                        <input type="checkbox" name="options" value="Dinner">
-                                                        <span class="custom-checkbox"></span>
-                                                        Dinner
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-group">
-                                                    <label class="checkbox-list">
-                                                        <input type="checkbox" name="options" value="Bike rent">
-                                                        <span class="custom-checkbox"></span>
-                                                        Bike rent
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-12">
-                                                <div class="form-group submit-btn">
-                                                    <input type="submit" name="submit" value="Book Now">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
+                                <div class="widget-bg quote-wrap">
+                                    <h4 class="bg-title">Plan Your Adventure</h4>
+                                    <blockquote>
+                                        "Travel is the only thing you buy that makes you richer."
+                                    </blockquote>
+                                    <cite>– Anonymous</cite>
+                                    <div class="button-group">
+                                        <a href="/bookPackage/<%= package._id %>" class="button-primary book-now">Book
+                                            Now</a>
+                                        <button type="button" id="add-to-cart" class="button-primary add-to-cart">Add
+                                            to Cart</button>
+                                    </div>
                                 </div>
                                 <div class="widget-bg information-content text-center">
                                     <h5>TRAVEL TIPS</h5>
                                     <h3>NEED TRAVEL RELATED TIPS & INFORMATION</h3>
-                                    <p><%= package.quote || 'Mollit voluptatem perspiciatis convallis elementum corporis quo veritatis aliquid blandit.' %></p>
-                                    <a href="/contact" class="button-primary">GET A QUOTE</a>
+                                    <p>'Mollit voluptatem perspiciatis convallis elementum corporis quo veritatis aliquid
+                                        blandit.'</p>
                                 </div>
-                                <div class="travel-package-content text-center" style="background-image: url(/assets/images/img11.jpg);">
+                                <div class="travel-package-content text-center"
+                                     style="background-image: url(/assets/images/img11.jpg);">
                                     <h5>MORE PACKAGES</h5>
                                     <h3>OTHER TRAVEL PACKAGES</h3>
                                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                                     <ul>
-                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Vacation packages</a></li>
-                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Honeymoon packages</a></li>
-                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>New year packages</a></li>
-                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Weekend packages</a></li>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>Vacation
+                                                packages</a></li>
+                                        <li><a href="/tour-packages"><i
+                                                class="far fa-arrow-alt-circle-right"></i>Honeymoon packages</a></li>
+                                        <li><a href="/tour-packages"><i class="far fa-arrow-alt-circle-right"></i>New
+                                                year packages</a></li>
+                                        <li><a href="/tour-packages"><i
+                                                class="far fa-arrow-alt-circle-right"></i>Weekend packages</a></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <% } else { %>
+                    <% } else { %>
                     <div class="row">
                         <div class="col-12 text-center">
                             <h3>Package Not Found</h3>
@@ -758,203 +922,227 @@
                             <a href="/tour-packages" class="button-primary">View All Packages</a>
                         </div>
                     </div>
-                <% } %>
+                    <% } %>
+                </div>
             </div>
-        </div>
 
-        <!-- Subscribe Section -->
-        <section class="subscribe-section" style="background-image: url(/assets/images/img16.jpg);">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-7">
-                        <div class="section-heading section-heading-white">
-                            <h5 class="dash-style">HOLIDAY PACKAGE OFFER</h5>
-                            <h2>HOLIDAY SPECIAL <%= package && package.discount ? package.discount + '% OFF' : '25% OFF' %>!</h2>
-                            <h4>Sign up now to receive hot special offers and information about the best tour packages, updates, and discounts!</h4>
-                            <div class="newsletter-form">
-                                <form action="/subscribe" method="POST">
-                                    <input type="email" name="email" placeholder="Your Email Address" required>
-                                    <input type="submit" name="signup" value="SIGN UP NOW!">
-                                </form>
+            <!-- Subscribe Section -->
+            <section class="subscribe-section" style="background-image: url(/assets/images/img16.jpg);">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="section-heading section-heading-white">
+                                <h5 class="dash-style">HOLIDAY PACKAGE OFFER</h5>
+                                <h2>HOLIDAY SPECIAL <%= package && package.discount ? package.discount + '% OFF' : '25% OFF' %>
+                                    !</h2>
+                                <h4>Sign up now to receive hot special offers and information about the best tour
+                                    packages, updates, and discounts!</h4>
+                                <div class="newsletter-form">
+                                    <form action="/subscribe" method="POST">
+                                        <input type="email" name="email" placeholder="Your Email Address" required>
+                                        <input type="submit" name="signup" value="SIGN UP NOW!">
+                                    </form>
+                                </div>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec
+                                    ullamcorper mattis, pulvinar dapibus leo.</p>
                             </div>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
+            </section>
+        </main>
 
-    <%- include('../partials/Footer') %>
-</div>
+        <%- include('../partials/Footer') %>
+    </div>
 
-<!-- JavaScript -->
-<%- include('../partials/Script') %>
-<!-- Dependencies -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Store initial reviews from package data
-    let reviews = <%- JSON.stringify(reviews || []) %>;
+    <!-- JavaScript -->
+    <%- include('../partials/Script') %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Store initial reviews from package data
+        let reviews = <%- JSON.stringify(reviews || []) %>;
 
-    // Function to render reviews
-    function renderReviews() {
-        const reviewList = document.getElementById('review-list');
-        const reviewTitle = document.getElementById('review-title');
-        const averageRating = document.getElementById('average-rating');
-        const reviewCount = document.getElementById('review-count');
+        // Function to render reviews
+        function renderReviews() {
+            const reviewList = document.getElementById('review-list');
+            const reviewTitle = document.getElementById('review-title');
+            const averageRating = document.getElementById('average-rating');
+            const reviewCount = document.getElementById('review-count');
 
-        // Update review count and average rating
-        const reviewCountValue = reviews.length;
-        const averageRatingValue = reviewCountValue > 0 
-            ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCountValue).toFixed(1) 
-            : '0';
-        
-        reviewTitle.textContent = `${reviewCountValue} Reviews`;
-        averageRating.textContent = averageRatingValue;
-        reviewCount.textContent = `( Based on ${reviewCountValue} reviews )`;
+            // Update review count and average rating
+            const reviewCountValue = reviews.length;
+            const averageRatingValue = reviewCountValue > 0
+                ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCountValue).toFixed(1)
+                : '0';
 
-        // Clear existing reviews
-        reviewList.innerHTML = '';
+            reviewTitle.textContent = `${reviewCountValue} Reviews`;
+            averageRating.textContent = averageRatingValue;
+            reviewCount.textContent = `( Based on ${reviewCountValue} reviews )`;
 
-        if (reviews.length > 0) {
-            reviews.forEach(review => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                <figure class="comment-thumb">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60&q=80" alt="User Avatar">
-            </figure>
-                    <div class="comment-content">
-                        <div class="comment-header">
-                            <h5 class="author-name">${review.name || 'Anonymous'}</h5>
-                            <span class="post-on">${new Date(review.date).toDateString()}</span>
-                            <div class="rating-wrap">
-                                <div class="rating-start" title="Rated ${review.rating} out of 5">
-                                    ${Array(5).fill().map((_, i) => 
-                                        `<i class="fas fa-star ${i < review.rating ? 'filled' : ''}"></i>`
-                                    ).join('')}
+            // Clear existing reviews
+            reviewList.innerHTML = '';
+
+            if (reviews.length > 0) {
+                reviews.forEach(review => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <figure class="comment-thumb">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60&q=80" alt="User Avatar">
+                        </figure>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <h5 class="author-name">${review.name || 'Anonymous'}</h5>
+                                <span class="post-on">${new Date(review.date).toDateString()}</span>
+                                <div class="rating-wrap">
+                                    <div class="rating-start" title="Rated ${review.rating} out of 5">
+                                        ${Array(5).fill().map((_, i) => `<i class="fas fa-star ${i < review.rating ? 'filled' : ''}"></i>`).join('')}
+                                    </div>
                                 </div>
                             </div>
+                            <p>${review.comment || 'No comment provided.'}</p>
                         </div>
-                        <p>${review.comment || 'No comment provided.'}</p>
-                  
-                    </div>
-                `;
-                reviewList.appendChild(li);
-            });
-        } else {
-            reviewList.innerHTML = `
-                <li>
-                    <div class="comment-content">
-                        <div class="comment-header">
-                            <h5 class="author-name">No Reviews Yet</h5>
-                            <span class="post-on">N/A</span>
-                        </div>
-                        <p>Be the first to leave a review for this package!</p>
-                    </div>
-                </li>
-            `;
-        }
-    }
-
-    // Handle star rating hover and selection
-    const ratingInputs = document.querySelectorAll('.package-rate input[type="radio"]');
-    const ratingLabels = document.querySelectorAll('.package-rate label');
-
-    function updateStarRating(upToIndex) {
-        ratingLabels.forEach((label, index) => {
-            if (index <= upToIndex) {
-                label.classList.add('filled');
-            } else {
-                label.classList.remove('filled');
-            }
-        });
-    }
-
-    // Handle click/selection
-    ratingInputs.forEach((input, index) => {
-        input.addEventListener('change', () => {
-            updateStarRating(index);
-        });
-    });
-
-    // Handle hover
-    ratingLabels.forEach((label, index) => {
-        label.addEventListener('mouseenter', () => {
-            updateStarRating(index);
-        });
-        label.addEventListener('mouseleave', () => {
-            // Restore stars based on the currently selected radio input
-            const selectedInput = document.querySelector('.package-rate input[type="radio"]:checked');
-            const selectedIndex = selectedInput ? Array.from(ratingInputs).indexOf(selectedInput) : -1;
-            updateStarRating(selectedIndex);
-        });
-    });
-
-    // Initialize stars based on any pre-selected rating
-    const selectedInput = document.querySelector('.package-rate input[type="radio"]:checked');
-    if (selectedInput) {
-        const selectedIndex = Array.from(ratingInputs).indexOf(selectedInput);
-        updateStarRating(selectedIndex);
-    }
-
-    // Handle review form submission
-    document.getElementById('review-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData);
-
-        // Ensure rating is a number
-        data.rating = parseInt(data.rating);
-
-        fetch('/review/<%= package._id %>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageEl = document.getElementById('review-message');
-            messageEl.textContent = data.message;
-            messageEl.classList.add(data.message.includes('successfully') ? 'success' : 'error');
-            messageEl.style.display = 'block';
-            
-            if (data.message.includes('successfully')) {
-                // Add new review to the reviews array
-                reviews.push({
-                    name: data.review.name,
-                    rating: data.review.rating,
-                    comment: data.review.comment,
-                    date: new Date(),
+                    `;
+                    reviewList.appendChild(li);
                 });
-                document.getElementById('review-form').reset();
-                renderReviews(); // Update review section
-                // Reset star ratings
-                updateStarRating(-1);
+            } else {
+                reviewList.innerHTML = `
+                    <li>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <h5 class="author-name">No Reviews Yet</h5>
+                                <span class="post-on">N/A</span>
+                            </div>
+                            <p>Be the first to leave a review for this package!</p>
+                        </div>
+                    </li>
+                `;
             }
-            
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-                messageEl.classList.remove('success', 'error');
-            }, 3000);
-        })
-        .catch(error => {
-            console.error('Error submitting review:', error);
-            const messageEl = document.getElementById('review-message');
-            messageEl.textContent = 'Error submitting review';
-            messageEl.classList.add('error');
-            messageEl.style.display = 'block';
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-                messageEl.classList.remove('error');
-            }, 3000);
-        });
-    });
+        }
 
-    // Initialize reviews on page load
-    renderReviews();
-</script>
+        // Handle star rating hover and selection
+        const ratingInputs = document.querySelectorAll('.package-rate input[type="radio"]');
+        const ratingLabels = document.querySelectorAll('.package-rate label');
+
+        function updateStarRating(upToIndex) {
+            ratingLabels.forEach((label, index) => {
+                if (index <= upToIndex) {
+                    label.classList.add('filled');
+                } else {
+                    label.classList.remove('filled');
+                }
+            });
+        }
+
+        // Handle click/selection
+        ratingInputs.forEach((input, index) => {
+            input.addEventListener('change', () => {
+                updateStarRating(index);
+            });
+        });
+
+        // Handle hover
+        ratingLabels.forEach((label, index) => {
+            label.addEventListener('mouseenter', () => {
+                updateStarRating(index);
+            });
+            label.addEventListener('mouseleave', () => {
+                // Restore stars based on the currently selected radio input
+                const selectedInput = document.querySelector('.package-rate input[type="radio"]:checked');
+                const selectedIndex = selectedInput ? Array.from(ratingInputs).indexOf(selectedInput) : -1;
+                updateStarRating(selectedIndex);
+            });
+        });
+
+        // Initialize stars based on any pre-selected rating
+        const selectedInput = document.querySelector('.package-rate input[type="radio"]:checked');
+        if (selectedInput) {
+            const selectedIndex = Array.from(ratingInputs).indexOf(selectedInput);
+            updateStarRating(selectedIndex);
+        }
+
+        // Handle review form submission
+        document.getElementById('review-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            // Ensure rating is a number
+            data.rating = parseInt(data.rating);
+
+            fetch('/review/<%= package._id %>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const messageEl = document.getElementById('review-message');
+                    messageEl.textContent = data.message;
+                    messageEl.classList.add(data.message.includes('successfully') ? 'success' : 'error');
+                    messageEl.style.display = 'block';
+
+                    if (data.message.includes('successfully')) {
+                        // Add new review to the reviews array
+                        reviews.push({
+                            name: data.review.name,
+                            rating: data.review.rating,
+                            comment: data.review.comment,
+                            date: new Date(),
+                        });
+                        document.getElementById('review-form').reset();
+                        renderReviews(); // Update review section
+                        // Reset star ratings
+                        updateStarRating(-1);
+                    }
+
+                    setTimeout(() => {
+                        messageEl.style.display = 'none';
+                        messageEl.classList.remove('success', 'error');
+                    }, 3000);
+                })
+                .catch(error => {
+                    console.error('Error submitting review:', error);
+                    const messageEl = document.getElementById('review-message');
+                    messageEl.textContent = 'Error submitting review';
+                    messageEl.classList.add('error');
+                    messageEl.style.display = 'block';
+                    setTimeout(() => {
+                        messageEl.style.display = 'none';
+                        messageEl.classList.remove('error');
+                    }, 3000);
+                });
+        });
+
+        renderReviews();
+
+        document.getElementById('add-to-cart').addEventListener('click', function () {
+            const data = {
+                packageId: '<%= package._id %>',
+                quantity: 1
+            };
+
+            fetch('/packageCart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Successfully added');
+                    } else {
+                        console.log('Error adding package to cart: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                });
+        });
+    </script>
 </body>
 </html>

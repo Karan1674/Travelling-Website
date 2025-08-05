@@ -30,7 +30,7 @@
         display: inline-flex;
     }
     .rating-start i {
-        margin: 0 2px;
+        margin: 0 0.2px;
     }
     .rating-start .filled {
         color: #f5c518;
@@ -116,7 +116,7 @@
                                                         </div>
                                                         <p><%= package.description?.substring(0, 100) %>...</p>
                                                         <div class="btn-wrap">
-                                                            <a href="/booking/<%= package._id %>" class="button-text width-6">Book Now<i class="fas fa-arrow-right"></i></a>
+                                                            <a href="/bookPackage/<%= package._id %>" class="button-text width-6">Book Now<i class="fas fa-arrow-right"></i></a>
                                                             <a href="#" class="wishlist-toggle button-text width-6" data-package-id="<%= package._id %>" data-is-wishlisted="<%= package.isWishlisted %>">
                                                                 <%= package.isWishlisted ? 'Remove' : 'Wish List' %>
                                                                 <i class="<%= package.isWishlisted ? 'fas fa-heart' : 'far fa-heart' %>"></i>
