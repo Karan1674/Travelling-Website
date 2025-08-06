@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap db-booking">
+                <div class="dashboard-box table-opp-color-box">
+                    <h4>Edit Booking Status</h4>
+                    <p>Update the status of the booking package</p>
+                    <div class="confirmation-details">
+                        <h5>Booking Details</h5>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><strong>User:</strong></td>
+                                    <td><%= booking && booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown User' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td><%= booking && booking.userDetails ? booking.userDetails.email : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td><%= booking && booking.userDetails ? booking.userDetails.phone : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>
+                                        <%= booking && booking.userDetails ? 
+                                            `${booking.userDetails.street_1}${booking.userDetails.street_2 ? ', ' + booking.userDetails.street_2 : ''}, 
+                                            ${booking.userDetails.city}, ${booking.userDetails.state}, ${booking.userDetails.country}, ${booking.userDetails.postal_code}` 
+                                            : 'N/A' %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Notes:</strong></td>
+                                    <td><%= booking && booking.userDetails && booking.userDetails.notes ? booking.userDetails.notes : 'None' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date:</strong></td>
+                                    <td><%= booking && booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Packages:</strong></td>
+                                    <td>
+                                        <% if (booking && booking.items && booking.items.length > 0) { %>
+                                            <ul>
+                                                <% booking.items.forEach(item => { %>
+                                                    <li>
+                                                        <a href="/packages/<%= item.packageId._id %>" target="_blank">
+                                                            <%= item.packageId && item.packageId.title ? item.packageId.title : 'Unknown Package' %>
+                                                        </a> (Quantity: <%= item.quantity || 1 %>)
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        <% } else { %>
+                                            No packages
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total People:</strong></td>
+                                    <td><%= booking && booking.items ? booking.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0 %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Booking ID:</strong></td>
+                                    <td><%= booking && booking._id ? booking._id : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Amount:</strong></td>
+                                    <td><%= booking && booking.total ? `$${booking.total.toFixed(2)}` : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Status:</strong></td>
+                                    <td><%= booking && booking.payment ? booking.payment.paymentStatus : 'N/A' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Type:</strong></td>
+                                    <td><%= booking && booking.payment ? booking.payment.paymentType : 'N/A' %></td>
+                                </tr>
+                                <!-- <tr>
+                                    <td><strong>Stripe Payment Intent:</strong></td>
+                                    <td><%= booking && booking.payment ? booking.payment.stripePaymentIntentId : 'N/A' %></td>
+                                </tr> -->
+                            </tbody>
+                        </table>
+                        <form id="editBookingForm" action="/admin/bookings/edit/<%= booking && booking._id ? booking._id : '' %>" method="POST">
+                            
+                            <% if( booking && booking.status !== 'rejected') { %>
+                                <div class="form-group">
+                                    <label for="status">Booking Status</label>
+                                    <select name="status" id="status" class="form-control" required>
+                                        <option value="pending" <%= booking && booking.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                        <option value="approved" <%= booking && booking.status === 'approved' ? 'selected' : '' %>>Approved</option>
+                                        <option value="rejected" <%= booking && booking.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Status</button>
+                              
+            
+                                    
+                                    <%}%>
+                            <a href="/admin/bookings" class="btn btn-secondary">Back</a>
+                        
+                         
+                        </form>
+                    </div>
+                </div>
+            </div>
+        
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script') %>
+ 
+</body>
+</html>

@@ -6,6 +6,12 @@ import wishlistSchema from '../models/wishlistSchema.js';
 import packageCartSchema from '../models/packageCartSchema.js';
 import packageBookingSchema from '../models/packageBookingSchema.js';
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
+
+import { promises as fs } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -398,7 +404,9 @@ export const addToPackageCart = async (req, res) => {
         }
 
         const existingItemIndex = cart.items.findIndex(item => item.packageId.toString() === packageId);
+        console.log(existingItemIndex)
         if (existingItemIndex > -1) {
+            console.log("w")
             cart.items[existingItemIndex].quantity += quantity;
         } else {
             cart.items.push({ packageId, quantity});
@@ -613,9 +621,16 @@ export const confirmPackageBooking = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!firstname_booking || !client_secret) {
+        if (!firstname_booking || !client_secret || !firstname || !lastname || !email || !phone || !country || !street_1 || !city || !state || !postal_code) {
             console.log('Missing required fields');
-            return res.status(400).send('Name on card and payment details are required');
+            return res.status(400).send('All required fields (name on card, payment details, user details) are required');
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            console.log('Invalid email format:', email);
+            return res.status(400).send('Invalid email format');
         }
 
         // Convert country to ISO 3166-1 alpha-2 code
@@ -650,8 +665,10 @@ export const confirmPackageBooking = async (req, res) => {
             },
             payment: {
                 stripePaymentIntentId: paymentIntent.id,
-                paymentStatus: paymentIntent.status
+                paymentStatus: paymentIntent.status,
+                paymentType: 'deposit' // Set as per schema default
             },
+            status: 'pending', // Set as per schema default
             total: paymentIntent.amount / 100 // Convert back to dollars
         };
 
@@ -791,9 +808,16 @@ export const confirmSinglePackageBooking = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!packageId || !firstname_booking || !client_secret) {
+        if (!packageId || !firstname_booking || !client_secret || !firstname || !lastname || !email || !phone || !country || !street_1 || !city || !state || !postal_code) {
             console.log('Missing required fields');
-            return res.status(400).send('Package ID, name on card, and payment details are required');
+            return res.status(400).send('Package ID, name on card, payment details, and user details are required');
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            console.log('Invalid email format:', email);
+            return res.status(400).send('Invalid email format');
         }
 
         const packageData = await packageModel.findById(packageId);
@@ -839,8 +863,10 @@ export const confirmSinglePackageBooking = async (req, res) => {
             },
             payment: {
                 stripePaymentIntentId: paymentIntent.id,
-                paymentStatus: paymentIntent.status
+                paymentStatus: paymentIntent.status,
+                paymentType: 'deposit' // Set as per schema default
             },
+            status: 'pending', // Set as per schema default
             total: paymentIntent.amount / 100 // Convert back to dollars
         };
 
@@ -873,3 +899,207 @@ export const confirmSinglePackageBooking = async (req, res) => {
     }
 };
 
+
+
+
+
+
+
+export const getUserBookings = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.redirect('/');
+        }
+
+        const userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exists in the Database');
+            return res.redirect('/');
+        }
+
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = 3; // Number of bookings per page
+        const skip = (page - 1) * limit;
+
+        // Search query
+        const search = req.query.search || '';
+        let query = { userId };
+
+        if (search) {
+            // Search by booking ID (as ObjectId or string), package title, or payment status
+            let idQuery = {};
+            if (mongoose.isValidObjectId(search)) {
+                idQuery = { _id: new mongoose.Types.ObjectId(search) };
+            }
+
+            const packageIds = await packageModel.find({
+                title: { $regex: search, $options: 'i' }
+            }).distinct('_id');
+
+            query = {
+                userId,
+                $or: [
+                    idQuery,
+                    { 'items.packageId': { $in: packageIds } },
+                    { 'payment.paymentStatus': { $regex: search, $options: 'i' } }
+                ].filter(condition => Object.keys(condition).length > 0) // Remove empty idQuery if invalid
+            };
+        }
+
+        // Fetch bookings with pagination
+        const bookings = await packageBookingSchema
+            .find(query)
+            .populate('items.packageId')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }); // Sort by newest first
+
+        // Calculate total pages
+        const totalBookings = await packageBookingSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalBookings / limit);
+
+        console.log(`Fetched bookings for user: ${userId}, page: ${page}, total: ${totalBookings}, search: ${search}`);
+
+        res.render('client/layout/userBookings', { 
+            bookings,
+            user: userData,
+            currentPage: page,
+            totalPages,
+            limit,
+            search
+        });
+    } catch (error) {
+        console.error('Get user bookings error:', error);
+        res.status(500).send('Error fetching bookings');
+    }
+};
+
+export const getBookingDetails = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.redirect('/');
+        }
+
+        const userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exists in the Database');
+            return res.redirect('/');
+        }
+
+        const bookingId = req.params.bookingId;
+        const booking = await packageBookingSchema.findById(bookingId).populate('items.packageId');
+        if (!booking || booking.userId.toString() !== userId.toString()) {
+            console.log('Booking not found or not authorized:', bookingId);
+            return res.redirect('/my-bookings');
+        }
+
+        // Fetch payment details
+        const paymentIntent = await stripeInstance.paymentIntents.retrieve(booking.payment.stripePaymentIntentId);
+        const paymentMethod = await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method);
+        const paymentDetails = {
+            cardBrand: paymentMethod.card.brand,
+            last4: paymentMethod.card.last4
+        };
+
+        console.log('Rendering booking details for:', bookingId);
+        res.render('client/layout/bookingDetails', { 
+            booking, 
+            user: userData, 
+            paymentDetails
+        });
+    } catch (error) {
+        console.error('Get booking details error:', error);
+        if (error.type === 'StripeInvalidRequestError') {
+            return res.status(400).send(`Payment error: ${error.message}`);
+        }
+        res.status(500).send('Error fetching booking details');
+    }
+};
+
+
+
+
+// Get User Profile
+export const getUserProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.redirect('/');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No user found for:', userId);
+            return res.redirect('/');
+        }
+
+        console.log('Rendering user profile for:', userId);
+        res.render('client/layout/userProfile', { user });
+    } catch (error) {
+        console.error('Get user profile error:', error);
+        res.status(500).json({ error: 'Server error while fetching profile' });
+    }
+};
+
+// Update User Profile
+export const updateUserProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.status(401).json({ error: 'Unauthorized: No user ID provided' });
+        }
+
+        const { firstName, lastName, email, phone } = req.body;
+
+        // Validate required fields
+        if (!firstName || !lastName || !email || !phone) {
+            console.log('Missing required fields:', { firstName, lastName, email, phone });
+            return res.status(400).render('client/layout/userProfile', {
+                user: await userModel.findById(userId),
+                error: 'First name, last name, email, and phone are required'
+            });
+        }
+
+        let updateData = { firstName, lastName, email, phone };
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No user found for:', userId);
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (req.file) {
+            // Delete existing profile picture if it exists
+            if (user.profilePic) {
+                const oldImagePath = join(__dirname, '../Uploads/profiles');
+                try {
+                    
+                    await fs.unlink(join(oldImagePath, user.profilePic));
+                    console.log('Deleted old profile picture:', user.profilePic);
+                } catch (err) {
+                    if (err.code !== 'ENOENT') {
+                        console.error('Error deleting old profile picture:', err);
+                    }
+                }
+            }
+            updateData.profilePic = req.file.filename;
+        }
+
+        await userModel.findByIdAndUpdate(userId, updateData, { new: true });
+        console.log('Updated user profile:', userId);
+        res.redirect('/user-profile');
+    } catch (error) {
+        console.error('Update user profile error:', error);
+        res.status(500).render('client/layout/userProfile', {
+            user: null,
+            error: 'Server error while updating profile'
+        });
+    }
+};

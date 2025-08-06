@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header.ejs') %>
+<body>
+    <%- include('../partials/Loader.ejs') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar.ejs') %>
+        <main id="content" class="site-main">
+            <!-- Inner Banner html start -->
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">My Bookings</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <!-- Inner Banner html end -->
+            <!-- Bookings html start -->
+            <div class="package-section">
+                <div class="container-xxl px-5 mx-5">
+                    <!-- Custom Search Bar -->
+            
+                    <form id="search-form" action="/user-bookings" method="get" style="flex: 1; margin-bottom: 20px;">
+                        <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                            <input type="text" name="search" id="search-input" placeholder="Search by Booking ID, Package Title, or Payment Status" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <button type="submit" aria-label="Search packages" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                <i class="fas fa-search" style="color: #007bff;"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="dashboard-box">
+                        <% if (bookings && bookings.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table" style="white-space: nowrap;">
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Booking ID</th>
+                                            <th>Package Name</th>
+                                            <th>Quantity</th>
+                                            <th>Total Cost</th>
+                                            <th>Payment Status</th>
+                                            <th>Booking Date</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% bookings.forEach((booking, index) => { %>
+                                            <% booking.items.forEach((item, itemIndex) => { %>
+                                                <tr>
+                                                    <% if (itemIndex === 0) { %>
+                                                        <td rowspan="<%= booking.items.length %>">
+                                                            <span>
+                                                                <%= ((currentPage - 1) * limit) + index + 1 %>.
+                                                            </span>
+                                                        </td>
+                                                        <td rowspan="<%= booking.items.length %>">
+                                                            <span class="package-name">
+                                                                <%= booking._id %>
+                                                            </span>
+                                                        </td>
+                                                    <% } %>
+                                                    <td>
+                                                        <a href="/package-detail/<%= item.packageId._id %>" class="package-name">
+                                                            <%= item.packageId.title %>
+                                                        </a>
+                                                    </td>
+                                                    <td><%= item.quantity %></td>
+                                                    <% if (itemIndex === 0) { %>
+                                                        <td rowspan="<%= booking.items.length %>">$<%= booking.total.toFixed(2) %></td>
+                                                        <td rowspan="<%= booking.items.length %>"><%= booking.payment.paymentStatus %></td>
+                                                        <td rowspan="<%= booking.items.length %>"><%= new Date(booking.createdAt).toLocaleDateString() %></td>
+                                                        <% if (booking.status === 'approved') { %>
+                                                            <td rowspan="<%= booking.items.length %>">
+                                                              <span class="badge badge-success">Approve</span>
+                                                            </td>
+                                                          <% } else if(booking.status === 'rejected'){ %>
+                                                            <td rowspan="<%= booking.items.length %>">
+                                                                <span class="badge badge-danger">Reject</span>
+                                                              </td>
+                                                            <% } else{ %>
+                                                                <td rowspan="<%= booking.items.length %>">
+                                                                    <span class="badge badge-primary">Pending</span>
+                                                                  </td>
+
+                                                            <%}%>
+                                                          
+                                                        <td rowspan="<%= booking.items.length %>">
+                                                            <a href="/user-booking/<%= booking._id %>" class=" text-white px-2 py-1" style="background-color: #0791BE;">See Details</a>
+                                                        </td>
+                                                    <% } %>
+                                                </tr>
+                                            <% }) %>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Enhanced Pagination -->
+                            <div class="pagination">
+                                <% if (currentPage > 1) { %>
+                                    <a href="/user-bookings?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-prev">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                <% } else { %>
+                                    <span class="pagination-link pagination-disabled">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </span>
+                                <% } %>
+                                <% 
+                                    const maxPagesToShow = 5;
+                                    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+                                    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                                    if (endPage - startPage < maxPagesToShow - 1) {
+                                        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                                    }
+                                    for (let i = startPage; i <= endPage; i++) { 
+                                %>
+                                    <a href="/user-bookings?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link <%= i === currentPage ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
+                                <% if (currentPage < totalPages) { %>
+                                    <a href="/user-bookings?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-next">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                <% } else { %>
+                                    <span class="pagination-link pagination-disabled">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </span>
+                                <% } %>
+                            </div>
+                        <% } else { %>
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="text-secondary" style="font-size: 17px;">No bookings found</span>
+                                <a class="mt-2" href="/tour-packages"><button class="button-secondary">Explore Tours</button></a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            <!-- Bookings html end -->
+        </main>
+        <%- include('../partials/Footer.ejs') %>
+    </div>
+    <!-- JavaScript -->
+    <%- include('../partials/Script.ejs') %>
+    <style>
+    
+
+        .table th, .table td {
+            padding: 12px 30px;
+            text-align: left;
+            vertical-align: middle;
+           
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        .table td {
+            font-size: 16px;
+            color: #555;
+        }
+        .package-name {
+            color: #0791BE;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .package-name:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+        .pagination-link {
+            padding: 12px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #007bff;
+            background: #fff;
+            border: 2px solid #007bff;
+           
+            text-decoration: none;
+            transition: all 0.3s ease;
+            min-width: 44px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pagination-link:hover {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .pagination-link.active {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+        }
+        .pagination-link.pagination-disabled {
+            color: #adb5bd;
+            border-color: #adb5bd;
+            background: #f1f3f5;
+            cursor: not-allowed;
+
+        }
+        .pagination-link.pagination-disabled:hover {
+            background: #f1f3f5;
+            color: #adb5bd;
+            transform: none;
+
+        }
+        .pagination-link.pagination-prev, .pagination-link.pagination-next {
+            padding: 12px 16px;
+            font-size: 18px;
+        }
+
+    </style>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+
+        // Handle form submission
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+        });
+    });
+</script>
+</html>
+
+
+
+
+
+
+
+
+

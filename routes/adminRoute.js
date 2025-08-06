@@ -1,5 +1,5 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
 const { uploadProfilePic, uploadGallery } = require('../middleware/multer');
@@ -37,5 +37,15 @@ router.get('/db-expired-packages', isAuthenticated, isAdminCheck, (req, res) => 
 router.get('/db-user-dashboard', isAuthenticated, isAdminCheck, getUserDashboard);
 router.get('/db-package-dashboard', isAuthenticated, isAdminCheck, getPackageDashboard);
 
+
+
+router.get('/admin-agent-profile',isAuthenticated, isAdminCheck, getAdminAgentProfile);
+router.post('/admin-agent-profile/update',isAuthenticated,isAdminCheck, uploadProfilePic.single('profilePic'), updateAdminAgentProfile);
+
+
+router.get('/admin/bookings', isAuthenticated, isAdminCheck, getBookings);
+router.get('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, getEditBooking);
+router.post('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, editBooking);
+router.get('/admin/bookings/delete/:bookingId', isAuthenticated, isAdminCheck,deleteBooking);
 
 module.exports = router;

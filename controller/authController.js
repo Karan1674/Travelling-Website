@@ -33,7 +33,7 @@ export const homePage = async (req, res) => {
         }
 
    
-        return res.render('client/layout/Home');
+        return res.render('client/layout/Home',{user:null});
     } catch (error) {
         console.error("Home page error:", error);
         return res.status(500).render('client/layout/Home', { error: "Internal server error" });

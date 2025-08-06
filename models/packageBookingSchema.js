@@ -21,7 +21,14 @@ const bookingSchema = new mongoose.Schema({
     },
     payment: {
         stripePaymentIntentId: { type: String, required: true },
-        paymentStatus: { type: String, required: true, enum: ['pending', 'succeeded', 'failed'] }
+        paymentStatus: { type: String, required: true, enum: ['pending', 'succeeded', 'failed'] },
+        paymentType: { type: String, enum: ['deposit', 'refund'], default: 'deposit', required: true }
+    },
+    status: {
+        type: String,
+        enum: ['approved', 'pending', 'rejected'],
+        default: 'pending',
+        required: true
     },
     total: { type: Number, required: true },
     createdAt: { type: Date, default: Date.now }

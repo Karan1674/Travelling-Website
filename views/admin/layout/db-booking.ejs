@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap db-booking">
+                <div class="dashboard-box table-opp-color-box">
+                    <h4>Recent Bookings</h4>
+                    <p>Manage bookings and enquiries for travel packages</p>
+                    <!-- Search Form -->
+                    <div  style="margin-bottom: 20px;">
+              
+
+                        <form id="search-form" action="/admin/bookings" method="get" style="flex: 1; margin-right: 20px;">
+                            <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                                <input type="text" name="search" id="search-input" placeholder="Search by package name or status" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <button type="submit" aria-label="Search packages" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-search" style="color: #007bff;"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-responsive">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Date</th>
+                                    <!-- <th>Destination</th> -->
+                                    <th>Booking ID</th>
+                                    <th>Status</th>
+                                    <th>People</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (bookings && bookings.length > 0) { %>
+                                    <% bookings.forEach(booking => { %>
+                                        <tr>
+                                            <td>
+                                              
+                                                    <span class="list-img"><img src="<%= user.profilePic ? '/Uploads/profiles/' + user.profilePic : '/assets/images/favicon.png' %>" alt=""></span>
+                                               
+                                                <span class="list-enq-name">
+                                                    <%= booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown User' %>
+                                                </span>
+                                            </td>
+  <td>
+                                            
+                                                    <%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %>
+                                            
+                                            </td>
+
+                                            <td><%= booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></td>
+                                            <!-- <td>
+                                                <%= booking.items && booking.items.length > 0 && booking.items[0].packageId && booking.items[0].packageId.title ? booking.items[0].packageId.title : 'Unknown Destination' %>
+                                            </td> -->
+                                            <td><%= booking._id ? booking._id : 'N/A' %></td>
+                                            <td>
+                                                <% if (booking.status === 'approved') { %>
+                                                    <span class="badge badge-success">Approved</span>
+                                                <% } else if (booking.status === 'pending') { %>
+                                                    <span class="badge badge-primary">Pending</span>
+                                                <% } else if (booking.status === 'rejected') { %>
+                                                    <span class="badge badge-danger">Rejected</span>
+                                                <% } else { %>
+                                                    <span class="badge badge-secondary">Unknown</span>
+                                                <% } %>
+                                            </td>
+                                          
+                                            <td>
+                                                <span class="badge badge-success">
+                                                    <%= booking.items ? booking.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0 %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="/admin/bookings/edit/<%= booking._id %>" class="badge badge-success text-white"><i class="far fa-edit"></i></a>
+                                                <!-- <% if( booking && booking.status === 'rejected') { %>
+                                                    <a href="/admin/bookings/delete/<%= booking._id %>" data-itemId="<%= booking._id %>" class="delete-btn badge badge-danger text-white"><i class="far fa-trash-alt"></i></a>
+                              
+                                                    <%} %>
+                                                 -->
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="8">No bookings found</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pagination -->
+                <%- include('../partials/pagination') %>
+
+            </div>
+            <%- include('../partials/deletePopup', { entityName: 'Booking', deleteEndpoint: '/admin/bookings/delete', buttonClass: 'delete-btn' }) %>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script') %>
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+
+        // Handle form submission
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+        });
+    });
+</script>
+</html>

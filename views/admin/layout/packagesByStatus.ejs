@@ -55,7 +55,7 @@
                                             </td>
                                             <td>
                                                 <span class="badge badge-success" onclick="window.location.href='/edit-package/<%= package._id %>'"><i class="far fa-edit"></i></span>
-                                                <span class="badge badge-danger delete-btn" data-packageId="<%= package._id %>"><i class="far fa-trash-alt"></i></span>
+                                                <span class="badge badge-danger delete-btn" data-itemId="<%= package._id %>"><i class="far fa-trash-alt"></i></span>
                                             </td>
                                         </tr>
                                     <% }) %>
@@ -68,41 +68,10 @@
                         </table>
                     </div>
                 </div>
-                <div class="pagination-wrap">
-                    <nav class="pagination-inner">
-                        <ul class="pagination <%= currentPage === 1 ? 'disabled' : '' %>">
-                            <li class="page-item">
-                                <% if (currentPage === 1) { %>
-                                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-                                <% } else { %>
-                                    <a class="page-link" href="/db-all-packages?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>"><i class="fas fa-chevron-left"></i></a>
-                                <% } %>
-                            </li>
-                            <% 
-                                const maxPagesToShow = 5;
-                                let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-                                let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-                                if (endPage - startPage < maxPagesToShow - 1) {
-                                    startPage = Math.max(1, endPage - maxPagesToShow + 1);
-                                }
-                                for (let i = startPage; i <= endPage; i++) { 
-                            %>
-                                <li class="page-item">
-                                    <a class="page-link <%= i === currentPage ? 'active' : '' %>" href="/db-all-packages?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
-                                </li>
-                            <% } %>
-                            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                                <% if (currentPage === totalPages) { %>
-                                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
-                                <% } else { %>
-                                    <a class="page-link" href="/db-all-packages?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>"><i class="fas fa-chevron-right"></i></a>
-                                <% } %>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                <%- include('../partials/pagination') %>
             </div>
-            <%- include('../partials/deletePackagePopup') %>
+            <%- include('../partials/deletePopup', { entityName: 'Package', deleteEndpoint: '/delete-package', buttonClass: 'delete-btn' }) %>
+
             <%- include('../partials/Footer') %>
         </div>
     </div>

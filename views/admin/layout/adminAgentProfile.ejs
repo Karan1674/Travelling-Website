@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="profile-row">
+                    <div class="profile-full-width">
+                        <div class="dashboard-box table-opp-color-box shadow-sm">
+                            <h4 class="mb-3">Profile Management</h4>
+                            <p class="text-muted mb-4">View and update your profile information</p>
+                            <!-- Profile View -->
+                            <div class="profile-view-section">
+                                <div class="profile-view-card">
+                                    <div class="profile-view-body profile-flex-container">
+                                        <div class="avatar-section">
+                                            <% if (user.profilePic) { %>
+                                                <img src="/uploads/profiles/<%= user.profilePic %>" alt="Profile Picture" class="avatar-img">
+                                            <% } else { %>
+                                                <i class="fas fa-user avatar-icon"></i>
+                                            <% } %>
+                                        </div>
+                                        <div class="profile-info-section">
+                                            <h3 class="profile-title profile-name"><%= user.firstName %> <%= user.lastName %></h3>
+                                            <div class="profile-info-grid">
+                                                <div class="info-group">
+                                                    <div class="info-label"><i class="fas fa-envelope icon-primary"></i>Email</div>
+                                                    <div class="info-value"><%= user.email %></div>
+                                                </div>
+                                                <div class="info-group">
+                                                    <div class="info-label"><i class="fas fa-phone icon-primary"></i>Phone</div>
+                                                    <div class="info-value"><%= user.phone %></div>
+                                                </div>
+                                                <% if (!user.isAdmin) { %>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-globe icon-primary"></i>Country Code</div>
+                                                        <div class="info-value"><%= user.countryCode %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-calendar-alt icon-primary"></i>Date of Birth</div>
+                                                        <div class="info-value"><%= user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-map-marker-alt icon-primary"></i>Country</div>
+                                                        <div class="info-value"><%= user.country || 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-map icon-primary"></i>State</div>
+                                                        <div class="info-value"><%= user.state || 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-city icon-primary"></i>City</div>
+                                                        <div class="info-value"><%= user.city || 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-home icon-primary"></i>Address</div>
+                                                        <div class="info-value"><%= user.address || 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-info-circle icon-primary"></i>Description</div>
+                                                        <div class="info-value"><%= user.description || 'Not set' %></div>
+                                                    </div>
+                                                    <div class="info-group">
+                                                        <div class="info-label"><i class="fas fa-user-tie icon-primary"></i>Admin</div>
+                                                        <div class="info-value"><%= user.admin ? user.admin.firstName + ' ' + user.admin.lastName : 'Not assigned' %></div>
+                                                    </div>
+                                                <% } %>
+                                                <div class="info-group">
+                                                    <div class="info-label"><i class="fas fa-user-shield icon-primary"></i>Role</div>
+                                                    <div class="info-value"><span class="profile-badge"><%= user.isAdmin ? 'Admin' : 'Agent' %></span></div>
+                                                </div>
+                                                <div class="info-group">
+                                                    <div class="info-label"><i class="fas fa-clock icon-primary"></i>Last Updated</div>
+                                                    <div class="info-value"><%= new Date(user.updatedAt).toLocaleDateString() %></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="profile-edit-btn" onclick="toggleEditForm()"><i class="fas fa-edit icon-btn"></i>Edit Profile</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Profile Edit Form -->
+                            <div class="profile-edit-section" style="display: none; opacity: 0;">
+                                <div class="profile-edit-card">
+                                    <div class="profile-edit-body">
+                                        <h5 class="profile-edit-title">Edit Profile</h5>
+                                        <form action="/admin-agent-profile/update" method="POST" enctype="multipart/form-data">
+                                            <div class="profile-form-grid">
+                                               
+                                                <div class="form-field">
+                                                    <div class="form-group">
+                                                        <label for="firstName" class="form-label">First Name *</label>
+                                                        <div class="input-container">
+                                                            <span class="input-icon"><i class="fas fa-user icon-primary"></i></span>
+                                                            <input type="text" name="firstName" id="firstName" class="form-input" value="<%= user.firstName %>" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-field">
+                                                    <div class="form-group">
+                                                        <label for="lastName" class="form-label">Last Name *</label>
+                                                        <div class="input-container">
+                                                            <span class="input-icon"><i class="fas fa-user icon-primary"></i></span>
+                                                            <input type="text" name="lastName" id="lastName" class="form-input" value="<%= user.lastName %>" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-field">
+                                                    <div class="form-group">
+                                                        <label for="email" class="form-label">Email *</label>
+                                                        <div class="input-container">
+                                                            <span class="input-icon"><i class="fas fa-envelope icon-primary"></i></span>
+                                                            <input type="email" name="email" id="email" class="form-input" value="<%= user.email %>" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-field">
+                                                    <div class="form-group">
+                                                        <label for="phone" class="form-label">Phone *</label>
+                                                        <div class="input-container">
+                                                            <span class="input-icon"><i class="fas fa-phone icon-primary"></i></span>
+                                                            <input type="tel" name="phone" id="phone" class="form-input" value="<%= user.phone %>" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <% if (!user.isAdmin) { %>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="countryCode" class="form-label">Country Code *</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-globe icon-primary"></i></span>
+                                                                <input type="text" name="countryCode" id="countryCode" class="form-input" value="<%= user.countryCode %>" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-calendar-alt icon-primary"></i></span>
+                                                                <input type="date" name="dateOfBirth" id="dateOfBirth" class="form-input" value="<%= user.dateOfBirth ? user.dateOfBirth.toISOString().split('T')[0] : '' %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="country" class="form-label">Country</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-map-marker-alt icon-primary"></i></span>
+                                                                <input type="text" name="country" id="country" class="form-input" value="<%= user.country || '' %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="state" class="form-label">State</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-map icon-primary"></i></span>
+                                                                <input type="text" name="state" id="state" class="form-input" value="<%= user.state || '' %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="city" class="form-label">City</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-city icon-primary"></i></span>
+                                                                <input type="text" name="city" id="city" class="form-input" value="<%= user.city || '' %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <div class="form-group">
+                                                            <label for="address" class="form-label">Address</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-home icon-primary"></i></span>
+                                                                <input type="text" name="address" id="address" class="form-input" value="<%= user.address || '' %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-field-full">
+                                                        <div class="form-group">
+                                                            <label for="description" class="form-label">Description</label>
+                                                            <div class="input-container">
+                                                                <span class="input-icon"><i class="fas fa-info-circle icon-primary"></i></span>
+                                                                <textarea name="description" id="description" class="form-input form-textarea" rows="5"><%= user.description || '' %></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% } %>
+                                                <div class="form-field-full">
+                                                    <div class="form-group">
+                                                        <label for="profilePic" class="form-label">Profile Picture</label>
+                                                        <input type="file" name="profilePic" id="profilePic" class="form-input" accept="image/*">
+                                                    </div>
+                                                    <% if (user.profilePic) { %>
+                                                        <div class="">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Current Profile Picture</label>
+                                                                <div class="">
+                                                                    <img src="/uploads/profiles/<%= user.profilePic %>" alt="Current Profile Picture" class="preview-img">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                            <div class="form-actions">
+                                                <button type="submit" class="btn-save"><i class="fas fa-save icon-btn"></i>Save Changes</button>
+                                                <button type="button" class="btn-cancel" onclick="toggleEditForm()"><i class="fas fa-times icon-btn"></i>Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script') %>
+ 
+    <script>
+        function toggleEditForm() {
+            const view = document.querySelector('.profile-view-section');
+            const edit = document.querySelector('.profile-edit-section');
+            if (view.style.display === 'none') {
+                view.style.display = 'block';
+                view.style.opacity = '0';
+                setTimeout(() => view.style.opacity = '1', 50);
+                edit.style.display = 'none';
+            } else {
+                view.style.display = 'none';
+                edit.style.display = 'block';
+                edit.style.opacity = '0';
+                setTimeout(() => edit.style.opacity = '1', 50);
+            }
+        }
+    </script>
+    <style>
+        .profile-view-section {
+            background-color: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-view-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border-radius: 10px;
+            padding: 25px;
+            /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+            /* transition: transform 0.2s ease-in-out; */
+        }
+
+        /* .profile-view-card:hover {
+            transform: translateY(-4px);
+        } */
+
+        .profile-flex-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .profile-flex-container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #2563eb;
+        }
+
+        .avatar-icon {
+            font-size: 60px;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb;
+            border-radius: 50%;
+            border: 3px solid #2563eb;
+        }
+
+        .profile-info-section {
+            flex-grow: 1;
+            padding: 15px;
+            background-color: #ffffff;
+
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+            color: #111827;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        @media (min-width: 768px) {
+            .profile-title {
+                text-align: left;
+            }
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .profile-info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .info-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .info-group:hover {
+            background-color: #eff6ff;
+        }
+
+        .info-label {
+            font-size: 0.95rem;
+            color: #374151;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #111827;
+            font-weight: 400;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+
+        .icon-primary {
+            color: #2563eb;
+            font-size: 1.2rem;
+        }
+
+        .profile-badge {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .profile-edit-btn {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .profile-edit-btn {
+                margin-top: 0;
+            }
+        }
+
+        .profile-edit-btn:hover {
+            background-color: #1e40af;
+        }
+
+        .profile-edit-section {
+            background-color: #f9fafb;
+            padding: 20px;
+        
+        }
+
+        .profile-edit-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+ 
+        }
+
+        .profile-edit-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+
+        .profile-form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .profile-form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .form-field-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 1rem;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .input-icon {
+            background-color: #e5e7eb;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input {
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .profile-pic-preview {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            background-color: #16a34a;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-save:hover {
+            background-color: #15803d;
+        }
+
+        .btn-cancel {
+            background-color: transparent;
+            color: #6b7280;
+            border: 1px solid #6b7280;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-cancel:hover {
+            background-color: #6b7280;
+            color: #ffffff;
+        }
+
+        .icon-btn {
+            font-size: 1rem;
+        }
+    </style>
+</body>
+</html>

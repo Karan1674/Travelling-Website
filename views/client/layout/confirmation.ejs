@@ -97,13 +97,30 @@
                                         <div class="details payment-details">
                                             <h3>PAYMENT</h3>
                                             <div class="details-desc">
-                                                <p>Payment is successful via <%= paymentDetails && paymentDetails.cardBrand ? paymentDetails.cardBrand : 'card' %> ending in <%= paymentDetails && paymentDetails.last4 ? paymentDetails.last4 : 'N/A' %></p>
+                                                <% if (booking && booking.payment && booking.payment.paymentStatus) { %>
+                                                    <p>
+                                                        Payment <%= booking.payment.paymentStatus === 'succeeded' ? 'successful' : booking.payment.paymentStatus === 'failed' ? 'failed' : booking.payment.paymentStatus %>
+                                                        <%= booking.payment.paymentStatus === 'succeeded' ? 'via ' + (paymentDetails && paymentDetails.cardBrand ? paymentDetails.cardBrand : 'card') + ' ending in ' + (paymentDetails && paymentDetails.last4 ? paymentDetails.last4 : 'N/A') : '' %>
+                                                    </p>
+                                                <% } else { %>
+                                                    <p>Payment status unknown</p>
+                                                <% } %>
+                                              
+                                            </div>
+                                            <div class="details-desc">
+                                                <% if (booking && booking.payment && booking.payment.paymentType) { %>
+                                                    <p>
+                                                        Payment <%= booking.payment.paymentType === 'deposit' ? 'deposited successfully' : 'refunded successfully' %>
+                                                    </p>
+                                                <% } else { %>
+                                                    <p>Payment type unknown</p>
+                                                <% } %>
                                             </div>
                                         </div>
                                         <div class="details">
                                             <h3>VIEW BOOKING DETAILS</h3>
                                             <div class="details-desc">
-                                                <p><a href="/booking/<%= booking && booking._id ? booking._id : '#' %>">https://www.travele.com/booking/<%= booking && booking._id ? booking._id : 'N/A' %></a></p>
+                                                <p><a href="/user-booking/<%= booking && booking._id ? booking._id : '#' %>">https://www.travele.com/user-booking/<%= booking && booking._id ? booking._id : 'N/A' %></a></p>
                                             </div>
                                         </div>
                                     </div>

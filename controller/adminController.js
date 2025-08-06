@@ -1,5 +1,6 @@
 import adminModel from '../models/adminModel.js';
 import agentModel from '../models/agentModel.js';
+import packageBookingSchema from '../models/packageBookingSchema.js';
 import packageModel from '../models/packageModel.js';
 import userModel from '../models/userModel.js';
 
@@ -8,6 +9,10 @@ import { promises as fs } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+
+import Stripe from 'stripe';
+const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 
 
@@ -637,7 +642,7 @@ const validatePackage = (data, isActive) => {
     return errors;
 };
 
-// Handle add package submission
+
 export const addPackage = async (req, res) => {
     try {
         // Apply multer middleware
@@ -796,7 +801,6 @@ export const addPackage = async (req, res) => {
     }
 };
 
-// Handle edit package submission
 export const editPackage = async (req, res) => {
     try {
             const { id } = req.params;
@@ -805,7 +809,7 @@ export const editPackage = async (req, res) => {
             }
 
             const data = req.body;
-console.log(data)
+
             // Determine adminId
             let adminId;
             if (req.isAdmin) {
@@ -1248,3 +1252,322 @@ export const getPackageDashboard = async (req, res) => {
 };
 
 
+
+
+
+
+
+// Get Admin/Agent Profile
+export const getAdminAgentProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.redirect('/');
+        }
+
+   
+        let user = await adminModel.findById(userId);
+        if (user) {
+            console.log('Rendering admin profile for:', userId);
+            return res.render('admin/layout/adminAgentProfile', { user,isAdmin });
+        }
+
+        // Check if user is an agent
+        user = await agentModel.findById(userId).populate('admin');
+        if (user) {
+            console.log('Rendering agent profile for:', userId);
+            return res.render('admin/layout/adminAgentProfile', { user,isAdmin });
+        }
+
+        console.log('No admin or agent found for:', userId);
+        return res.redirect('/');
+    } catch (error) {
+        console.error('Get admin/agent profile error:', error);
+        res.status(500).send('Error fetching profile');
+    }
+};
+
+// Update Admin/Agent Profile
+export const updateAdminAgentProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            return res.status(401).json({ error: 'Unauthorized: No user ID provided' });
+        }
+
+        const { firstName, lastName, email, phone, countryCode, dateOfBirth, country, state, city, address, description } = req.body;
+
+        // Validate required fields
+        if (!firstName || !lastName || !email || !phone) {
+            console.log('Missing required fields:', { firstName, lastName, email, phone });
+            return res.status(400).json({ error: 'First name, last name, email, and phone are required' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            console.log('Invalid email format:', email);
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        let updateData = { firstName, lastName, email, phone };
+
+        // Validate dateOfBirth if provided
+        if (dateOfBirth) {
+            const dob = new Date(dateOfBirth);
+            if (isNaN(dob.getTime())) {
+                console.log('Invalid date of birth:', dateOfBirth);
+                return res.status(400).json({ error: 'Invalid date of birth' });
+            }
+            updateData.dateOfBirth = dob;
+        }
+
+        // Check if user is an admin
+        let user = await adminModel.findById(userId);
+        if (user) {
+            if (req.file) {
+                // Delete existing profile picture if it exists
+                if (user.profilePic) {
+                    const oldImagePath = join(__dirname, '../Uploads/profiles');
+                    try {
+                        await fs.unlink(join(oldImagePath, user.profilePic));
+                        console.log('Deleted old profile picture:', user.profilePic);
+                    } catch (err) {
+                        if (err.code !== 'ENOENT') {
+                            console.error('Error deleting old profile picture:', err);
+                        }
+                    }
+                }
+                updateData.profilePic = req.file.filename;
+            }
+            await adminModel.findByIdAndUpdate(userId, updateData, { new: true });
+            console.log('Updated admin profile:', userId);
+            return res.redirect('/admin-agent-profile');
+        }
+
+        // Check if user is an agent
+        user = await agentModel.findById(userId);
+        if (user) {
+            // Validate agent-specific required field
+            if (!countryCode) {
+                console.log('Missing country code for agent:', userId);
+                return res.status(400).json({ error: 'Country code is required for agents' });
+            }
+            updateData = { ...updateData, countryCode, dateOfBirth: updateData.dateOfBirth || user.dateOfBirth, country, state, city, address, description };
+            if (req.file) {
+                // Delete existing profile picture if it exists
+                if (user.profilePic) {
+          
+                    const oldImagePath = join(__dirname, '../Uploads/profiles');
+                    try {
+                        
+                     
+                        await fs.unlink(join(oldImagePath, user.profilePic));
+                        console.log('Deleted old profile picture:', user.profilePic);
+                    } catch (err) {
+                        if (err.code !== 'ENOENT') {
+                            console.error('Error deleting old profile picture:', err);
+                        }
+                    }
+                }
+                updateData.profilePic = req.file.filename;
+            }
+            await agentModel.findByIdAndUpdate(userId, updateData, { new: true });
+            console.log('Updated agent profile:', userId);
+            return res.redirect('/admin-agent-profile');
+        }
+
+        console.log('No admin or agent found for:', userId);
+        return res.status(404).json({ error: 'User not found' });
+    } catch (error) {
+        console.error('Update admin/agent profile error:', error);
+        res.status(500).json({ error: 'Server error while updating profile' });
+    }
+};
+
+
+
+
+
+export const getBookings = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            console.log("No userId Available");
+            return res.redirect('/');
+        }
+
+        let userData;
+        if (isAdmin) {
+            userData = await adminModel.findById(userId); // Assuming User model for admins
+        } else {
+            userData = await agentModel.findById(userId); // Assuming same model for agents
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 1; // Bookings per page (as per provided controller)
+        const search = req.query.search || '';
+
+        const searchQuery = {};
+        if (search) {
+            const matchingPackageIds = await packageModel.find({
+                title: { $regex: search, $options: 'i' }
+            }).distinct('_id');
+
+            searchQuery.$or = [
+                { 'items.packageId': { $in: matchingPackageIds } },
+                { status: { $regex: search, $options: 'i' } }
+            ].filter(condition => condition !== null);
+        }
+
+        // Fetch bookings with pagination and population
+        const bookings = await packageBookingSchema.find(searchQuery)
+            .populate('userId', 'firstName lastName email')
+            .populate('items.packageId', 'title')
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+
+        const totalBookings = await packageBookingSchema.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalBookings / limit);
+
+        res.render('admin/layout/db-booking', {
+            bookings,
+            currentPage: page,
+            totalPages,
+            user: userData,
+            isAdmin,
+            search,
+        });
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).send('Error fetching bookings');
+    }
+};
+
+
+
+export const getEditBooking = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+  
+
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            console.log("No userId Available");
+            return res.redirect('/');
+        }
+
+        let userData;
+        if (isAdmin) {
+            userData = await adminModel.findById(userId); // Assuming User model for admins
+        } else {
+            userData = await agentModel.findById(userId); // Assuming same model for agents
+        }
+
+    
+        const booking = await packageBookingSchema.findById(bookingId)
+            .populate('userId', 'firstName lastName email')
+            .populate('items.packageId', 'title');
+
+        if (!booking) {
+            return res.status(404).send('Booking not found');
+        }
+
+        res.render('admin/layout/edit-booking', {
+            booking,
+            user: userData,
+            isAdmin
+        });
+    } catch (error) {
+        console.error('Error fetching booking for edit:', error);
+        res.status(500).send('Error fetching booking');
+    }
+};
+
+export const editBooking = async (req, res) => {
+    try {
+   
+
+        const userId = req.id;
+    
+
+        if (!userId) {
+            console.log("No userId Available");
+            return res.redirect('/');
+        }
+
+       
+
+
+        const { bookingId } = req.params;
+        const { status } = req.body;
+
+        if (!['approved', 'pending', 'rejected'].includes(status)) {
+            return res.status(400).send('Invalid status');
+        }
+
+        const booking = await packageBookingSchema.findById(bookingId);
+        if (!booking) {
+            return res.status(404).send('Booking not found');
+        }
+
+        booking.status = status;
+
+        // Automatically initiate refund if status is 'rejected'
+        if (status === 'rejected' && booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentType !== 'refund') {
+            try {
+                const refund = await stripeInstance.refunds.create({
+                    payment_intent: booking.payment.stripePaymentIntentId,
+                    amount: Math.round(booking.total * 100), // Convert to cents
+                });
+                booking.payment.paymentType = 'refund';
+                booking.payment.paymentStatus = 'pending';
+            } catch (refundError) {
+                console.error('Error processing refund:', refundError);
+                return res.status(500).send('Error processing refund');
+            }
+        }
+
+        await booking.save();
+
+        res.redirect('/admin/bookings');
+    } catch (error) {
+        console.error('Error editing booking:', error);
+        res.status(500).send('Error editing booking');
+    }
+};
+
+
+
+ export const deleteBooking = async (req, res) => {
+    try {
+        
+        const userId = req.id;
+    
+
+        if (!userId) {
+            console.log("No userId Available");
+            return res.redirect('/');
+        }
+
+        
+        const { bookingId } = req.params;
+        const booking = await packageBookingSchema.findByIdAndDelete(bookingId);
+        if (!booking) {
+            return res.status(404).send('Booking not found');
+        }
+        res.redirect('/admin/bookings');
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        res.status(500).send('Error deleting booking');
+    }
+};

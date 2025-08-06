@@ -1,6 +1,7 @@
 const express = require('express');
-const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking } = require('../controller/clientController');
+const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile } = require('../controller/clientController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
+const { uploadProfilePic } = require('../middleware/multer');
 
 const router = express.Router();
 
@@ -30,5 +31,15 @@ router.post('/packageCart/create-payment-intent', isAuthenticated, createPackage
 router.get('/bookPackage/:packageId',isAuthenticated, bookSinglePackage);
 router.post('/bookPackage/create-payment-intent', isAuthenticated, createSinglePackagePaymentIntent);
 router.post('/bookPackage/confirm', isAuthenticated, confirmSinglePackageBooking);
+
+
+router.get('/user-bookings', isAuthenticated, getUserBookings);
+router.get('/user-booking/:bookingId', isAuthenticated, getBookingDetails);
+
+
+
+router.get('/user-profile',isAuthenticated, getUserProfile);
+router.post('/user-profile/update',isAuthenticated, uploadProfilePic.single('profilePic'), updateUserProfile);
+
 
 module.exports = router;
