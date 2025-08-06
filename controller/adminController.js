@@ -1404,18 +1404,23 @@ export const getBookings = async (req, res) => {
 
         let userData;
         if (isAdmin) {
-            userData = await adminModel.findById(userId); // Assuming User model for admins
+            userData = await adminModel.findById(userId);
         } else {
-            userData = await agentModel.findById(userId); // Assuming same model for agents
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            console.log("User not found");
+            return res.redirect('/loginPage');
         }
 
         const page = parseInt(req.query.page) || 1;
-        const limit = 1; // Bookings per page (as per provided controller)
+        const limit = 1; // Bookings per page
         const search = req.query.search || '';
 
         const searchQuery = {};
         if (search) {
-            const matchingPackageIds = await packageModel.find({
+            const matchingPackageIds = await Package.find({
                 title: { $regex: search, $options: 'i' }
             }).distinct('_id');
 
@@ -1425,6 +1430,24 @@ export const getBookings = async (req, res) => {
             ].filter(condition => condition !== null);
         }
 
+        // For admins, filter bookings by packages they created
+        if (isAdmin) {
+            const adminPackageIds = await packageModel.find({ adminId: userId }).distinct('_id');
+            if (adminPackageIds.length > 0) {
+                searchQuery['items.packageId'] = { $in: adminPackageIds };
+            } else {
+                searchQuery['items.packageId'] = { $in: [] };
+            }
+        }
+        else {
+            const agentPackageIds = await packageModel.find({ adminId: userData.admin }).distinct('_id');
+            if (agentPackageIds.length > 0) {
+                searchQuery['items.packageId'] = { $in: agentPackageIds };
+            } else {
+                searchQuery['items.packageId'] = { $in: [] };
+            }
+        }
+
         // Fetch bookings with pagination and population
         const bookings = await packageBookingSchema.find(searchQuery)
             .populate('userId', 'firstName lastName email')
@@ -1432,7 +1455,6 @@ export const getBookings = async (req, res) => {
             .skip((page - 1) * limit)
             .limit(limit)
             .sort({ createdAt: -1 });
-
 
         const totalBookings = await packageBookingSchema.countDocuments(searchQuery);
         const totalPages = Math.ceil(totalBookings / limit);
