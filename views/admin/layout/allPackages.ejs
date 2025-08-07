@@ -54,8 +54,9 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <span class="badge badge-success" onclick="window.location.href='/edit-package/<%= package._id %>'"><i class="far fa-edit"></i></span>
-                                                <span class="badge badge-danger delete-btn" data-itemId="<%= package._id %>"><i class="far fa-trash-alt"></i></span>
+                                                <a href="/package-preview/<%= package._id %>" class="badge badge-info text-white" title="Preview Package"><i class="far fa-eye"></i></a>
+                                                <span class="badge badge-success "  style="cursor: pointer;" onclick="window.location.href='/edit-package/<%= package._id %>'"><i class="far fa-edit"></i></span>
+                                                <span class="badge badge-danger delete-btn"  style="cursor: pointer;" data-itemId="<%= package._id %>"><i class="far fa-trash-alt"></i></span>
                                             </td>
                                         </tr>
                                     <% }) %>

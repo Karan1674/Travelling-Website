@@ -1,5 +1,5 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
 const { uploadProfilePic, uploadGallery } = require('../middleware/multer');
@@ -47,5 +47,8 @@ router.get('/admin/bookings', isAuthenticated, isAdminCheck, getBookings);
 router.get('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, getEditBooking);
 router.post('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, editBooking);
 router.get('/admin/bookings/delete/:bookingId', isAuthenticated, isAdminCheck,deleteBooking);
+
+
+router.get('/package-preview/:packageId' ,isAuthenticated,isAdminCheck,packagePreview)
 
 module.exports = router;

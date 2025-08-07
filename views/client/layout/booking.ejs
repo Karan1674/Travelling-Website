@@ -40,7 +40,12 @@
                                     <input type="hidden" name="client_secret" id="client-secret" value="">
                                     <% if (!isShow) { %>
                                         <input type="hidden" name="packageId" value="<%= cart && cart.items && cart.items[0] && cart.items[0].packageId && cart.items[0].packageId._id ? cart.items[0].packageId._id : '' %>">
-                                        <input type="hidden" name="quantity" value="<%= cart && cart.items && cart.items[0] && cart.items[0].quantity ? cart.items[0].quantity : 1 %>">
+                                        <input type="hidden" name="quantity" id="single-package-quantity" value="<%= cart && cart.items && cart.items[0] && cart.items[0].quantity ? cart.items[0].quantity : 1 %>">
+                                    <% } else { %>
+                                        <% cart.items.forEach((item, index) => { %>
+                                            <input type="hidden" name="items[<%= index %>][packageId]" value="<%= item.packageId._id %>">
+                                            <input type="hidden" name="items[<%= index %>][quantity]" id="cart-item-quantity-<%= index %>" value="<%= item.quantity %>">
+                                        <% }); %>
                                     <% } %>
                                     <div class="booking-content">
                                         <div class="form-title">
@@ -125,7 +130,7 @@
                                                         <option value="" selected>Select your country</option>
                                                         <option value="US">United States</option>
                                                         <option value="CA">Canada</option>
-                                                        <option value="GB">United Aesthetics
+                                                        <option value="GB">United Kingdom</option>
                                                         <!-- Add more ISO 3166-1 alpha-2 codes as needed -->
                                                     </select>
                                                 </div>
@@ -206,13 +211,20 @@
                                                     }, 0);
                                                     tax = subtotal * 0.13;
                                                     total = subtotal + 34 + 34 + tax;
-                                                    cart.items.forEach(item => { 
+                                                    cart.items.forEach((item, index) => { 
                                                         if (item && item.packageId && item.packageId.title) { %>
-                                                            <tr>
-                                                                <td><strong><%= item.packageId.title %></strong></td>
+                                                            <tr data-price="<%= item.packageId.salePrice || item.packageId.regularPrice %>">
+                                                                <td>
+                                                                    <strong><%= item.packageId.title %></strong>
+                                                                    <div class="quantity-control" style="margin-top: 5px;">
+                                                                        <button class="btn btn-sm btn-outline-secondary decrease-quantity" data-index="<%= index %>" data-package-id="<%= item.packageId._id %>">-</button>
+                                                                        <span class="quantity" id="quantity-<%= index %>"><%= item.quantity %></span>
+                                                                        <button class="btn btn-sm btn-outline-secondary increase-quantity" data-index="<%= index %>" data-package-id="<%= item.packageId._id %>">+</button>
+                                                                    </div>
+                                                                </td>
                                                                 <td class="text-right">
-                                                                    $<%= (item.quantity * (item.packageId.salePrice || item.packageId.regularPrice)).toFixed(2) %>
-                                                                    (x<%= item.quantity %>)
+                                                                    $<span id="item-total-<%= index %>"><%= (item.quantity * (item.packageId.salePrice || item.packageId.regularPrice)).toFixed(2) %></span>
+                                                                    (x<span id="item-quantity-<%= index %>"><%= item.quantity %></span>)
                                                                 </td>
                                                             </tr>
                                                         <% }
@@ -232,11 +244,11 @@
                                             </tr>
                                             <tr>
                                                 <td><strong>Tax (13%)</strong></td>
-                                                <td class="text-right">$<%= tax.toFixed(2) %></td>
+                                                <td class="text-right">$<span id="tax"><%= tax.toFixed(2) %></span></td>
                                             </tr>
                                             <tr class="total">
                                                 <td><strong>Total cost</strong></td>
-                                                <td class="text-right"><strong>$<%= total.toFixed(2) %></strong></td>
+                                                <td class="text-right"><strong>$<span id="total"><%= total.toFixed(2) %></span></strong></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -280,6 +292,19 @@
         .button-loading .fa-spinner {
             margin-right: 8px;
         }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .quantity {
+            min-width: 20px;
+            text-align: center;
+        }
+        .btn-sm {
+            padding: 2px 8px;
+            font-size: 12px;
+        }
     </style>
     <script>
         const stripe = Stripe('<%= stripeKey %>');
@@ -304,6 +329,52 @@
         const cardErrors = document.getElementById('card-errors');
         const isShow = <%= isShow %>;
 
+        // Handle quantity changes
+        const updateSummary = () => {
+            let subtotal = 0;
+            document.querySelectorAll('.quantity').forEach((elem, index) => {
+                const quantity = parseInt(elem.textContent);
+                const row = elem.closest('tr');
+                const price = parseFloat(row.dataset.price);
+                const itemTotal = quantity * price;
+                subtotal += itemTotal;
+                document.getElementById(`item-total-${index}`).textContent = itemTotal.toFixed(2);
+                document.getElementById(`item-quantity-${index}`).textContent = quantity;
+                if (isShow) {
+                    document.getElementById(`cart-item-quantity-${index}`).value = quantity;
+                } else {
+                    document.getElementById('single-package-quantity').value = quantity;
+                }
+            });
+            const tax = subtotal * 0.13;
+            const total = subtotal + 34 + 34 + tax;
+            document.getElementById('tax').textContent = tax.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
+        };
+
+        document.querySelectorAll('.increase-quantity').forEach(button => {
+            button.addEventListener('click', () => {
+                const index = button.dataset.index;
+                const quantityElem = document.getElementById(`quantity-${index}`);
+                let quantity = parseInt(quantityElem.textContent);
+                quantity += 1;
+                quantityElem.textContent = quantity;
+                updateSummary();
+            });
+        });
+
+        document.querySelectorAll('.decrease-quantity').forEach(button => {
+            button.addEventListener('click', () => {
+                const index = button.dataset.index;
+                const quantityElem = document.getElementById(`quantity-${index}`);
+                let quantity = parseInt(quantityElem.textContent);
+                if (quantity <= 1) return; // Prevent quantity < 1
+                quantity -= 1;
+                quantityElem.textContent = quantity;
+                updateSummary();
+            });
+        });
+
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             submitButton.disabled = true;
@@ -326,11 +397,18 @@
             try {
                 console.log('Creating payment intent for email:', email);
                 const paymentIntentUrl = isShow ? '/packageCart/create-payment-intent' : '/bookPackage/create-payment-intent';
-                const requestBody = isShow ? { email } : {
+                const requestBody = isShow ? {
+                    email,
+                    items: Array.from(document.querySelectorAll('.quantity')).map((elem, index) => ({
+                        packageId: document.querySelector(`input[name="items[${index}][packageId]"]`).value,
+                        quantity: parseInt(elem.textContent)
+                    }))
+                } : {
                     email,
                     packageId: form.querySelector('input[name="packageId"]').value,
-                    quantity: form.querySelector('input[name="quantity"]').value
+                    quantity: parseInt(form.querySelector('input[name="quantity"]').value)
                 };
+                console.log('Request body:', requestBody);
                 const response = await fetch(paymentIntentUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

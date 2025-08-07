@@ -1973,7 +1973,7 @@
   }
   .rating-start:before {
     color: #ddd;
-    content: "\f005\f005\f005\f005\f005";
+    content: "";
     display: block;
     font-family: "Font Awesome 5 free";
   }

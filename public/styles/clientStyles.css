@@ -4590,7 +4590,7 @@ Due to the split circle of progress-left and progress right, we must use the ani
   background-color: #FAFAFA;
 }
 .inner-banner-gray .inner-shape {
-  background-image: url(assets/images/banner-pattern.png);
+  background-image: url(/assets/images/banner-pattern.png);
 }
 
 .inner-baner-container {

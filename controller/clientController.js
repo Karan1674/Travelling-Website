@@ -512,6 +512,9 @@ export const removeFromPackageCart = async (req, res) => {
     }
 };
 
+
+
+
 const countryToIsoCode = {
     'United States': 'US',
     'Canada': 'CA',
@@ -566,21 +569,41 @@ export const createPackagePaymentIntent = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const cart = await packageCartSchema.findOne({ userId }).populate('items.packageId');
-        if (!cart || cart.items.length === 0) {
-            console.log('Cart is empty for user:', userId);
-            return res.status(400).json({ success: false, message: 'Cart is empty' });
+        const { items, email } = req.body;
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            console.log('No items provided in request body');
+            return res.status(400).json({ success: false, message: 'No items provided' });
         }
 
-        console.log('Cart found:', cart.items);
-        const total = cart.items.reduce((sum, item) => sum + item.quantity * (item.packageId.salePrice || item.packageId.regularPrice), 0) + 34 + 34 + (cart.items.reduce((sum, item) => sum + item.quantity * (item.packageId.salePrice || item.packageId.regularPrice), 0) * 0.13);
+        // Validate and fetch package data
+        const packageIds = items.map(item => item.packageId);
+        const packages = await packageModel.find({ _id: { $in: packageIds } });
+        if (packages.length !== items.length) {
+            console.log('Some packages not found or not active');
+            return res.status(400).json({ success: false, message: 'Some packages not found or not active' });
+        }
+
+        // Create a map of package data for price lookup
+        const packageMap = packages.reduce((map, pkg) => {
+            map[pkg._id.toString()] = pkg;
+            return map;
+        }, {});
+
+        // Calculate total
+        const subtotal = items.reduce((sum, item) => {
+            const pkg = packageMap[item.packageId];
+            if (!pkg || !item.quantity || item.quantity < 1) return sum;
+            return sum + item.quantity * (pkg.salePrice || pkg.regularPrice);
+        }, 0);
+        const tax = subtotal * 0.13;
+        const total = subtotal + 34 + 34 + tax;
         console.log('Calculated total:', total);
 
         const paymentIntent = await stripeInstance.paymentIntents.create({
             amount: Math.round(total * 100), // Convert to cents
             currency: 'usd',
             metadata: { userId: userId.toString() },
-            receipt_email: req.body.email || (await userModel.findById(userId)).email,
+            receipt_email: email || (await userModel.findById(userId)).email,
             automatic_payment_methods: {
                 enabled: true,
                 allow_redirects: 'never'
@@ -609,21 +632,16 @@ export const confirmPackageBooking = async (req, res) => {
             return res.redirect('/');
         }
 
-        const cart = await packageCartSchema.findOne({ userId }).populate('items.packageId');
-        if (!cart || cart.items.length === 0) {
-            console.log('Cart is empty or not found for user:', userId);
-            return res.redirect('/packageCart');
-        }
-
         const { 
-            firstname, lastname, email, phone, country, street_1, street_2, city, state, postal_code, notes,
+            items, firstname, lastname, email, phone, country, street_1, street_2, city, state, postal_code, notes,
             firstname_booking, client_secret
         } = req.body;
 
         // Validate required fields
-        if (!firstname_booking || !client_secret || !firstname || !lastname || !email || !phone || !country || !street_1 || !city || !state || !postal_code) {
+        if (!items || !Array.isArray(items) || items.length === 0 || !firstname_booking || !client_secret || 
+            !firstname || !lastname || !email || !phone || !country || !street_1 || !city || !state || !postal_code) {
             console.log('Missing required fields');
-            return res.status(400).send('All required fields (name on card, payment details, user details) are required');
+            return res.status(400).send('All required fields (items, name on card, payment details, user details) are required');
         }
 
         // Validate email format
@@ -640,6 +658,20 @@ export const confirmPackageBooking = async (req, res) => {
             return res.status(400).send('Invalid country code. Please select a valid country.');
         }
 
+        // Validate and fetch package data
+        const packageIds = items.map(item => item.packageId);
+        const packages = await packageModel.find({ _id: { $in: packageIds } });
+        if (packages.length !== items.length) {
+            console.log('Some packages not found or not active');
+            return res.status(400).send('Some packages not found or not active');
+        }
+
+        // Create a map of package data for price lookup
+        const packageMap = packages.reduce((map, pkg) => {
+            map[pkg._id.toString()] = pkg;
+            return map;
+        }, {});
+
         // Retrieve and verify payment intent
         const paymentIntent = await stripeInstance.paymentIntents.retrieve(client_secret.split('_secret_')[0]);
         if (paymentIntent.status !== 'succeeded') {
@@ -647,9 +679,14 @@ export const confirmPackageBooking = async (req, res) => {
             return res.status(400).send('Payment not completed: ' + paymentIntent.status);
         }
 
+        // Prepare booking details
         const bookingDetails = {
             userId,
-            items: cart.items,
+            items: items.map(item => ({
+                packageId: item.packageId,
+                quantity: parseInt(item.quantity),
+                price: packageMap[item.packageId].salePrice || packageMap[item.packageId].regularPrice
+            })),
             userDetails: {
                 firstname,
                 lastname,
@@ -657,29 +694,32 @@ export const confirmPackageBooking = async (req, res) => {
                 phone,
                 country: isoCountry,
                 street_1,
-                street_2,
+                street_2: street_2 || '',
                 city,
                 state,
                 postal_code: postal_code || '',
-                notes
+                notes: notes || ''
             },
             payment: {
                 stripePaymentIntentId: paymentIntent.id,
                 paymentStatus: paymentIntent.status,
-                paymentType: 'deposit' // Set as per schema default
+                paymentType: 'deposit'
             },
-            status: 'pending', // Set as per schema default
-            total: paymentIntent.amount / 100 // Convert back to dollars
+            status: 'pending',
+            total: paymentIntent.amount / 100
         };
 
         // Save booking to database
         console.log('Saving booking:', bookingDetails);
-        const bookingData = await new packageBookingSchema(bookingDetails).save();
+        const bookingData = await packageBookingSchema.create(bookingDetails);
 
         // Clear cart after booking
-        cart.items = [];
-        await cart.save();
-        console.log('Cart cleared for user:', userId);
+        const cart = await packageCartSchema.findOne({ userId });
+        if (cart) {
+            cart.items = [];
+            await cart.save();
+            console.log('Cart cleared for user:', userId);
+        }
 
         // Fetch payment details for display
         const paymentMethod = await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method);
@@ -688,8 +728,11 @@ export const confirmPackageBooking = async (req, res) => {
             last4: paymentMethod.card.last4
         };
 
+        // Populate booking for confirmation page
+        const populatedBooking = await packageBookingSchema.findById(bookingData._id).populate('items.packageId');
+
         res.render('client/layout/confirmation', { 
-            booking: bookingData, 
+            booking: populatedBooking, 
             user: userData, 
             paymentDetails,
             isShow: true
@@ -720,7 +763,7 @@ export const bookSinglePackage = async (req, res) => {
         const packageId = req.params.packageId;
         const packageData = await packageModel.findById(packageId);
         if (!packageData) {
-            console.log('Package not found or not active:', packageId);
+            console.log('Package helo not found or not active:', packageId);
             return res.redirect('/tour-packages');
         }
         const cart = {
@@ -757,7 +800,8 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const { packageId, quantity = 1 } = req.body;
+        const { packageId, quantity = 1, email } = req.body;
+        console.log(packageId)
         const packageData = await packageModel.findById(packageId);
         if (!packageData) {
             console.log('Package not found or not active:', packageId);
@@ -766,14 +810,16 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
 
         // Calculate total: package price + fixed fees ($34 + $34) + 13% tax
         const packagePrice = packageData.salePrice || packageData.regularPrice;
-        const total = (packagePrice * quantity) + 34 + 34 + (packagePrice * quantity * 0.13);
+        const subtotal = packagePrice * quantity;
+        const tax = subtotal * 0.13;
+        const total = subtotal + 34 + 34 + tax;
         console.log('Calculated total for package:', total);
 
         const paymentIntent = await stripeInstance.paymentIntents.create({
             amount: Math.round(total * 100), // Convert to cents
             currency: 'usd',
             metadata: { userId: userId.toString(), packageId: packageId.toString() },
-            receipt_email: req.body.email || (await userModel.findById(userId)).email,
+            receipt_email: email || (await userModel.findById(userId)).email,
             automatic_payment_methods: {
                 enabled: true,
                 allow_redirects: 'never'
@@ -845,7 +891,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
             userId,
             items: [{
                 packageId,
-                quantity,
+                quantity: parseInt(quantity),
                 price: packageData.salePrice || packageData.regularPrice
             }],
             userDetails: {
@@ -855,24 +901,24 @@ export const confirmSinglePackageBooking = async (req, res) => {
                 phone,
                 country: isoCountry,
                 street_1,
-                street_2,
+                street_2: street_2 || '',
                 city,
                 state,
                 postal_code: postal_code || '',
-                notes
+                notes: notes || ''
             },
             payment: {
                 stripePaymentIntentId: paymentIntent.id,
                 paymentStatus: paymentIntent.status,
-                paymentType: 'deposit' // Set as per schema default
+                paymentType: 'deposit'
             },
-            status: 'pending', // Set as per schema default
-            total: paymentIntent.amount / 100 // Convert back to dollars
+            status: 'pending',
+            total: paymentIntent.amount / 100
         };
 
         // Save booking to database
         console.log('Saving booking:', bookingDetails);
-        const bookingData = await new packageBookingSchema(bookingDetails).save();
+        const bookingData = await packageBookingSchema.create(bookingDetails);
 
         // Fetch payment details for display
         const paymentMethod = await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method);
@@ -881,7 +927,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
             last4: paymentMethod.card.last4
         };
 
-        // Populate package details for confirmation page
+        // Populate booking for confirmation page
         const populatedBooking = await packageBookingSchema.findById(bookingData._id).populate('items.packageId');
 
         res.render('client/layout/confirmation', { 
@@ -898,7 +944,6 @@ export const confirmSinglePackageBooking = async (req, res) => {
         res.status(500).send(`Error confirming booking: ${error.message}`);
     }
 };
-
 
 
 
@@ -1103,3 +1148,56 @@ export const updateUserProfile = async (req, res) => {
         });
     }
 };
+
+
+
+
+export const getAboutPage = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized: Please log in' });
+        }
+        
+        const user = await userModel.findById(userId);
+        if(!user){
+            return res.render('client/layout/about', {
+                user:null
+            });
+        }
+
+        res.render('client/layout/about', {
+            user
+        });
+    } catch (error) {
+        console.error('Error rendering About page:', error);
+    }
+};
+
+
+
+export const getServicePage = async(req, res) => {
+    try {
+
+        const userId = req.id;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized: Please log in' });
+        }
+        
+        const user = await userModel.findById(userId);
+        if(!user){
+            return res.render('client/layout/services', {
+                user:null
+            });
+        }
+        res.render('client/layout/services', {
+      user
+        });
+
+    } catch (error) {
+        console.error('Error rendering Service page:', error);
+        res.status(500).render('client/layout/error', {
+            error: 'Server error while loading the Service page'
+        });
+    }
+}
