@@ -100,6 +100,8 @@
                 <%- include('../partials/pagination') %>
 
             </div>
+    <%- include('../../shared/partials/toaster') %>
+
             <%- include('../partials/deletePopup', { entityName: 'Booking', deleteEndpoint: '/admin/bookings/delete', buttonClass: 'delete-btn' }) %>
             <%- include('../partials/Footer') %>
         </div>

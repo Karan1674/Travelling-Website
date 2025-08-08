@@ -1,5 +1,5 @@
 const express = require('express');
-const { adminRegister, loginPage,signupUser,getSignupPage, loginUserOrAdmin, logoutUser, forgetPasswordPage, forgetPassword, resetPasswordPage, resetPassword, homePage } = require('../controller/authController');
+const { adminRegister, loginPage,signupUser,getSignupPage, loginUserOrAdmin, logoutUser, forgetPasswordPage, forgetPassword, resetPasswordPage, resetPassword, homePage, clearSessionMessage } = require('../controller/authController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { uploadProfilePic } = require('../middleware/multer');
 
@@ -23,5 +23,6 @@ router.post('/reset-password', resetPassword);
 
 
 
+router.post('/clear-session-message', clearSessionMessage);
 
 module.exports = router;

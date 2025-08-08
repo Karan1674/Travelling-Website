@@ -48,9 +48,17 @@ const packageSchema = new mongoose.Schema({
   destinationCountry: { type: String },
   gallery: [{ type: String }],
   featuredImage: { type: String },
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'createdByModel',
+    required: true
+  },
+  createdByModel: {
+    type: String,
+    required: true,
+    enum: ['Admin', 'Agent']
+  },
   status: { type: String, enum: ['Pending', 'Active', 'Expired'], required: true },
-
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
 }, { timestamps: true });
 

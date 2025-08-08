@@ -270,7 +270,10 @@
             </div>
         </main>
         <%- include('../partials/Footer')%>
+
     </div>
+    <%- include('../../shared/partials/toaster') %>
+
     <%- include('../partials/Script')%>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
@@ -424,7 +427,6 @@
                     buttonLoading.style.display = 'none';
                     return;
                 }
-
                 // Confirm card payment
                 console.log('Confirming payment with clientSecret:', clientSecret);
                 const result = await stripe.confirmCardPayment(clientSecret, {

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+    <%- include('../partials/Header')%>
+<body>
+    <!-- start Container Wrapper -->
+    <div id="container-wrapper">
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar')%>
+            <%- include('../partials/Sidebar')%>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box">
+                            <h4>Add New Coupon</h4>
+                            <p>Create a new coupon manually or generate multiple coupons automatically for discounts across the store.</p>
+                            <form class="form-horizontal" method="post" action="/new-coupon">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Creation Mode</label>
+                                            <select name="creationMode" id="creationMode" class="form-control" onchange="toggleCouponFields()">
+                                                <option value="manual" selected>Manual</option>
+                                                <option value="automatic">Automatic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6" id="couponCodeField">
+                                        <div class="form-group">
+                                            <label>Coupon Code</label>
+                                            <input name="code" id="couponCode" class="form-control" type="text" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6" id="numCouponsField" style="display: none;">
+                                        <div class="form-group">
+                                            <label>Number of Coupons to Generate</label>
+                                            <input name="numCoupons" id="numCoupons" class="form-control" type="number" min="1" step="1" placeholder="Enter number of coupons">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Discount Type</label>
+                                            <select name="discountType" class="form-control" required>
+                                                <option value="percentage">Percentage</option>
+                                                <option value="fixed">Fixed Amount</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Discount Value</label>
+                                            <input name="discountValue" class="form-control" type="number" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Minimum Purchase</label>
+                                            <input name="minPurchase" class="form-control" type="number" min="0" step="0.01" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Maximum Discount</label>
+                                            <input name="maxDiscount" class="form-control" type="number" min="0" step="0.01" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Expiry Date</label>
+                                            <input name="expiryDate" class="form-control" type="date" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Usage Limit</label>
+                                            <input name="usageLimit" class="form-control" type="number" min="1" step="1" value="1">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Restrict to User (Optional)</label>
+                                            <input name="restrictToUser" class="form-control" type="text" placeholder="Enter User Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Active</label>
+                                            <select name="isActive" class="form-control">
+                                                <option value="true" selected>Yes</option>
+                                                <option value="false">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                                <input type="submit" name="Submit" id="submitButton" value="Create Coupon">
+                            </form>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+            <!-- Content / End -->
+            <!-- Copyrights -->
+            <%- include('../partials/Footer')%>
+        </div>
+        <!-- Dashboard / End -->
+    </div>
+    <!-- end Container Wrapper -->
+    <!-- *Scripts* -->
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+    <script>
+        function toggleCouponFields() {
+            const creationMode = document.getElementById('creationMode').value;
+            const couponCodeField = document.getElementById('couponCodeField');
+            const numCouponsField = document.getElementById('numCouponsField');
+            const couponCodeInput = document.getElementById('couponCode');
+            const numCouponsInput = document.getElementById('numCoupons');
+            const submitButton = document.getElementById('submitButton');
+
+            if (creationMode === 'automatic') {
+                couponCodeField.style.display = 'none';
+                numCouponsField.style.display = 'block';
+                couponCodeInput.removeAttribute('required');
+                numCouponsInput.setAttribute('required', 'required');
+                submitButton.value = 'Generate Coupons';
+            } else {
+                couponCodeField.style.display = 'block';
+                numCouponsField.style.display = 'none';
+                couponCodeInput.setAttribute('required', 'required');
+                numCouponsInput.removeAttribute('required');
+                submitButton.value = 'Create Coupon';
+            }
+        }
+    </script>
+</body>
+</html>

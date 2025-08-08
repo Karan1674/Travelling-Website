@@ -5,7 +5,6 @@ import agentModel from '../models/agentModel.js';
 import userModel from '../models/userModel.js';
 import crypto from 'crypto';
 
-
 export const homePage = async (req, res) => {
     try {
         const token = req.cookies?.authToken;
@@ -32,23 +31,27 @@ export const homePage = async (req, res) => {
             res.clearCookie('authToken');
         }
 
-   
-        return res.render('client/layout/Home',{user:null});
+
+        return res.render('client/layout/Home', { user: null ,message: req.session?.message, type: req.session?.type });
     } catch (error) {
         console.error("Home page error:", error);
-        return res.status(500).render('client/layout/Home', { error: "Internal server error" });
+        req.session = req.session || {};
+        req.session.message = 'Internal server error';
+        req.session.type = 'error';
+        return res.render('client/layout/Home', { user: null ,message: req.session?.message, type: req.session?.type });
     }
 };
 
-
-// Register a Admin
 export const adminRegister = async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone } = req.body;
 
         const existingAdmin = await adminModel.findOne({ email });
         if (existingAdmin) {
-            return res.status(400).json({ message: 'Admin already exists' });
+            req.session = req.session || {};
+            req.session.message = 'Admin already exists';
+            req.session.type = 'error';
+            return res.redirect('/signupPage');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -62,49 +65,51 @@ export const adminRegister = async (req, res) => {
         });
 
         await newAdmin.save();
-        res.status(201).json({ message: 'Admin registered successfully' });
-
+        req.session = req.session || {};
+        req.session.message = 'Admin registered successfully';
+        req.session.type = 'success';
+        res.redirect('/loginPage');
     } catch (error) {
         console.error('Admin Register Error:', error);
-        res.status(500).json({ message: 'Server Error' });
+        req.session = req.session || {};
+        req.session.message = 'Server error during registration';
+        req.session.type = 'error';
+        res.redirect('/signupPage');
     }
 };
 
-
-export const getSignupPage = async(req, res) => {
+export const getSignupPage = async (req, res) => {
     try {
-        return res.render('shared/layout/sign-up');
+        return res.render('shared/layout/sign-up', { message: req.session?.message, type: req.session?.type });
     } catch (error) {
         console.error("Error rendering sign page:", error);
-        res.status(500).send("Internal Server Error");
+        req.session = req.session || {};
+        req.session.message = 'Internal server error';
+        req.session.type = 'error';
+        res.render('shared/layout/sign-up', { message: req.session.message, type: req.session.type });
     }
 };
-
-
-
 
 export const signupUser = async (req, res) => {
     try {
-
-
         const { firstName, lastName, email, password, phone } = req.body;
 
-       
         const existingUser = await userModel.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ error: 'Email already registered' });
+            req.session = req.session || {};
+            req.session.message = 'Email already registered';
+            req.session.type = 'error';
+            return res.redirect('/signupUser');
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
- 
         let profilePicPath = '';
         if (req.file) {
             profilePicPath = req.file.filename;
         }
 
-        // Create new user
         const newUser = new userModel({
             firstName,
             lastName,
@@ -114,82 +119,95 @@ export const signupUser = async (req, res) => {
             profilePic: profilePicPath,
         });
 
- 
         await newUser.save();
-
-        res.redirect('/loginPage') ;
+        req.session = req.session || {};
+        req.session.message = 'User registered successfully';
+        req.session.type = 'success';
+        res.redirect('/loginPage');
     } catch (error) {
         console.error('Signup error:', error);
-        res.status(500).json({ error: 'Server error during signup' });
+        req.session = req.session || {};
+        req.session.message = 'Server error during signup';
+        req.session.type = 'error';
+        res.redirect('/signupUser');
     }
 };
-
-
 
 export const loginPage = async (req, res) => {
     try {
         const token = req.cookies?.authToken;
 
         if (!token) {
-            return res.render('shared/layout/login');
+            return res.render('shared/layout/login', { message: req.session?.message, type: req.session?.type });
         }
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         const userId = decoded.userId;
 
-        if(!userId){
-            return res.render('shared/layout/login');
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid session';
+            req.session.type = 'error';
+            return res.render('shared/layout/login', { message: req.session.message, type: req.session.type });
         }
         let loginedUserData = await adminModel.findById(userId);
         if (loginedUserData) {
             return res.redirect('/AdminDashboard');
         }
-        if (!loginedUserData) {
-            loginedUserData = await agentModel.findById(userId);
-            if (loginedUserData) {
-                return res.redirect('/AdminDashboard');
-            }
-            if (!loginedUserData) {
-                loginedUserData = await userModel.findById(userId);
-                return res.redirect('/UserDashboard');
-            }
+
+        loginedUserData = await agentModel.findById(userId);
+        if (loginedUserData) {
+            return res.redirect('/AdminDashboard');
+        }
+
+        loginedUserData = await userModel.findById(userId);
+        if (loginedUserData) {
+            return res.redirect('/UserDashboard');
         }
 
         res.clearCookie('authToken');
-        return res.render('shared/layout/login', { error: "Invalid session" });
-
+        req.session = req.session || {};
+        req.session.message = 'Invalid session';
+        req.session.type = 'error';
+        return res.render('shared/layout/login', { message: req.session.message, type: req.session.type });
     } catch (error) {
         console.error("Error rendering login page:", error);
-        res.status(500).send("Internal Server Error");
+        req.session = req.session || {};
+        req.session.message = 'Internal server error';
+        req.session.type = 'error';
+        res.render('shared/layout/login', { message: req.session.message, type: req.session.type });
     }
 };
-
 
 export const loginUserOrAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
 
         let userData = await adminModel.findOne({ email });
-        let role = 'admin'
+        let role = 'admin';
 
         if (!userData) {
             userData = await agentModel.findOne({ email });
-            role = 'admin'
+            role = 'admin';
         }
 
-        
         if (!userData) {
             userData = await userModel.findOne({ email });
-            role = 'User'
+            role = 'User';
         }
 
         if (!userData) {
-            return res.status(400).redirect('/loginPage');
+            req.session = req.session || {};
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
         }
-
 
         const isMatch = await bcrypt.compare(password, userData.password);
         if (!isMatch) {
-            return res.status(400).redirect('/loginPage');
+            req.session = req.session || {};
+            req.session.message = 'Invalid credentials';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
         }
 
         const tokenData = {
@@ -200,112 +218,128 @@ export const loginUserOrAdmin = async (req, res) => {
             expiresIn: "1d",
         });
 
-
-        // Save token in cookie
         res.cookie('authToken', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 24 * 60 * 60 * 1000
         });
 
-
         if (role === 'admin') {
-            return res.redirect('/AdminDashboard',);
-        } else if(role==='User') {
-            return res.redirect('/userDashboard');
+            req.session = req.session || {};
+            req.session.message = 'Login successful';
+            req.session.type = 'success';
+            return res.redirect('/AdminDashboard');
+        } else if (role === 'User') {
+            req.session = req.session || {};
+            req.session.message = 'Login successful';
+            req.session.type = 'success';
+            return res.redirect('/UserDashboard');
+        } else {
+            req.session = req.session || {};
+            req.session.message = 'Invalid role';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
         }
-        else{
-            return res.redirect('/loginPage')
-        }
-
     } catch (error) {
         console.error("Login Error:", error);
-        res.status(500).redirect('/loginPage');
+        req.session = req.session || {};
+        req.session.message = 'Server error during login';
+        req.session.type = 'error';
+        res.redirect('/loginPage');
     }
 };
-
-
 
 export const logoutUser = async (req, res) => {
     try {
         res.clearCookie("authToken");
-        return res.redirect("/?message=Logout successful&type=success");
+        req.session = req.session || {};
+        req.session.message = 'Logged out successfully';
+        req.session.type = 'success';
+        return res.redirect('/');
     } catch (error) {
         console.log("error", error);
+        req.session = req.session || {};
+        req.session.message = 'Error during logout';
+        req.session.type = 'error';
+        res.redirect('/');
     }
 };
-
-
 
 export const forgetPasswordPage = async (req, res) => {
     try {
-        res.render('shared/layout/forget');
+        res.render('shared/layout/forget', { message: req.session?.message || null, type: req.session?.type || null });
     } catch (error) {
         console.error('Error rendering forget password page:', error);
-        res.status(500).send('Server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error';
+        req.session.type = 'error';
+        res.render('shared/layout/forget', { message: req.session.message, type: req.session.type });
     }
 };
-
-
 
 export const forgetPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
-        // Validate email
         if (!email) {
-            return res.status(400).json({ error: 'Email is required' });
+            req.session = req.session || {};
+            req.session.message = 'Email is required';
+            req.session.type = 'error';
+            return res.redirect('/forgetPasswordPage');
         }
 
-        // Check both User and Admin models
         let user = await agentModel.findOne({ email });
         let userType = 'Agent';
         if (!user) {
             user = await adminModel.findOne({ email });
             userType = 'Admin';
         }
-        if(!user){
+        if (!user) {
             user = await userModel.findOne({ email });
             userType = 'User';
         }
         if (!user) {
-            return res.status(404).json({ error: 'No user found with this email' });
+            req.session = req.session || {};
+            req.session.message = 'No user found with this email';
+            req.session.type = 'error';
+            return res.redirect('/forgetPasswordPage');
         }
 
-        // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
         const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-        const resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour expiry
+        const resetTokenExpiry = Date.now() + 60 * 60 * 1000;
 
-        // Save token and expiry
         user.resetPasswordToken = resetTokenHash;
         user.resetPasswordExpires = resetTokenExpiry;
         await user.save();
 
-        // Create reset URL with query parameters
         const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}&type=${userType}`;
-        console.log(`Reset URL for ${email} (${userType}): ${resetUrl}`); // Log for debugging
+        console.log(`Reset URL for ${email} (${userType}): ${resetUrl}`);
 
-        // Render confirmation page with reset URL
-        res.render('shared/layout/forget-confirmation', { resetUrl, email });
+        req.session = req.session || {};
+        req.session.message = 'Password reset link sent';
+        req.session.type = 'success';
+        res.render('shared/layout/forget-confirmation', { resetUrl, email , message: req.session?.message || null, type: req.session?.type || null });
     } catch (error) {
         console.error('Error in forgetPassword:', error);
-        res.status(500).json({ error: 'Failed to process password reset request' });
+        req.session = req.session || {};
+        req.session.message = 'Failed to process password reset request';
+        req.session.type = 'error';
+        res.redirect('/forgetPasswordPage');
     }
 };
-
-
 
 export const resetPasswordPage = async (req, res) => {
     try {
-        const { token, type } = req.query; // Get token and type from query parameters
+        const { token, type } = req.query;
 
-        // Validate query parameters
-        if (!token || !type || !['User','Agent', 'Admin'].includes(type)) {
-            return res.status(400).send('Invalid or missing reset token or user type');
+        if (!token || !type || !['User', 'Agent', 'Admin'].includes(type)) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid or missing reset token or user type';
+            req.session.type = 'error';
+            return res.render('shared/layout/reset-password', { message: req.session.message, type: req.session.type });
         }
 
-        // Verify token
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
         let user;
         if (type === 'Admin') {
@@ -313,50 +347,59 @@ export const resetPasswordPage = async (req, res) => {
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
             });
-        } else if(type === 'Agent') {
+        } else if (type === 'Agent') {
             user = await agentModel.findOne({
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
             });
-        }
-        else if(type === 'User') {
+        } else if (type === 'User') {
             user = await userModel.findOne({
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
             });
-
         }
 
         if (!user) {
-            return res.status(400).send('Invalid or expired reset token');
+            req.session = req.session || {};
+            req.session.message = 'Invalid or expired reset token';
+            req.session.type = 'error';
+            return res.render('shared/layout/reset-password', { message: req.session.message, type: req.session.type });
         }
 
-        res.render('shared/layout/reset-password', { token, userType: type });
+        res.render('shared/layout/reset-password', { token, userType: type, message: req.session?.message || null, type: req.session?.type || null });
     } catch (error) {
         console.error('Error rendering reset password page:', error);
-        res.status(500).send('Server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error';
+        req.session.type = 'error';
+        res.render('shared/layout/reset-password', { message: req.session.message, type: req.session.type });
     }
 };
 
-
-
 export const resetPassword = async (req, res) => {
     try {
-        const { token, type } = req.query; // Get token and type from query parameters
+        const { token, type } = req.query;
         const { password, confirmPassword } = req.body;
 
-        // Validate input
-        if (!token || !type || !['User','Agent', 'Admin'].includes(type)) {
-            return res.status(400).json({ error: 'Invalid or missing reset token or user type' });
+        if (!token || !type || !['User', 'Agent', 'Admin'].includes(type)) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid or missing reset token or user type';
+            req.session.type = 'error';
+            return res.redirect(`/reset-password?token=${token}&type=${type}`);
         }
         if (!password || !confirmPassword) {
-            return res.status(400).json({ error: 'Both password fields are required' });
+            req.session = req.session || {};
+            req.session.message = 'Both password fields are required';
+            req.session.type = 'error';
+            return res.redirect(`/reset-password?token=${token}&type=${type}`);
         }
         if (password !== confirmPassword) {
-            return res.status(400).json({ error: 'Passwords do not match' });
+            req.session = req.session || {};
+            req.session.message = 'Passwords do not match';
+            req.session.type = 'error';
+            return res.redirect(`/reset-password?token=${token}&type=${type}`);
         }
 
-        // Verify token
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
         let user;
         if (type === 'Admin') {
@@ -364,13 +407,12 @@ export const resetPassword = async (req, res) => {
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
             });
-        } else  if (type === 'Agent') {
+        } else if (type === 'Agent') {
             user = await agentModel.findOne({
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
             });
-        }
-        else  if (type === 'User') {
+        } else if (type === 'User') {
             user = await userModel.findOne({
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() },
@@ -378,19 +420,39 @@ export const resetPassword = async (req, res) => {
         }
 
         if (!user) {
-            return res.status(400).json({ error: 'Invalid or expired reset token' });
+            req.session = req.session || {};
+            req.session.message = 'Invalid or expired reset token';
+            req.session.type = 'error';
+            return res.redirect(`/reset-password?token=${token}&type=${type}`);
         }
 
-        // Update password
         user.password = await bcrypt.hash(password, 10);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
 
         console.log(`Password reset successfully for ${user.email} (${type})`);
+        req.session = req.session || {};
+        req.session.message = 'Password reset successfully';
+        req.session.type = 'success';
         res.redirect('/loginPage');
     } catch (error) {
         console.error('Error resetting password:', error);
-        res.status(500).json({ error: 'Failed to reset password' });
+        req.session = req.session || {};
+        req.session.message = 'Failed to reset password';
+        req.session.type = 'error';
+        res.redirect(`/reset-password?token=${token}&type=${type}`);
+    }
+};
+
+export const clearSessionMessage = async (req, res) => {
+    try {
+        req.session = req.session || {};
+        req.session.message = null;
+        req.session.type = null;
+        res.status(200).send('Session message cleared');
+    } catch (error) {
+        console.error('Error clearing session message:', error);
+        res.status(500).send('Error clearing session message');
     }
 };

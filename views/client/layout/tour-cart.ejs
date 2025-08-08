@@ -99,6 +99,8 @@
         <%- include('../partials/Footer')%>
     </div>
 
+    <%- include('../../shared/partials/toaster') %>
+
     <!-- JavaScript -->
     <%- include('../partials/Script')%>
     <script>
@@ -155,6 +157,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        window.location.reload()
                         updateTotals();
                     } else {
                         console.log('Error updating cart: ' + data.message);
@@ -184,6 +187,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        window.location.reload()
                         const row = document.querySelector(`tr[data-package-id="${packageId}"]`);
                         if (row) row.remove();
                         if (document.querySelectorAll('tbody tr').length > 0) {

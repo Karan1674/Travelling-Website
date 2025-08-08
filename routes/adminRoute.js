@@ -1,5 +1,5 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
 const { uploadProfilePic, uploadGallery } = require('../middleware/multer');
@@ -50,5 +50,14 @@ router.get('/admin/bookings/delete/:bookingId', isAuthenticated, isAdminCheck,de
 
 
 router.get('/package-preview/:packageId' ,isAuthenticated,isAdminCheck,packagePreview)
+
+
+router.get('/coupon-list', isAuthenticated,isAdminCheck,renderCouponList);
+router.get('/new-coupon', isAuthenticated,isAdminCheck, renderAddCoupon);
+router.post('/new-coupon', isAuthenticated,isAdminCheck, createCoupon);
+router.get('/edit-coupon/:couponId', isAuthenticated, isAdminCheck, renderEditCoupon);
+router.post('/edit-coupon/:couponId',  isAuthenticated, isAdminCheck, updateCoupon);
+router.get('/delete-coupon/:couponId', isAuthenticated, isAdminCheck, deleteCoupon);
+router.get('/coupon-details/:couponId', isAuthenticated, isAdminCheck, renderCouponDetails);
 
 module.exports = router;

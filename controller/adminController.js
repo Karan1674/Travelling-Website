@@ -1,78 +1,100 @@
+
 import adminModel from '../models/adminModel.js';
 import agentModel from '../models/agentModel.js';
 import packageBookingSchema from '../models/packageBookingSchema.js';
 import packageModel from '../models/packageModel.js';
 import userModel from '../models/userModel.js';
-
 import bcrypt from 'bcrypt';
-import { promises as fs } from 'fs'
-import { dirname, join } from 'path'
+import { promises as fs } from 'fs';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-
 import Stripe from 'stripe';
 import reviewSchema from '../models/reviewSchema.js';
+import couponSchema from '../models/couponSchema.js';
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-
 
 export const AdminDashboard = async (req, res) => {
     try {
         const userId = req.id;
-        const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
-            return res.redirect('/loginPage'); // Redirect if not authenticated
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
         }
 
+    let userData;
+    if (isAdmin) {
+         userData = await adminModel.findById(userId);
+    }
+    else{
+         userData = await agentModel.findById(userId);
+    }
 
-        const userData = await adminModel.findById(userId);
+    
+    if (!userData) {
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
 
         res.render('admin/layout/AdminDashboard', {
             user: userData,
-            isAdmin
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error("Error loading admin dashboard:", error);
-        res.status(500).send("Server error");
+        req.session = req.session || {};
+        req.session.message = 'Server error loading dashboard';
+        req.session.type = 'error';
+        res.status(500).render('admin/layout/AdminDashboard', {
+            user: null,
+            isAdmin,
+            message: req.session.message,
+            type: req.session.type
+        });
     }
 };
-
-
 
 export const getAllAgents = async (req, res) => {
     try {
         const { page = 1, search = '' } = req.query;
-        const limit = 10; // Agents per page
-        const pageNum = Math.max(1, Number(page)); // Ensure page is at least 1
-        const skip = (pageNum - 1) * limit; // Calculate skip, never negative
+        const limit = 10;
+        const pageNum = Math.max(1, Number(page));
+        const skip = (pageNum - 1) * limit;
         const adminId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
         if (!adminId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         const userData = await adminModel.findById(adminId);
         if (!userData) {
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         let query = { admin: adminId };
-
-        // Add search filter
         if (search) {
             query.$or = [
                 { firstName: { $regex: search, $options: 'i' } },
                 { lastName: { $regex: search, $options: 'i' } }
-            ]; // Case-insensitive search on firstName or lastName
+            ];
         }
 
-        // Get total count for pagination
         const totalAgents = await agentModel.countDocuments(query);
-        const totalPages = Math.ceil(totalAgents / limit) || 1; // Ensure at least 1 page
+        const totalPages = Math.ceil(totalAgents / limit) || 1;
 
-        // Fetch paginated agents
         const agents = await agentModel
             .find(query)
             .skip(skip)
@@ -86,39 +108,57 @@ export const getAllAgents = async (req, res) => {
             currentPage: pageNum,
             totalPages,
             isAdmin,
-            user: userData
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error fetching agents:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching agents';
+        req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }
 };
 
-
 export const getNewAgentPage = async (req, res) => {
-    const userId = req.id;
-    const isAdmin = req.isAdmin
-    if (!userId) {
-        return res.status(401).send("Unauthorized: Admin ID missing");
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin ID missing';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
+        }
+
+        const userData = await adminModel.findById(userId);
+        if (!userData && isAdmin) {
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.redirect('/AdminDashboard');
+        }
+
+        res.render('admin/layout/new-agent', {
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error("Error rendering new agent page:", error);
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering page';
+        req.session.type = 'error';
+        res.status(500).redirect('/AdminDashboard');
     }
-
-    const userData = await adminModel.findById(userId);
-
-    if (!userData && isAdmin) {
-        return res.redirect('/AdminDashboard')
-    }
-
-    res.render('admin/layout/new-agent', {
-        isAdmin,
-        user: userData
-    });
 };
-
 
 export const newAgent = async (req, res) => {
     try {
-
-        const adminId = req.id
+        const adminId = req.id;
+        req.session = req.session || {};
 
         const {
             firstName,
@@ -131,29 +171,35 @@ export const newAgent = async (req, res) => {
             confirmPassword,
             email,
             confirmEmail,
-
         } = req.body;
-
 
         if (!firstName || !lastName || !countryCode || !phone || !city || !country || !email || !confirmEmail || !password || !confirmPassword) {
             console.log("All fields are required.");
-            return res.redirect('/new-agent?error=All fields are required');
+            req.session.message = 'All fields are required';
+            req.session.type = 'error';
+            return res.redirect('/new-agent');
         }
 
         if (password !== confirmPassword) {
             console.log("Passwords do not match.");
-            return res.redirect('/new-agent?error=Passwords do not match');
+            req.session.message = 'Passwords do not match';
+            req.session.type = 'error';
+            return res.redirect('/new-agent');
         }
 
         if (email !== confirmEmail) {
             console.log("Emails do not match.");
-            return res.redirect('/new-agent?error=Emails do not match');
+            req.session.message = 'Emails do not match';
+            req.session.type = 'error';
+            return res.redirect('/new-agent');
         }
 
         const existingAgent = await agentModel.findOne({ email });
         if (existingAgent) {
             console.log("Agent already exists.");
-            return res.redirect('/new-agent?error=agent already exists');
+            req.session.message = 'Agent already exists';
+            req.session.type = 'error';
+            return res.redirect('/new-agent');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -172,79 +218,97 @@ export const newAgent = async (req, res) => {
 
         await agent.save();
         console.log("Agent registered successfully.");
-        return res.redirect('/db-admin-created-agents?success=Agent created');
+        req.session.message = 'Agent created successfully';
+        req.session.type = 'success';
+        return res.redirect('/db-admin-created-agents');
     } catch (error) {
         console.log("Agent registration error:", error.message);
-        return res.redirect('/new-agent?error=Internal server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error during agent registration';
+        req.session.type = 'error';
+        return res.redirect('/new-agent');
     }
 };
 
-
-
 export const editAgentPage = async (req, res) => {
     try {
-        const editAgentId = req.query.editAgentId
+        const editAgentId = req.query.editAgentId;
         const userId = req.id;
-        const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
-            return res.status(401).send("Unauthorized: Admin ID missing");
+            req.session.message = 'Unauthorized: Admin ID missing';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
         const userData = await adminModel.findById(userId);
-
         if (!userData && isAdmin) {
-            return res.redirect('/AdminDashboard')
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.redirect('/AdminDashboard');
         }
 
         if (!editAgentId) {
-            return res.redirect('/AdminDashboard')
+            req.session.message = 'Agent ID missing';
+            req.session.type = 'error';
+            return res.redirect('/AdminDashboard');
         }
 
-        const editAgentData = await agentModel.findById(editAgentId)
+        const editAgentData = await agentModel.findById(editAgentId);
+        if (!editAgentData) {
+            req.session.message = 'Agent not found';
+            req.session.type = 'error';
+            return res.redirect('/AdminDashboard');
+        }
 
         res.render('admin/layout/edit-agent', {
             isAdmin,
             user: userData,
-            editAgent: editAgentData
+            editAgent: editAgentData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
-
     } catch (error) {
         console.error("Error in editPage:", error);
-        res.status(500).send("Internal Server Error");
+        req.session = req.session || {};
+        req.session.message = 'Server error loading edit page';
+        req.session.type = 'error';
+        res.status(500).redirect('/AdminDashboard');
     }
-}
-
-
-
+};
 
 export const editAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
         const { editAgentId } = req.params;
         const { firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year } = req.body;
+        req.session = req.session || {};
 
-        console.log(firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year)
-        // Check if user is admin
         if (!isAdmin) {
             console.log("User is not authorized to edit");
+            req.session.message = 'Unauthorized: Admin access required';
+            req.session.type = 'error';
             return res.status(403).json({ error: "Unauthorized: Admin access required" });
         }
 
-        // Validate required fields
         if (!firstName || !lastName || !email || !phone || !countryCode) {
-            return res.status(400).json({ error: "Missing required fields" });
+            req.session.message = 'Missing required fields';
+            req.session.type = 'error';
+            return res.status(400).json({ error: "Missing required fields", message: req.session.message, type: req.session.type });
         }
 
-        // Construct dateOfBirth if provided
         let dateOfBirth;
         if (day && month && year) {
             dateOfBirth = new Date(`${year}-${month}-${day}`);
             if (isNaN(dateOfBirth)) {
-                return res.status(400).json({ error: "Invalid date of birth" });
+                req.session.message = 'Invalid date of birth';
+                req.session.type = 'error';
+                return res.status(400).json({ error: "Invalid date of birth", message: req.session.message, type: req.session.type });
             }
         }
 
-        // Build the update object
         const editAgent = {
             firstName,
             lastName,
@@ -259,12 +323,13 @@ export const editAgent = async (req, res) => {
             ...(dateOfBirth && { dateOfBirth }),
         };
 
-
         if (req.file) {
             editAgent.profilePic = req.file.filename;
             const agent = await agentModel.findById(editAgentId);
             if (!agent) {
-                return res.status(404).json({ error: "Agent not found" });
+                req.session.message = 'Agent not found';
+                req.session.type = 'error';
+                return res.status(404).json({ error: "Agent not found", message: req.session.message, type: req.session.type });
             }
 
             if (agent.profilePic) {
@@ -278,8 +343,6 @@ export const editAgent = async (req, res) => {
             }
         }
 
-
-
         const updatedAgent = await agentModel.findByIdAndUpdate(
             editAgentId,
             { $set: editAgent },
@@ -287,77 +350,95 @@ export const editAgent = async (req, res) => {
         );
 
         if (!updatedAgent) {
-            return res.status(404).json({ error: "Agent not found" });
+            req.session.message = 'Agent not found';
+            req.session.type = 'error';
+            return res.status(404).json({ error: "Agent not found", message: req.session.message, type: req.session.type });
         }
 
         console.log("Agent updated successfully");
+        req.session.message = 'Agent updated successfully';
+        req.session.type = 'success';
         res.redirect('/db-admin-created-agents');
     } catch (error) {
         console.error("Error updating Agent:", error);
-        res.status(500).json({ error: "Failed to update Agent" });
+        req.session = req.session || {};
+        req.session.message = 'Failed to update agent';
+        req.session.type = 'error';
+        res.status(500).json({ error: "Failed to update Agent", message: req.session.message, type: req.session.type });
     }
 };
-
-
-
 
 export const getAgentDetails = async (req, res) => {
     try {
-
         const agentId = req.query.agentId;
         const adminId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
-        // Check if admin ID is present
         if (!adminId) {
             console.log("Unauthorized: Admin ID missing");
-            return res.status(401).send("Unauthorized: Admin ID missing");
+            req.session.message = 'Unauthorized: Admin ID missing';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
-        // Verify admin exists
         const adminData = await adminModel.findById(adminId);
         if (!adminData) {
             console.log("Admin not found");
-            return res.status(401).send("Unauthorized: Admin details not found");
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
-        // Check if user is admin
         if (!isAdmin) {
             console.log("User is not authorized to view user details");
-            return res.status(403).send("Unauthorized: Admin access required");
+            req.session.message = 'Unauthorized: Admin access required';
+            req.session.type = 'error';
+            return res.status(403).redirect('/AdminDashboard');
         }
 
-        // Fetch user data
         const agent = await agentModel.findById(agentId);
         if (!agent) {
             console.log(`Agent not found for ID: ${agentId}`);
-            return res.redirect('/db-admin-created-agents')
+            req.session.message = 'Agent not found';
+            req.session.type = 'error';
+            return res.redirect('/db-admin-created-agents');
         }
 
-
-        res.render('admin/layout/agentDetail', { user: adminData, isAdmin, agent });
+        res.render('admin/layout/agentDetail', {
+            user: adminData,
+            isAdmin,
+            agent,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
     } catch (error) {
         console.error("Error fetching agent details:", error);
-
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching agent details';
+        req.session.type = 'error';
+        res.redirect('/db-admin-created-agents');
     }
 };
-
 
 export const deleteAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
         const { agentId } = req.params;
-
+        req.session = req.session || {};
 
         if (!isAdmin) {
             console.log("Agent is not authorized to delete");
-            return res.status(403).json({ error: "Unauthorized: Admin access required" });
+            req.session.message = 'Unauthorized: Admin access required';
+            req.session.type = 'error';
+            return res.status(403).json({ error: "Unauthorized: Admin access required", message: req.session.message, type: req.session.type });
         }
-
 
         const agent = await agentModel.findById(agentId);
         if (!agent) {
-            return res.status(404).json({ error: "Agent not found" });
+            req.session.message = 'Agent not found';
+            req.session.type = 'error';
+            return res.status(404).json({ error: "Agent not found", message: req.session.message, type: req.session.type });
         }
 
         if (agent.profilePic) {
@@ -370,18 +451,20 @@ export const deleteAgent = async (req, res) => {
             }
         }
 
-
         await agentModel.findByIdAndDelete(agentId);
 
         console.log("Agent deleted successfully");
+        req.session.message = 'Agent deleted successfully';
+        req.session.type = 'success';
         res.redirect('/db-admin-created-agents');
     } catch (error) {
         console.error("Error deleting agent:", error);
-        res.status(500).json({ error: "Failed to delete agent" });
+        req.session = req.session || {};
+        req.session.message = 'Failed to delete agent';
+        req.session.type = 'error';
+        res.status(500).json({ error: "Failed to delete agent", message: req.session.message, type: req.session.type });
     }
 };
-
-
 
 export const getSignedInUsers = async (req, res) => {
     try {
@@ -389,27 +472,30 @@ export const getSignedInUsers = async (req, res) => {
         const isAdmin = req.isAdmin;
         const { search = '', page = 1 } = req.query;
         const limit = 10;
+        req.session = req.session || {};
 
-        // Check if admin ID is present
         if (!adminId) {
             console.log("Unauthorized: Admin ID missing");
-            return res.status(401).send("Unauthorized: Admin ID missing");
+            req.session.message = 'Unauthorized: Admin ID missing';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
-        // Verify admin exists
         const adminData = await adminModel.findById(adminId);
         if (!adminData) {
             console.log("Admin not found");
-            return res.status(401).send("Unauthorized: Admin details not found");
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
-        // Check if user is admin
         if (!isAdmin) {
             console.log("User is not authorized to view signed-in users");
-            return res.status(403).send("Unauthorized: Admin access required");
+            req.session.message = 'Unauthorized: Admin access required';
+            req.session.type = 'error';
+            return res.status(403).redirect('/AdminDashboard');
         }
 
-        // Build search query
         const searchQuery = search
             ? {
                 $or: [
@@ -419,7 +505,6 @@ export const getSignedInUsers = async (req, res) => {
                 ],
             }
             : {};
-
 
         const users = await userModel
             .find(searchQuery)
@@ -436,59 +521,88 @@ export const getSignedInUsers = async (req, res) => {
             currentPage: parseInt(page),
             totalPages: totalPages || 1,
             isAdmin,
-            user: adminData
+            user: adminData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error("Error fetching signed-in users:", error);
-        res.redirect('/loginPage')
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching users';
+        req.session.type = 'error';
+        res.redirect('/loginPage');
     }
 };
-
 
 export const getUserDetails = async (req, res) => {
     try {
         const { userId } = req.query;
         const adminId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
         if (!adminId) {
             console.log("Unauthorized: Admin ID missing");
-            return res.status(401).send("Unauthorized: Admin ID missing");
+            req.session.message = 'Unauthorized: Admin ID missing';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
         const adminData = await adminModel.findById(adminId);
         if (!adminData) {
             console.log("Admin not found");
-            return res.status(401).send("Unauthorized: Admin details not found");
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
+            return res.status(401).redirect('/loginPage');
         }
 
         if (!isAdmin) {
             console.log("User is not authorized to view user details");
-            return res.status(403).send("Unauthorized: Admin access required");
+            req.session.message = 'Unauthorized: Admin access required';
+            req.session.type = 'error';
+            return res.status(403).redirect('/AdminDashboard');
         }
 
         const userDetail = await userModel.findById(userId);
         if (!userDetail) {
             console.log(`User not found for ID: ${userId}`);
-            return res.render('user-details', { userDetail: null });
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.render('admin/layout/user-details', {
+                userDetail: null,
+                isAdmin,
+                user: adminData,
+                message: req.session.message,
+                type: req.session.type
+            });
         }
 
-        res.render('admin/layout/user-details', { userDetail, isAdmin, user: adminData });
+        res.render('admin/layout/user-details', {
+            userDetail,
+            isAdmin,
+            user: adminData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
     } catch (error) {
         console.error("Error fetching user details:", error);
-        res.redirect('/loginPage')
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching user details';
+        req.session.type = 'error';
+        res.redirect('/loginPage');
     }
 };
 
-
-
-// Render add package page
 export const addPackagePage = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
-            return res.status(400).send('User ID not available');
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.status(400).redirect('/loginPage');
         }
 
         let userData = await adminModel.findById(userId);
@@ -497,6 +611,8 @@ export const addPackagePage = async (req, res) => {
         }
 
         if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
             return res.status(400).redirect('/loginPage');
         }
 
@@ -504,20 +620,28 @@ export const addPackagePage = async (req, res) => {
             isAdmin,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error rendering add package page:', error);
-        res.status(500).send('Server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering add package page';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
     }
 };
 
-// Render edit package page
 export const editPackagePage = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
-            return res.status(400).send('User ID not available');
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.status(400).redirect('/loginPage');
         }
 
         let userData = await adminModel.findById(userId);
@@ -526,15 +650,18 @@ export const editPackagePage = async (req, res) => {
         }
 
         if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
             return res.status(400).redirect('/loginPage');
         }
 
         const packageData = await packageModel.findById(req.params.id);
         if (!packageData) {
-            return res.status(404).send('Package not found');
+            req.session.message = 'Package not found';
+            req.session.type = 'error';
+            return res.status(404).redirect('/db-all-packages');
         }
 
-        // Ensure itineraryDays has the correct structure
         packageData.itineraryDays = packageData.itineraryDays || [];
         packageData.itineraryDays = packageData.itineraryDays.map((day, index) => ({
             day: day.day || index + 1,
@@ -545,32 +672,35 @@ export const editPackagePage = async (req, res) => {
             packageData,
             isAdmin,
             user: userData,
-            opencageApiKey: process.env.OPENCAGE_API_KEY
+            opencageApiKey: process.env.OPENCAGE_API_KEY,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error rendering edit package page:', error);
-        res.status(500).send('Server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering edit package page';
+        req.session.type = 'error';
+        res.status(500).redirect('/db-all-packages');
     }
 };
 
-// Validation function for package data
-const validatePackage = (data, isActive) => {
+export const validatePackage = (data, isActive) => {
     const errors = [];
 
-    // Always required fields
     if (!data.title) errors.push('Title is required');
-    if (!data.adminId) errors.push('Admin ID is required');
+    if (!data.createdBy) errors.push('CreatedBy ID is required');
+    if (!data.createdByModel) errors.push('CreatedByModel is required');
+    if (!['Admin', 'Agent'].includes(data.createdByModel)) errors.push('Invalid createdByModel (must be Admin or Agent)');
     if (!data.status || !['Pending', 'Active', 'Expired'].includes(data.status)) {
         errors.push('Valid status is required (Pending, Active, Expired)');
     }
 
-    // Additional validation for fields not strictly required by schema
     if (!data.description) errors.push('Description is required');
     if (!data.packageType || !['Adventure', 'Cultural', 'Luxury', 'Family', 'Wellness', 'Eco'].includes(data.packageType)) {
         errors.push('Valid package type is required (Adventure, Cultural, Luxury, Family, Wellness, Eco)');
     }
 
-    // Additional fields required for Active status
     if (isActive) {
         if (!data.groupSize || isNaN(data.groupSize) || data.groupSize <= 0) errors.push('Valid group size is required');
         if (!data.tripDuration?.days || isNaN(data.tripDuration.days) || data.tripDuration.days <= 0) errors.push('Valid number of days is required');
@@ -637,45 +767,44 @@ const validatePackage = (data, isActive) => {
         if (!data.featuredImage) errors.push('Featured image is required');
     }
 
-    // Gallery limit check
     if (data.gallery && data.gallery.length > 8) errors.push('Maximum 8 gallery images allowed');
 
     return errors;
 };
 
-
 export const addPackage = async (req, res) => {
     try {
-        // Apply multer middleware
-
-
         const data = req.body;
+        req.session = req.session || {};
 
-        // Determine adminId
-        let adminId;
+        let createdBy, createdByModel;
         if (req.isAdmin) {
-            adminId = req.id;
+            createdBy = req.id;
+            createdByModel = 'Admin';
         } else {
             const userData = await agentModel.findById(req.id);
             if (!userData) {
-                return res.status(400).json({ error: 'Agent not found' });
+                req.session.message = 'Agent not found';
+                req.session.type = 'error';
+                return res.status(400).json({ error: 'Agent not found', message: req.session.message, type: req.session.type });
             }
-            adminId = userData.admin;
+            createdBy = req.id;
+            createdByModel = 'Agent';
         }
-        if (!adminId) {
-            return res.status(400).json({ error: 'Admin ID not found' });
-        }
-        data.adminId = adminId;
+
+        data.createdBy = createdBy;
+        data.createdByModel = createdByModel;
         data.status = data.status || 'Pending';
 
-        // Parse multipleDepartures
         if (data.multipleDepartures) {
             let departures = data.multipleDepartures;
             if (typeof departures === 'string') {
                 try {
                     departures = JSON.parse(departures);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid multipleDepartures format' });
+                    req.session.message = 'Invalid multipleDepartures format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid multipleDepartures format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(departures)) {
@@ -684,7 +813,9 @@ export const addPackage = async (req, res) => {
             for (let i = 0; i < departures.length; i++) {
                 const dep = departures[i];
                 if (!dep.location || !dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
-                    return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required` });
+                    req.session.message = `Departure ${i + 1}: Valid location and date/time are required`;
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required`, message: req.session.message, type: req.session.type });
                 }
             }
             data.multipleDepartures = departures.map(dep => ({
@@ -695,14 +826,15 @@ export const addPackage = async (req, res) => {
             data.multipleDepartures = [];
         }
 
-        // Parse itineraryDays
         if (data.itineraryDays) {
             let itineraryDays = data.itineraryDays;
             if (typeof itineraryDays === 'string') {
                 try {
                     itineraryDays = JSON.parse(itineraryDays);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid itineraryDays format' });
+                    req.session.message = 'Invalid itineraryDays format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid itineraryDays format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(itineraryDays)) {
@@ -722,14 +854,15 @@ export const addPackage = async (req, res) => {
             data.itineraryDays = [];
         }
 
-        // Parse programDays
         if (data.programDays) {
             let programDays = data.programDays;
             if (typeof programDays === 'string') {
                 try {
                     programDays = JSON.parse(programDays);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid programDays format' });
+                    req.session.message = 'Invalid programDays format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid programDays format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(programDays)) {
@@ -744,7 +877,6 @@ export const addPackage = async (req, res) => {
             data.programDays = [];
         }
 
-        // Parse arrays
         data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : JSON.parse(data.inclusions || '[]')).filter(i => i) : [];
         data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : JSON.parse(data.exclusions || '[]')).filter(e => e) : [];
         data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : JSON.parse(data.activityTypes || '[]')).filter(a => a) : [];
@@ -756,7 +888,6 @@ export const addPackage = async (req, res) => {
         }
         data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
 
-        // Parse numeric fields
         data.tripDuration = {
             days: Number(data.tripDuration?.days) || 0,
             nights: Number(data.tripDuration?.nights) || 0
@@ -770,7 +901,6 @@ export const addPackage = async (req, res) => {
         data.destinationAddress = data.destinationAddress || undefined;
         data.destinationCountry = data.destinationCountry || undefined;
 
-        // Handle file uploads
         let gallery = [];
         if (req.files && req.files['gallery']) {
             gallery = req.files['gallery'].map(file => file.filename);
@@ -782,60 +912,69 @@ export const addPackage = async (req, res) => {
         data.gallery = gallery;
         data.featuredImage = featuredImage;
 
-        // Validate data
         const validationErrors = validatePackage(data, data.status === 'Active');
         if (validationErrors.length > 0) {
-            return res.status(400).json({ error: validationErrors.join(', ') });
+            req.session.message = validationErrors.join(', ');
+            req.session.type = 'error';
+            return res.status(400).json({ error: validationErrors.join(', '), message: req.session.message, type: req.session.type });
         }
 
-        // Remove undefined fields
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
-        // Save package
         const newPackage = new packageModel(data);
         await newPackage.save();
-        return res.status(200).json({ message: 'Package created successfully', packageId: newPackage._id });
-
+        req.session.message = 'Package created successfully';
+        req.session.type = 'success';
+        return res.status(200).json({ message: 'Package created successfully', packageId: newPackage._id, sessionMessage: req.session.message, sessionType: req.session.type });
     } catch (error) {
         console.error('Error adding package:', error);
-        res.status(500).json({ error: 'Server error' });
+        req.session = req.session || {};
+        req.session.message = 'Server error adding package';
+        req.session.type = 'error';
+        res.status(500).json({ error: 'Server error', message: req.session.message, type: req.session.type });
     }
 };
 
 export const editPackage = async (req, res) => {
     try {
         const { id } = req.params;
+        req.session = req.session || {};
+
         if (!id) {
-            return res.status(400).json({ error: 'Invalid package ID' });
+            req.session.message = 'Invalid package ID';
+            req.session.type = 'error';
+            return res.status(400).json({ error: 'Invalid package ID', message: req.session.message, type: req.session.type });
         }
 
         const data = req.body;
 
-        // Determine adminId
-        let adminId;
+        let createdBy, createdByModel;
         if (req.isAdmin) {
-            adminId = req.id;
+            createdBy = req.id;
+            createdByModel = 'Admin';
         } else {
             const userData = await agentModel.findById(req.id);
             if (!userData) {
-                return res.status(400).json({ error: 'Agent not found' });
+                req.session.message = 'Agent not found';
+                req.session.type = 'error';
+                return res.status(400).json({ error: 'Agent not found', message: req.session.message, type: req.session.type });
             }
-            adminId = userData.admin;
+            createdBy = req.id;
+            createdByModel = 'Agent';
         }
-        if (!adminId) {
-            return res.status(400).json({ error: 'Admin ID not found' });
-        }
-        data.adminId = adminId;
+        data.createdBy = createdBy;
+        data.createdByModel = createdByModel;
         data.status = data.status || 'Pending';
 
-        // Parse multipleDepartures
         if (data.multipleDepartures) {
             let departures = data.multipleDepartures;
             if (typeof departures === 'string') {
                 try {
                     departures = JSON.parse(departures);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid multipleDepartures format' });
+                    req.session.message = 'Invalid multipleDepartures format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid multipleDepartures format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(departures)) {
@@ -844,7 +983,9 @@ export const editPackage = async (req, res) => {
             for (let i = 0; i < departures.length; i++) {
                 const dep = departures[i];
                 if (!dep.location || !dep.dateTime || new Date(dep.dateTime).toString() === 'Invalid Date') {
-                    return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required` });
+                    req.session.message = `Departure ${i + 1}: Valid location and date/time are required`;
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: `Departure ${i + 1}: Valid location and date/time are required`, message: req.session.message, type: req.session.type });
                 }
             }
             data.multipleDepartures = departures.map(dep => ({
@@ -855,14 +996,15 @@ export const editPackage = async (req, res) => {
             data.multipleDepartures = [];
         }
 
-        // Parse itineraryDays
         if (data.itineraryDays) {
             let itineraryDays = data.itineraryDays;
             if (typeof itineraryDays === 'string') {
                 try {
                     itineraryDays = JSON.parse(itineraryDays);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid itineraryDays format' });
+                    req.session.message = 'Invalid itineraryDays format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid itineraryDays format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(itineraryDays)) {
@@ -882,14 +1024,15 @@ export const editPackage = async (req, res) => {
             data.itineraryDays = [];
         }
 
-        // Parse programDays
         if (data.programDays) {
             let programDays = data.programDays;
             if (typeof programDays === 'string') {
                 try {
                     programDays = JSON.parse(programDays);
                 } catch (e) {
-                    return res.status(400).json({ error: 'Invalid programDays format' });
+                    req.session.message = 'Invalid programDays format';
+                    req.session.type = 'error';
+                    return res.status(400).json({ error: 'Invalid programDays format', message: req.session.message, type: req.session.type });
                 }
             }
             if (!Array.isArray(programDays)) {
@@ -904,7 +1047,6 @@ export const editPackage = async (req, res) => {
             data.programDays = [];
         }
 
-        // Parse arrays
         data.inclusions = data.inclusions ? (Array.isArray(data.inclusions) ? data.inclusions : JSON.parse(data.inclusions || '[]')).filter(i => i) : [];
         data.exclusions = data.exclusions ? (Array.isArray(data.exclusions) ? data.exclusions : JSON.parse(data.exclusions || '[]')).filter(e => e) : [];
         data.activityTypes = data.activityTypes ? (Array.isArray(data.activityTypes) ? data.activityTypes : JSON.parse(data.activityTypes || '[]')).filter(a => a) : [];
@@ -916,7 +1058,6 @@ export const editPackage = async (req, res) => {
         }
         data.keywords = data.keywords ? data.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
 
-        // Parse numeric fields
         data.tripDuration = {
             days: Number(data.tripDuration?.days) || 0,
             nights: Number(data.tripDuration?.nights) || 0
@@ -930,13 +1071,13 @@ export const editPackage = async (req, res) => {
         data.destinationAddress = data.destinationAddress || undefined;
         data.destinationCountry = data.destinationCountry || undefined;
 
-        // Fetch existing package
         const existingPackage = await packageModel.findById(id);
         if (!existingPackage) {
-            return res.status(404).json({ error: 'Package not found' });
+            req.session.message = 'Package not found';
+            req.session.type = 'error';
+            return res.status(404).json({ error: 'Package not found', message: req.session.message, type: req.session.type });
         }
 
-        // Handle gallery updates
         let gallery = existingPackage.gallery || [];
         if (data.deletedImages) {
             let imagesToDelete = data.deletedImages;
@@ -946,7 +1087,7 @@ export const editPackage = async (req, res) => {
             for (const image of imagesToDelete) {
                 if (gallery.includes(image)) {
                     try {
-                        await fs.unlink(join(uploadsDir, image));
+                        await fs.unlink(join(__dirname, '../Uploads/gallery', image));
                         console.log(`Deleted image: ${image}`);
                     } catch (err) {
                         console.error(`Failed to delete image ${image}:`, err);
@@ -958,15 +1099,14 @@ export const editPackage = async (req, res) => {
 
         if (req.files && req.files['gallery']) {
             const newImages = req.files['gallery'].map(file => file.filename);
-            gallery = [...gallery, ...newImages].slice(0, 8); // Enforce max 8 images
+            gallery = [...gallery, ...newImages].slice(0, 8);
         }
 
-        // Handle featured image
         let featuredImage = existingPackage.featuredImage;
         if (req.files && req.files['featuredImage']) {
             if (featuredImage) {
                 try {
-                    await fs.unlink(join(uploadsDir, featuredImage));
+                    await fs.unlink(join(__dirname, '../Uploads/gallery', featuredImage));
                     console.log(`Deleted featured image: ${featuredImage}`);
                 } catch (err) {
                     console.error(`Failed to delete featured image ${featuredImage}:`, err);
@@ -978,14 +1118,12 @@ export const editPackage = async (req, res) => {
         data.gallery = gallery;
         data.featuredImage = featuredImage;
 
-        // Validate data
         const validationErrors = validatePackage(data, data.status === 'Active');
         if (validationErrors.length > 0) {
-            // Clean up uploaded files if validation fails
             if (req.files && req.files['gallery']) {
                 for (const file of req.files['gallery']) {
                     try {
-                        await fs.unlink(join(uploadsDir, file.filename));
+                        await fs.unlink(join(__dirname, '../Uploads/gallery', file.filename));
                     } catch (err) {
                         console.error(`Failed to clean up gallery image ${file.filename}:`, err);
                     }
@@ -993,66 +1131,90 @@ export const editPackage = async (req, res) => {
             }
             if (req.files && req.files['featuredImage']) {
                 try {
-                    await fs.unlink(join(uploadsDir, req.files['featuredImage'][0].filename));
+                    await fs.unlink(join(__dirname, '../Uploads/gallery', req.files['featuredImage'][0].filename));
                 } catch (err) {
                     console.error(`Failed to clean up featured image ${req.files['featuredImage'][0].filename}:`, err);
                 }
             }
-            return res.status(400).json({ error: validationErrors.join(', ') });
+            req.session.message = validationErrors.join(', ');
+            req.session.type = 'error';
+            return res.status(400).json({ error: validationErrors.join(', '), message: req.session.message, type: req.session.type });
         }
 
-        // Remove undefined fields
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
-        // Update package
         const updatedPackage = await packageModel.findByIdAndUpdate(id, data, { new: true });
         if (!updatedPackage) {
-            return res.status(404).json({ error: 'Package not found' });
+            req.session.message = 'Package not found';
+            req.session.type = 'error';
+            return res.status(404).json({ error: 'Package not found', message: req.session.message, type: req.session.type });
         }
 
-        return res.status(200).json({ message: 'Package updated successfully', packageId: updatedPackage._id });
-
+        req.session.message = 'Package updated successfully';
+        req.session.type = 'success';
+        return res.status(200).json({ message: 'Package updated successfully', packageId: updatedPackage._id, sessionMessage: req.session.message, sessionType: req.session.type });
     } catch (error) {
         console.error('Error updating package:', error);
-        res.status(500).json({ error: 'Server error' });
+        req.session = req.session || {};
+        req.session.message = 'Server error updating package';
+        req.session.type = 'error';
+        res.status(500).json({ error: 'Server error', message: req.session.message, type: req.session.type });
     }
 };
 
-
-// Render all packages page
 export const getAllPackages = async (req, res) => {
     try {
         const { page = 1, search = '' } = req.query;
-        const limit = 5; // Packages per page
-        const pageNum = Math.max(1, Number(page)); // Ensure page is at least 1
-        const skip = (pageNum - 1) * limit; // Calculate skip
+        const limit = 5;
+        const pageNum = Math.max(1, Number(page));
+        const skip = (pageNum - 1) * limit;
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
         if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         let userData = await adminModel.findById(userId);
-        let adminId = userId;
-        if (!userData) {
+        let query = {};
+
+        if (isAdmin) {
+            // Admin can see their own packages and those created by their agents
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
             userData = await agentModel.findById(userId);
             if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
                 return res.status(401).redirect('/loginPage');
             }
-            adminId = userData.admin;
+            // Agent can see their own packages, their admin's packages, and other agents' packages under the same admin
+            const adminId = userData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: adminId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
         }
 
-        let query = { adminId };
         if (search) {
-            query.title = { $regex: search, $options: 'i' }; // Case-insensitive search
+            query.title = { $regex: search, $options: 'i' };
         }
 
-        // Get total count for pagination
         const totalPackages = await packageModel.countDocuments(query);
-        const totalPages = Math.ceil(totalPackages / limit) || 1; // Ensure at least 1 page
+        const totalPages = Math.ceil(totalPackages / limit) || 1;
 
-        // Fetch paginated packages
         const allPackages = await packageModel
             .find(query)
             .skip(skip)
@@ -1068,19 +1230,23 @@ export const getAllPackages = async (req, res) => {
             isAdmin,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error fetching packages:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching packages';
+        req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }
 };
 
 
-
 export const deletePackage = async (req, res) => {
     try {
         const { id } = req.params;
-
+        req.session = req.session || {};
 
         let adminId;
         if (req.isAdmin) {
@@ -1088,23 +1254,22 @@ export const deletePackage = async (req, res) => {
         } else {
             const userData = await agentModel.findById(req.id);
             if (!userData) {
-                return res.status(401).json({ error: 'Unauthorized: User not found' });
+                req.session.message = 'Unauthorized: User not found';
+                req.session.type = 'error';
+                return res.status(401).json({ error: 'Unauthorized: User not found', message: req.session.message, type: req.session.type });
             }
             adminId = userData.admin;
         }
 
-        // Fetch package to verify ownership and get images
         const packagePacket = await packageModel.findById(id);
         if (!packagePacket) {
-            return res.status(404).json({ error: 'Package not found' });
+            req.session.message = 'Package not found';
+            req.session.type = 'error';
+            return res.status(404).json({ error: 'Package not found', message: req.session.message, type: req.session.type });
         }
 
-
-
-        // Delete associated images from file system
         const uploadsDir = join(__dirname, '../Uploads/gallery');
 
-        // Delete gallery images
         if (packagePacket.gallery && packagePacket.gallery.length > 0) {
             for (const image of packagePacket.gallery) {
                 try {
@@ -1115,7 +1280,6 @@ export const deletePackage = async (req, res) => {
             }
         }
 
-        // Delete featured image
         if (packagePacket.featuredImage) {
             try {
                 await fs.unlink(join(uploadsDir, packagePacket.featuredImage));
@@ -1124,36 +1288,38 @@ export const deletePackage = async (req, res) => {
             }
         }
 
-        // Delete package from database
         await packageModel.findByIdAndDelete(id);
 
-
-        res.status(200).json({
-            message: "Package Deleted Successfuly"
-        })
+        req.session.message = 'Package deleted successfully';
+        req.session.type = 'success';
+        res.status(200).json({ message: 'Package deleted successfully', sessionMessage: req.session.message, sessionType: req.session.type });
     } catch (error) {
         console.error('Error deleting package:', error);
-
-        res.status(500).json({ error: 'Failed to delete package' });
+        req.session = req.session || {};
+        req.session.message = 'Failed to delete package';
+        req.session.type = 'error';
+        res.status(500).json({ error: 'Failed to delete package', message: req.session.message, type: req.session.type });
     }
 };
-
 
 export const getPackagesByStatus = async (req, res) => {
     try {
         const { page = 1, search = '', status } = req.query;
         const validStatuses = ['Active', 'Pending', 'Expired'];
+        req.session = req.session || {};
+
         if (!validStatuses.includes(status)) {
+            req.session.message = 'Invalid package status';
+            req.session.type = 'error';
             return res.status(400).redirect('/db-all-packages');
         }
-
-
-
 
         const userId = req.id;
         const isAdmin = req.isAdmin;
 
         if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
@@ -1162,15 +1328,14 @@ export const getPackagesByStatus = async (req, res) => {
         if (!userData) {
             userData = await agentModel.findById(userId);
             if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
                 return res.status(401).redirect('/loginPage');
             }
             createdId = userData.admin;
         }
 
         let query = { adminId: createdId, status };
-
-
-
 
         if (search) {
             query.title = { $regex: search, $options: 'i' };
@@ -1196,141 +1361,185 @@ export const getPackagesByStatus = async (req, res) => {
             isAdmin,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
-            pageTitle: `${status} Packages`
+            pageTitle: `${status} Packages`,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error(`Error fetching ${req.query.status} packages:`, error);
+        req.session = req.session || {};
+        req.session.message = `Server error fetching ${req.query.status} packages`;
+        req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }
 };
-
 
 export const getUserDashboard = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
-        const userData = await adminModel.findById(userId)
+        const userData = await adminModel.findById(userId);
         if (!userData) {
+            req.session.message = 'Admin not found';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         res.render('admin/layout/userPageDashboard', {
             isAdmin,
-            user: userData
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error rendering user dashboard:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering user dashboard';
+        req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }
 };
-
 
 export const getPackageDashboard = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         const userData = await adminModel.findById(userId) || await agentModel.findById(userId);
         if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
             return res.status(401).redirect('/loginPage');
         }
 
         res.render('admin/layout/packagePageDashboard', {
             isAdmin,
-            user: userData
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error rendering package dashboard:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering package dashboard';
+        req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }
 };
 
-
-
-
-
-
-
-// Get Admin/Agent Profile
 export const getAdminAgentProfile = async (req, res) => {
     try {
         const userId = req.id;
-        const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
         if (!userId) {
             console.log('No user ID in request');
+            req.session.message = 'Unauthorized: No user ID provided';
+            req.session.type = 'error';
             return res.redirect('/');
         }
-
 
         let user = await adminModel.findById(userId);
         if (user) {
             console.log('Rendering admin profile for:', userId);
-            return res.render('admin/layout/adminAgentProfile', { user, isAdmin });
+            return res.render('admin/layout/adminAgentProfile', {
+                user,
+                isAdmin,
+                message: req.session?.message || null,
+                type: req.session?.type || null
+            });
         }
 
-        // Check if user is an agent
         user = await agentModel.findById(userId).populate('admin');
         if (user) {
             console.log('Rendering agent profile for:', userId);
-            return res.render('admin/layout/adminAgentProfile', { user, isAdmin });
+            return res.render('admin/layout/adminAgentProfile', {
+                user,
+                isAdmin,
+                message: req.session?.message || null,
+                type: req.session?.type || null
+            });
         }
 
         console.log('No admin or agent found for:', userId);
+        req.session.message = 'User not found';
+        req.session.type = 'error';
         return res.redirect('/');
     } catch (error) {
         console.error('Get admin/agent profile error:', error);
-        res.status(500).send('Error fetching profile');
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching profile';
+        req.session.type = 'error';
+        res.status(500).render('admin/layout/adminAgentProfile', {
+            user: null,
+            isAdmin,
+            message: req.session.message,
+            type: req.session.type
+        });
     }
 };
 
-// Update Admin/Agent Profile
 export const updateAdminAgentProfile = async (req, res) => {
     try {
         const userId = req.id;
+        req.session = req.session || {};
+
         if (!userId) {
             console.log('No user ID in request');
-            return res.status(401).json({ error: 'Unauthorized: No user ID provided' });
+            req.session.message = 'Unauthorized: No user ID provided';
+            req.session.type = 'error';
+            return res.status(401).json({ error: 'Unauthorized: No user ID provided', message: req.session.message, type: req.session.type });
         }
 
         const { firstName, lastName, email, phone, countryCode, dateOfBirth, country, state, city, address, description } = req.body;
 
-        // Validate required fields
         if (!firstName || !lastName || !email || !phone) {
             console.log('Missing required fields:', { firstName, lastName, email, phone });
-            return res.status(400).json({ error: 'First name, last name, email, and phone are required' });
+            req.session.message = 'First name, last name, email, and phone are required';
+            req.session.type = 'error';
+            return res.status(400).json({ error: 'First name, last name, email, and phone are required', message: req.session.message, type: req.session.type });
         }
 
-        // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             console.log('Invalid email format:', email);
-            return res.status(400).json({ error: 'Invalid email format' });
+            req.session.message = 'Invalid email format';
+            req.session.type = 'error';
+            return res.status(400).json({ error: 'Invalid email format', message: req.session.message, type: req.session.type });
         }
 
         let updateData = { firstName, lastName, email, phone };
 
-        // Validate dateOfBirth if provided
         if (dateOfBirth) {
             const dob = new Date(dateOfBirth);
             if (isNaN(dob.getTime())) {
                 console.log('Invalid date of birth:', dateOfBirth);
-                return res.status(400).json({ error: 'Invalid date of birth' });
+                req.session.message = 'Invalid date of birth';
+                req.session.type = 'error';
+                return res.status(400).json({ error: 'Invalid date of birth', message: req.session.message, type: req.session.type });
             }
             updateData.dateOfBirth = dob;
         }
 
-        // Check if user is an admin
         let user = await adminModel.findById(userId);
         if (user) {
             if (req.file) {
-                // Delete existing profile picture if it exists
                 if (user.profilePic) {
                     const oldImagePath = join(__dirname, '../Uploads/profiles');
                     try {
@@ -1346,26 +1555,24 @@ export const updateAdminAgentProfile = async (req, res) => {
             }
             await adminModel.findByIdAndUpdate(userId, updateData, { new: true });
             console.log('Updated admin profile:', userId);
+            req.session.message = 'Admin profile updated successfully';
+            req.session.type = 'success';
             return res.redirect('/admin-agent-profile');
         }
 
-        // Check if user is an agent
         user = await agentModel.findById(userId);
         if (user) {
-            // Validate agent-specific required field
             if (!countryCode) {
                 console.log('Missing country code for agent:', userId);
-                return res.status(400).json({ error: 'Country code is required for agents' });
+                req.session.message = 'Country code is required for agents';
+                req.session.type = 'error';
+                return res.status(400).json({ error: 'Country code is required for agents', message: req.session.message, type: req.session.type });
             }
             updateData = { ...updateData, countryCode, dateOfBirth: updateData.dateOfBirth || user.dateOfBirth, country, state, city, address, description };
             if (req.file) {
-                // Delete existing profile picture if it exists
                 if (user.profilePic) {
-
                     const oldImagePath = join(__dirname, '../Uploads/profiles');
                     try {
-
-
                         await fs.unlink(join(oldImagePath, user.profilePic));
                         console.log('Deleted old profile picture:', user.profilePic);
                     } catch (err) {
@@ -1378,28 +1585,34 @@ export const updateAdminAgentProfile = async (req, res) => {
             }
             await agentModel.findByIdAndUpdate(userId, updateData, { new: true });
             console.log('Updated agent profile:', userId);
+            req.session.message = 'Agent profile updated successfully';
+            req.session.type = 'success';
             return res.redirect('/admin-agent-profile');
         }
 
         console.log('No admin or agent found for:', userId);
-        return res.status(404).json({ error: 'User not found' });
+        req.session.message = 'User not found';
+        req.session.type = 'error';
+        return res.status(404).json({ error: 'User not found', message: req.session.message, type: req.session.type });
     } catch (error) {
         console.error('Update admin/agent profile error:', error);
-        res.status(500).json({ error: 'Server error while updating profile' });
+        req.session = req.session || {};
+        req.session.message = 'Server error updating profile';
+        req.session.type = 'error';
+        res.status(500).json({ error: 'Server error while updating profile', message: req.session.message, type: req.session.type });
     }
 };
-
-
-
-
 
 export const getBookings = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
         if (!userId) {
             console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.redirect('/');
         }
 
@@ -1412,16 +1625,18 @@ export const getBookings = async (req, res) => {
 
         if (!userData) {
             console.log("User not found");
+            req.session.message = 'User not found';
+            req.session.type = 'error';
             return res.redirect('/loginPage');
         }
 
         const page = parseInt(req.query.page) || 1;
-        const limit = 3; // Bookings per page
+        const limit = 3;
         const search = req.query.search || '';
 
         const searchQuery = {};
         if (search) {
-            const matchingPackageIds = await Package.find({
+            const matchingPackageIds = await packageModel.find({
                 title: { $regex: search, $options: 'i' }
             }).distinct('_id');
 
@@ -1431,7 +1646,6 @@ export const getBookings = async (req, res) => {
             ].filter(condition => condition !== null);
         }
 
-        // For admins, filter bookings by packages they created
         if (isAdmin) {
             const adminPackageIds = await packageModel.find({ adminId: userId }).distinct('_id');
             if (adminPackageIds.length > 0) {
@@ -1439,8 +1653,7 @@ export const getBookings = async (req, res) => {
             } else {
                 searchQuery['items.packageId'] = { $in: [] };
             }
-        }
-        else {
+        } else {
             const agentPackageIds = await packageModel.find({ adminId: userData.admin }).distinct('_id');
             if (agentPackageIds.length > 0) {
                 searchQuery['items.packageId'] = { $in: agentPackageIds };
@@ -1449,7 +1662,6 @@ export const getBookings = async (req, res) => {
             }
         }
 
-        // Fetch bookings with pagination and population
         const bookings = await packageBookingSchema.find(searchQuery)
             .populate('userId', 'firstName lastName email')
             .populate('items.packageId', 'title')
@@ -1458,7 +1670,7 @@ export const getBookings = async (req, res) => {
             .sort({ createdAt: -1 });
 
         const totalBookings = await packageBookingSchema.countDocuments(searchQuery);
-        const totalPages = Math.ceil(totalBookings / limit);
+        const totalPages = Math.ceil(totalBookings / limit) || 1;
 
         res.render('admin/layout/db-booking', {
             bookings,
@@ -1467,172 +1679,856 @@ export const getBookings = async (req, res) => {
             user: userData,
             isAdmin,
             search,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error fetching bookings:', error);
-        res.status(500).send('Error fetching bookings');
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching bookings';
+        req.session.type = 'error';
+        res.status(500).render('admin/layout/db-booking', {
+            bookings: [],
+            currentPage: 1,
+            totalPages: 1,
+            user: null,
+            isAdmin,
+            search: '',
+            message: req.session.message,
+            type: req.session.type
+        });
     }
 };
-
-
 
 export const getEditBooking = async (req, res) => {
     try {
         const { bookingId } = req.params;
-
-
         const userId = req.id;
         const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
         if (!userId) {
             console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.redirect('/');
         }
 
         let userData;
         if (isAdmin) {
-            userData = await adminModel.findById(userId); // Assuming User model for admins
+            userData = await adminModel.findById(userId);
         } else {
-            userData = await agentModel.findById(userId); // Assuming same model for agents
+            userData = await agentModel.findById(userId);
         }
 
+        if (!userData) {
+            console.log("User not found");
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
 
         const booking = await packageBookingSchema.findById(bookingId)
             .populate('userId', 'firstName lastName email')
             .populate('items.packageId', 'title');
 
         if (!booking) {
-            return res.status(404).send('Booking not found');
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.status(404).render('admin/layout/edit-booking', {
+                booking: null,
+                user: userData,
+                isAdmin,
+                message: req.session.message,
+                type: req.session.type
+            });
         }
 
         res.render('admin/layout/edit-booking', {
             booking,
             user: userData,
-            isAdmin
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
     } catch (error) {
         console.error('Error fetching booking for edit:', error);
-        res.status(500).send('Error fetching booking');
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching booking';
+        req.session.type = 'error';
+        res.status(500).redirect('/admin/bookings');
     }
 };
 
 export const editBooking = async (req, res) => {
     try {
-
-
         const userId = req.id;
-
+        req.session = req.session || {};
 
         if (!userId) {
             console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.redirect('/');
         }
-
-
-
 
         const { bookingId } = req.params;
         const { status } = req.body;
 
         if (!['approved', 'pending', 'rejected'].includes(status)) {
-            return res.status(400).send('Invalid status');
+            req.session.message = 'Invalid status';
+            req.session.type = 'error';
+            return res.status(400).redirect('/admin/bookings');
         }
 
         const booking = await packageBookingSchema.findById(bookingId);
         if (!booking) {
-            return res.status(404).send('Booking not found');
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.status(404).redirect('/admin/bookings');
         }
 
         booking.status = status;
 
-        // Automatically initiate refund if status is 'rejected'
         if (status === 'rejected' && booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentType !== 'refund') {
             try {
                 const refund = await stripeInstance.refunds.create({
                     payment_intent: booking.payment.stripePaymentIntentId,
-                    amount: Math.round(booking.total * 100), // Convert to cents
+                    amount: Math.round(booking.total * 100),
                 });
                 booking.payment.paymentType = 'refund';
                 booking.payment.paymentStatus = 'pending';
             } catch (refundError) {
                 console.error('Error processing refund:', refundError);
-                return res.status(500).send('Error processing refund');
+                req.session.message = 'Error processing refund';
+                req.session.type = 'error';
+                return res.status(500).redirect('/admin/bookings');
             }
         }
 
         await booking.save();
 
+        req.session.message = 'Booking updated successfully';
+        req.session.type = 'success';
         res.redirect('/admin/bookings');
     } catch (error) {
         console.error('Error editing booking:', error);
-        res.status(500).send('Error editing booking');
+        req.session = req.session || {};
+        req.session.message = 'Server error editing booking';
+        req.session.type = 'error';
+        res.status(500).redirect('/admin/bookings');
     }
 };
 
-
-
 export const deleteBooking = async (req, res) => {
     try {
-
         const userId = req.id;
-
+        req.session = req.session || {};
 
         if (!userId) {
             console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
             return res.redirect('/');
         }
-
 
         const { bookingId } = req.params;
         const booking = await packageBookingSchema.findByIdAndDelete(bookingId);
         if (!booking) {
-            return res.status(404).send('Booking not found');
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.status(404).redirect('/admin/bookings');
         }
+
+        req.session.message = 'Booking deleted successfully';
+        req.session.type = 'success';
         res.redirect('/admin/bookings');
     } catch (error) {
         console.error('Error deleting booking:', error);
-        res.status(500).send('Error deleting booking');
+        req.session = req.session || {};
+        req.session.message = 'Server error deleting booking';
+        req.session.type = 'error';
+        res.status(500).redirect('/admin/bookings');
     }
 };
 
-
-
 export const packagePreview = async (req, res) => {
     try {
-        const userId = req.id
+        const userId = req.id;
+        req.session = req.session || {};
+
         if (!userId) {
-            return res.redirect('/')
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
         }
 
-        const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin;
 
         let userData;
         if (isAdmin) {
             userData = await adminModel.findById(userId);
-        }
-        else {
-            userData = await agentModel.findById(userId)
+        } else {
+            userData = await agentModel.findById(userId);
         }
 
         if (!userData) {
-            console.log("User not found")
-            return res.redirect('/')
+            console.log("User not found");
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/');
         }
-
 
         const packageData = await packageModel.findById(req.params.packageId).lean();
         if (!packageData) {
-            return res.render('admin/layout/packagePreview', { package: null, isAdmin, bookings: [], reviews: [], user: req.user });
+            req.session.message = 'Package not found';
+            req.session.type = 'error';
+            return res.render('admin/layout/packagePreview', {
+                package: null,
+                isAdmin,
+                bookings: [],
+                reviews: [],
+                user: userData,
+                message: req.session.message,
+                type: req.session.type
+            });
         }
+
         const bookings = await packageBookingSchema.find({ 'items.packageId': req.params.packageId })
             .populate('userId', 'firstName lastName email')
             .lean();
         const reviews = await reviewSchema.find({ 'packageId': req.params.packageId }).sort({ date: -1 });
 
-
-        res.render('admin/layout/packagePreview', { package: packageData, bookings, reviews, user: userData, isAdmin });
+        res.render('admin/layout/packagePreview', {
+            package: packageData,
+            bookings,
+            reviews,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
     } catch (error) {
         console.error('Error fetching package preview:', error);
-        res.status(500).send('Server error');
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching package preview';
+        req.session.type = 'error';
+        res.status(500).render('admin/layout/packagePreview', {
+            package: null,
+            isAdmin,
+            bookings: [],
+            reviews: [],
+            user: null,
+            message: req.session.message,
+            type: req.session.type
+        });
+    }
+};
+
+
+
+export const renderCouponList = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+
+        const { search = '', page = 1 } = req.query;
+        const limit = 10; // Number of coupons per page
+        const skip = (page - 1) * limit;
+
+        // Build query
+        let query = {};
+        if (isAdmin) {
+            // Admin can see their own coupons and those created by their agents
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query.$or = [
+                { createdBy: userId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        } else {
+            // Agent can see their own coupons, their admin's coupons, and other agents' coupons under the same admin
+            const agentData = await agentModel.findById(userId);
+            if (!agentData || !agentData.admin) {
+                req.session.message = 'Agent or admin not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            const adminId = agentData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query.$or = [
+                { createdBy: adminId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        }
+
+        if (search) {
+            query.code = { $regex: search, $options: 'i' }; // Case-insensitive search by code
+        }
+
+        // Fetch coupons
+        const coupons = await couponSchema.find(query)
+            .lean()
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        // Get total count for pagination
+        const totalCoupons = await couponSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalCoupons / limit) || 1;
+
+        res.render('admin/layout/couponList', {
+            coupons,
+            user: userData,
+            isAdmin,
+            search,
+            currentPage: parseInt(page),
+            totalPages,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching coupon list:', error);
+        req.session.message = 'Error fetching coupon list';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+
+
+// Render Add Coupon Page
+export const renderAddCoupon = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+
+        res.render('admin/layout/addCoupon', {
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error rendering add coupon page:', error);
+        req.session.message = 'Error rendering add coupon page';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+
+// Function to generate a random coupon code
+function generateRandomCode(length = 8) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+}
+
+
+
+// Create New Coupon
+export const createCoupon = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        let createdBy, createdByModel;
+        if (isAdmin) {
+            createdBy = userId;
+            createdByModel = 'Admin';
+        } else {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            createdBy = userId;
+            createdByModel = 'Agent';
+        }
+
+        const {
+            creationMode = 'manual',
+            code,
+            numCoupons,
+            discountType,
+            discountValue,
+            minPurchase = 0,
+            maxDiscount = 0,
+            expiryDate,
+            usageLimit = 1,
+            restrictToUser,
+            isActive = 'true'
+        } = req.body;
+
+        if (creationMode === 'manual' && !code) {
+            req.session.message = 'Coupon code is required for manual creation';
+            req.session.type = 'error';
+            return res.redirect('/new-coupon');
+        }
+        if (creationMode === 'automatic' && (!numCoupons || parseInt(numCoupons) <= 0)) {
+            req.session.message = 'Number of coupons must be greater than 0 for automatic creation';
+            req.session.type = 'error';
+            return res.redirect('/new-coupon');
+        }
+
+        // Validate required fields
+        if (!discountType || !discountValue || !expiryDate) {
+            req.session.message = 'Required fields are missing';
+            req.session.type = 'error';
+            return res.redirect('/new-coupon');
+        }
+
+
+        // Validate discountType
+        if (!['percentage', 'fixed'].includes(discountType)) {
+            req.session.message = 'Invalid discount type';
+            req.session.type = 'error';
+            return res.redirect('/new-coupon');
+        }
+
+        // Validate discountValue
+        if (parseFloat(discountValue) < 0) {
+            req.session.message = 'Discount value cannot be negative';
+            req.session.type = 'error';
+            return res.redirect('/new-coupon');
+        }
+
+        // Validate restrictToUser (if provided)
+        let userIdRestrict = null;
+        if (restrictToUser) {
+
+            const user = await userModel.findOne({email: restrictToUser});
+            if (!user) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/new-coupon');
+            }
+            userIdRestrict = user._id;
+        }
+
+        // Create coupon
+        const couponData = {
+            
+            // code: code.toUpperCase(),
+            discountType,
+            discountValue: parseFloat(discountValue),
+            minPurchase: parseFloat(minPurchase),
+            maxDiscount: parseFloat(maxDiscount),
+            expiryDate: new Date(expiryDate),
+            usageLimit: parseInt(usageLimit),
+            restrictToUser: userIdRestrict,
+            isActive: isActive === 'true',
+            createdBy,
+            createdByModel
+        };
+
+ // Handle manual or automatic creation
+ if (creationMode === 'manual') {
+    const coupon = new couponSchema({
+        ...couponData,
+        code: code.toUpperCase()
+    });
+    await coupon.save();
+    req.session.message = 'Coupon created successfully';
+    req.session.type = 'success';
+} else {
+    const numToGenerate = parseInt(numCoupons);
+    const coupons = [];
+    for (let i = 0; i < numToGenerate; i++) {
+        let uniqueCode;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        // Generate unique code
+        do {
+            uniqueCode = generateRandomCode();
+            attempts++;
+            if (attempts > maxAttempts) {
+                req.session.message = 'Unable to generate unique coupon codes';
+                req.session.type = 'error';
+                return res.redirect('/new-coupon');
+            }
+        } while (await couponSchema.findOne({ code: uniqueCode }));
+
+        coupons.push({
+            ...couponData,
+            code: uniqueCode
+        });
+    }
+
+    await couponSchema.insertMany(coupons);
+    req.session.message = `${numToGenerate} coupons generated successfully`;
+    req.session.type = 'success';
+}
+
+
+        res.redirect('/coupon-list');
+    } catch (error) {
+        console.error('Error creating coupon:', error);
+        req.session.message = 'Error creating coupon';
+        req.session.type = 'error';
+        res.redirect('/new-coupon');
+    }
+};
+
+
+// Render Edit Coupon Page
+export const renderEditCoupon = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+
+        // Build query to ensure user has access to the coupon
+        let query = { _id: req.params.couponId };
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query.$or = [
+                { createdBy: userId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        } else {
+            const agentData = await agentModel.findById(userId);
+            if (!agentData || !agentData.admin) {
+                req.session.message = 'Agent or admin not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            const adminId = agentData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query.$or = [
+                { createdBy: adminId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        }
+
+        const coupon = await couponSchema.findOne(query).lean();
+        if (!coupon) {
+            req.session.message = 'Coupon not found or you do not have access';
+            req.session.type = 'error';
+            return res.redirect('/coupon-list');
+        }
+
+        res.render('admin/layout/editCoupon', {
+            coupon,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching coupon:', error);
+        req.session.message = 'Error fetching coupon';
+        req.session.type = 'error';
+        res.redirect('/coupon-list');
+    }
+};
+
+// // Update Coupon
+export const updateCoupon = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        let createdBy, createdByModel;
+        if (isAdmin) {
+            createdBy = userId;
+            createdByModel = 'Admin';
+        } else {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            createdBy = userId;
+            createdByModel = 'Agent';
+        }
+
+        const {
+            code,
+            discountType,
+            discountValue,
+            minPurchase = 0,
+            maxDiscount = 0,
+            expiryDate,
+            usageLimit = 1,
+            restrictToUser,
+            isActive = 'true'
+        } = req.body;
+
+        // Validate required fields
+        if (!code || !discountType || !discountValue || !expiryDate) {
+            req.session.message = 'Required fields are missing';
+            req.session.type = 'error';
+            return res.redirect(`/edit-coupon/${req.params.couponId}`);
+        }
+
+        // Validate discountType
+        if (!['percentage', 'fixed'].includes(discountType)) {
+            req.session.message = 'Invalid discount type';
+            req.session.type = 'error';
+            return res.redirect(`/edit-coupon/${req.params.couponId}`);
+        }
+
+        // Validate discountValue
+        if (parseFloat(discountValue) < 0) {
+            req.session.message = 'Discount value cannot be negative';
+            req.session.type = 'error';
+            return res.redirect(`/edit-coupon/${req.params.couponId}`);
+        }
+
+        // Validate restrictToUser (if provided)
+        let userIdRestrict = null;
+        if (restrictToUser) {
+           
+            const user = await userModel.findOne({email: restrictToUser});
+            if (!user) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/new-coupon');
+            }
+            userIdRestrict = user._id;
+        }
+
+        // Update coupon
+        const coupon = await couponSchema.findByIdAndUpdate(
+            req.params.couponId,
+            {
+                code: code.toUpperCase(),
+                discountType,
+                discountValue: parseFloat(discountValue),
+                minPurchase: parseFloat(minPurchase),
+                maxDiscount: parseFloat(maxDiscount),
+                expiryDate: new Date(expiryDate),
+                usageLimit: parseInt(usageLimit),
+                restrictToUser: userIdRestrict,
+                isActive: isActive === 'true',
+                createdBy,
+                createdByModel
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!coupon) {
+            req.session.message = 'Coupon not found';
+            req.session.type = 'error';
+            return res.redirect('/coupon-list');
+        }
+
+        req.session.message = 'Coupon updated successfully';
+        req.session.type = 'success';
+        res.redirect('/coupon-list');
+    } catch (error) {
+        console.error('Error updating coupon:', error);
+        req.session.message = 'Error updating coupon';
+        req.session.type = 'error';
+        res.redirect(`/edit-coupon/${req.params.couponId}`);
+    }
+};
+
+
+
+// Delete Coupon
+export const deleteCoupon = async (req, res) => {
+    try {
+
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+    
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+  
+
+        const { couponId } = req.params;
+        let query = { _id: couponId };
+     
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query.$or = [
+                { createdBy: userId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        } else {
+            const agentData = await agentModel.findById(userId);
+            if (!agentData || !agentData.admin) {
+                req.session.message = 'Agent or admin not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            const adminId = agentData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query.$or = [
+                { createdBy: adminId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        }
+
+        const coupon = await couponSchema.findOneAndDelete(query);
+        if (!coupon) {
+            req.session.message = 'Coupon not found or you do not have access';
+            req.session.type = 'error';
+            return res.redirect('/coupon-list');
+        }
+
+        req.session.message = 'Coupon deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/coupon-list');
+    } catch (error) {
+        console.error('Error deleting coupon:', error);
+        req.session.message = 'Error deleting coupon';
+        req.session.type = 'error';
+        res.redirect('/coupon-list');
+    }
+};
+
+
+
+// Render Coupon Details
+export const renderCouponDetails = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+
+        // Build query to ensure user has access to the coupon
+        let query = { _id: req.params.couponId };
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query.$or = [
+                { createdBy: userId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        } else {
+            const agentData = await agentModel.findById(userId);
+            if (!agentData || !agentData.admin) {
+                req.session.message = 'Agent or admin not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            const adminId = agentData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query.$or = [
+                { createdBy: adminId, createdByModel: 'Admin' },
+                { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+            ];
+        }
+
+        const coupon = await couponSchema.findOne(query)
+            .populate('usedBy.userId', 'firstName lastName email')
+            .populate('restrictToUser', 'firstName lastName email')
+            .lean();
+        if (!coupon) {
+            req.session.message = 'Coupon not found or you do not have access';
+            req.session.type = 'error';
+            return res.render('admin/layout/couponDetails', {
+                coupon: null,
+                user: userData,
+                isAdmin,
+                message: req.session.message,
+                type: req.session.type
+            });
+        }
+
+        res.render('admin/layout/couponDetails', {
+            coupon,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching coupon details:', error);
+        req.session.message = 'Error fetching coupon details';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
     }
 };

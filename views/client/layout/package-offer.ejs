@@ -215,6 +215,8 @@
         </main>
         <%- include('../partials/Footer.ejs') %>
     </div>
+    <%- include('../../shared/partials/toaster') %>
+
     <%- include('../partials/Script.ejs') %>
     
     <script>
@@ -237,6 +239,8 @@
                         const data = await response.json();
 
                         if (response.ok) {
+                            window.location.reload()
+
                             button.setAttribute('data-is-wishlisted', !isWishlisted);
                             button.innerHTML = isWishlisted 
                                 ? 'Wish List<i class="far fa-heart"></i>' 

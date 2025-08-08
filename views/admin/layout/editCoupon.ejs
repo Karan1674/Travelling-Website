@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+    <%- include('../partials/Header')%>
+<body>
+    <!-- start Container Wrapper -->
+    <div id="container-wrapper">
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar')%>
+            <%- include('../partials/Sidebar')%>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box">
+                            <h4>Edit Coupon</h4>
+                            <p>Update the details of the coupon. Fill in all required fields to ensure proper functionality.</p>
+                            <form class="form-horizontal" method="post" action="/edit-coupon/<%= coupon._id %>">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Coupon Code</label>
+                                            <input name="code" class="form-control" type="text" value="<%= coupon.code %>" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Discount Type</label>
+                                            <select name="discountType" class="form-control" required>
+                                                <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
+                                                <option value="fixed" <%= coupon.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Discount Value</label>
+                                            <input name="discountValue" class="form-control" type="number" min="0" step="0.01" value="<%= coupon.discountValue %>" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Minimum Purchase</label>
+                                            <input name="minPurchase" class="form-control" type="number" min="0" step="0.01" value="<%= coupon.minPurchase %>" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Maximum Discount</label>
+                                            <input name="maxDiscount" class="form-control" type="number" min="0" step="0.01" value="<%= coupon.maxDiscount %>" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Expiry Date</label>
+                                            <input name="expiryDate" class="form-control" type="date" value="<%= coupon.expiryDate.toISOString().split('T')[0] %>" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Usage Limit</label>
+                                            <input name="usageLimit" class="form-control" type="number" min="1" step="1" value="<%= coupon.usageLimit %>">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Restrict to User (Optional)</label>
+                                            <input name="restrictToUser" class="form-control" type="text" value="<%= coupon.restrictToUser ? coupon.restrictToUser.email : '' %>" placeholder="Enter User Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Active</label>
+                                            <select name="isActive" class="form-control">
+                                                <option value="true" <%= coupon.isActive ? 'selected' : '' %>>Yes</option>
+                                                <option value="false" <%= !coupon.isActive ? 'selected' : '' %>>No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                                <input type="submit" name="Submit" value="Update Coupon">
+                            </form>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+            <!-- Content / End -->
+            <!-- Copyrights -->
+            <%- include('../partials/Footer')%>
+        </div>
+        <!-- Dashboard / End -->
+    </div>
+    <!-- end Container Wrapper -->
+    <!-- *Scripts* -->
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+</body>
+</html>

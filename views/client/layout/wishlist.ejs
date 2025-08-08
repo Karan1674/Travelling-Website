@@ -132,6 +132,9 @@
         </main>
         <%- include('../partials/Footer.ejs') %>
     </div>
+
+    <%- include('../../shared/partials/toaster') %>
+
     <%- include('../partials/Script.ejs') %>
     <!-- Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -154,6 +157,7 @@
                         const data = await response.json();
 
                         if (response.ok) {
+                            window.location.reload()
                             button.closest('.col-lg-4').remove();
                             if (document.querySelectorAll('.package-wrap').length === 0) {
                                 document.querySelector('.package-inner .row').innerHTML = `
@@ -164,6 +168,7 @@
                                     </div>
                                 `;
                             }
+                   
                         } else {
                             alert('Failed to remove package from wishlist');
                         }

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+    <%- include('../partials/Header')%>
+<body>
+    <!-- start Container Wrapper -->
+    <div id="container-wrapper">
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar')%>
+            <%- include('../partials/Sidebar')%>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box">
+                            <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">Coupon Details</h4>
+                                <div>
+                                    <a href="/edit-coupon/<%= coupon._id %>" class="btn btn-primary" style="width: fit-content;" aria-label="Edit coupon">Edit Coupon</a>
+                                    <a href="/coupon-list" class="btn btn-secondary" style="width: fit-content;" aria-label="Back to coupon list">Back to List</a>
+                                </div>
+                            </div>
+                            <% if (!coupon) { %>
+                                <p>No coupon found or you do not have access.</p>
+                            <% } else { %>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p><strong>Coupon Code:</strong> <%= coupon.code %></p>
+                                        <p><strong>Discount Type:</strong> <%= coupon.discountType.charAt(0).toUpperCase() + coupon.discountType.slice(1) %></p>
+                                        <p><strong>Discount Value:</strong> <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '$' + coupon.discountValue.toFixed(2) %></p>
+                                        <p><strong>Minimum Purchase:</strong> $<%= coupon.minPurchase.toFixed(2) %></p>
+                                        <p><strong>Maximum Discount:</strong> <%= coupon.maxDiscount > 0 ? '$' + coupon.maxDiscount.toFixed(2) : 'No limit' %></p>
+                                        <p><strong>Expiry Date:</strong> <%= new Date(coupon.expiryDate).toLocaleDateString() %></p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p><strong>Usage Limit:</strong> <%= coupon.usageLimit %></p>
+                                        <p><strong>Used Count:</strong> <%= coupon.usedCount %></p>
+                                        <p><strong>Restricted to User:</strong> <%= coupon.restrictToUser ? `${coupon.restrictToUser.firstName} ${coupon.restrictToUser.lastName} (${coupon.restrictToUser.email})` : 'None' %></p>
+                                        <p><strong>Status:</strong> <span class="badge badge-<%= coupon.isActive ? 'success' : 'danger' %>"><%= coupon.isActive ? 'Active' : 'Inactive' %></span></p>
+                                        <p><strong>Created At:</strong> <%= new Date(coupon.createdAt).toLocaleString() %></p>
+                                        <p ><strong>Created By:</strong> <%= coupon.createdByModel === 'Admin' ? 'Admin' : 'Agent' %> (ID: <%= coupon.createdBy %>)
+                                        </p>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <h5>Used By</h5>
+                                        <% if (coupon.usedBy && coupon.usedBy.length > 0) { %>
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>User</th>
+                                                            <th>Email</th>
+                                                            <th>Used At</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% coupon.usedBy.forEach(entry => { %>
+                                                            <tr>
+                                                                <td><%= entry.userId.firstName %> <%= entry.userId.lastName %></td>
+                                                                <td><%= entry.userId.email %></td>
+                                                                <td><%= new Date(entry.usedAt).toLocaleString() %></td>
+                                                            </tr>
+                                                        <% }) %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <% } else { %>
+                                            <p>No users have used this coupon.</p>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Content / End -->
+            <!-- Copyrights -->
+            <%- include('../partials/Footer')%>
+        </div>
+        <!-- Dashboard / End -->
+    </div>
+    <!-- end Container Wrapper -->
+    <!-- *Scripts* -->
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+</body>
+</html>

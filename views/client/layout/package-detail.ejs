@@ -954,6 +954,7 @@
 
         <%- include('../partials/Footer') %>
     </div>
+    <%- include('../../shared/partials/toaster') %>
 
     <!-- JavaScript -->
     <%- include('../partials/Script') %>
@@ -1079,6 +1080,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    window.location.reload()
                     const messageEl = document.getElementById('review-message');
                     messageEl.textContent = data.message;
                     messageEl.classList.add(data.message.includes('successfully') ? 'success' : 'error');
@@ -1134,6 +1136,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        window.location.reload()
+
                         console.log('Successfully added');
                     } else {
                         console.log('Error adding package to cart: ' + data.message);
