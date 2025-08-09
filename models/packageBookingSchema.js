@@ -4,7 +4,8 @@ const bookingSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     items: [{
         packageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Package', required: true },
-        quantity: { type: Number, default: 1 }
+        quantity: { type: Number, default: 1, min: [1, 'Quantity must be at least 1'] },
+        price: { type: Number, required: true } // Store price at booking time
     }],
     userDetails: {
         firstname: { type: String, required: true },
@@ -31,6 +32,8 @@ const bookingSchema = new mongoose.Schema({
         required: true
     },
     total: { type: Number, required: true },
+    discount: { type: Number, default: 0 }, // Added discount field
+    couponCode: { type: String, default: null }, // Added coupon code field
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

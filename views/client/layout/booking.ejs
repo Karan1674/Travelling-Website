@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<%- include('../partials/Header')%>
+    <%- include('../partials/Header')%>
 <body>
     <div id="page" class="full-page">
         <%- include('../partials/Navbar')%>
@@ -38,12 +38,13 @@
                             <div class="booking-form-wrap">
                                 <form action="<%= isShow ? '/packageCart/confirm' : '/bookPackage/confirm' %>" method="POST" id="booking-form">
                                     <input type="hidden" name="client_secret" id="client-secret" value="">
+                                    <input type="hidden" name="appliedCouponCode" id="applied-coupon-code" value="">
                                     <% if (!isShow) { %>
                                         <input type="hidden" name="packageId" value="<%= cart && cart.items && cart.items[0] && cart.items[0].packageId && cart.items[0].packageId._id ? cart.items[0].packageId._id : '' %>">
                                         <input type="hidden" name="quantity" id="single-package-quantity" value="<%= cart && cart.items && cart.items[0] && cart.items[0].quantity ? cart.items[0].quantity : 1 %>">
                                     <% } else { %>
                                         <% cart.items.forEach((item, index) => { %>
-                                            <input type="hidden" name="items[<%= index %>][packageId]" value="<%= item.packageId._id %>">
+                                            <input type="hidden" name="items[<%= index %>][packageId]" value="<%= item.packageId && item.packageId._id ? item.packageId._id : '' %>">
                                             <input type="hidden" name="items[<%= index %>][quantity]" id="cart-item-quantity-<%= index %>" value="<%= item.quantity %>">
                                         <% }); %>
                                     <% } %>
@@ -131,7 +132,6 @@
                                                         <option value="US">United States</option>
                                                         <option value="CA">Canada</option>
                                                         <option value="GB">United Kingdom</option>
-                                                        <!-- Add more ISO 3166-1 alpha-2 codes as needed -->
                                                     </select>
                                                 </div>
                                             </div>
@@ -246,12 +246,32 @@
                                                 <td><strong>Tax (13%)</strong></td>
                                                 <td class="text-right">$<span id="tax"><%= tax.toFixed(2) %></span></td>
                                             </tr>
+                                            <tr>
+                                                <td><strong>Discount</strong></td>
+                                                <td class="text-right">$<span id="discount">0.00</span></td>
+                                            </tr>
                                             <tr class="total">
                                                 <td><strong>Total cost</strong></td>
                                                 <td class="text-right"><strong>$<span id="total"><%= total.toFixed(2) %></span></strong></td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="widget-bg widget-coupon-apply" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <h4 class="bg-title" style="margin-bottom: 15px;">Apply Coupon</h4>
+                                    <div class="input-group" style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="text" id="coupon-input" class="form-control" placeholder="Enter coupon code" style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                                        <button type="button" class="button-primary" id="apply-coupon-btn" style="padding: 10px 20px; font-size: 14px; border-radius: 4px; cursor: pointer;">
+                                            <span class="button-text text-white">Apply</span>
+                                        </button>
+                                        <button type="button" class="button-primary" id="remove-coupon-btn" style="padding: 10px 20px; font-size: 14px; border-radius: 4px; cursor: pointer; display: none; background-color: #dc3545;">
+                                            <span class="button-text text-white">Remove</span>
+                                        </button>
+                                    </div>
+                                    <p id="coupon-status" style="margin-top: 10px; color: green; font-weight: bold; display: none;"></p>
+                                    <p id="coupon-error" style="margin-top: 10px; color: red; font-weight: bold; display: none;"></p>
+                                    <a href="#" id="available-coupons-link" style="display: block; margin-top: 10px; color: #007bff; text-decoration: underline; font-size: 14px;">Available Coupons</a>
+                                    <input type="hidden" name="appliedCouponCode" id="applied-coupon-code" value="">
                                 </div>
                                 <div class="widget-bg widget-support-wrap">
                                     <div class="icon">
@@ -270,10 +290,8 @@
             </div>
         </main>
         <%- include('../partials/Footer')%>
-
     </div>
     <%- include('../../shared/partials/toaster') %>
-
     <%- include('../partials/Script')%>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
@@ -308,168 +326,495 @@
             padding: 2px 8px;
             font-size: 12px;
         }
+        #popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        #popup-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #available-coupons-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            width: 90%;
+        }
+        #available-coupons-popup.show {
+            opacity: 1;
+        }
+        #available-coupons-popup h5 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #available-coupons-popup ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #available-coupons-popup li {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        #available-coupons-popup li:hover {
+            background: #f1f1f1;
+        }
+        #available-coupons-popup .coupon-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        #available-coupons-popup .coupon-code {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #available-coupons-popup .coupon-code i {
+            color: #6c757d;
+        }
+        #available-coupons-popup .coupon-code span {
+            font-weight: bold;
+            color: #333;
+        }
+        #available-coupons-popup .coupon-save {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        #available-coupons-popup .apply {
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        #available-coupons-popup .apply:hover {
+            background: #0056b3;
+        }
+        #available-coupons-popup .close-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        #available-coupons-popup .close-icon:hover {
+            color: #333;
+        }
     </style>
     <script>
-        const stripe = Stripe('<%= stripeKey %>');
-        const elements = stripe.elements();
-        const cardElement = elements.create('card', {
-            style: {
-                base: {
-                    fontSize: '16px',
-                    color: '#32325d',
-                    '::placeholder': {
-                        color: '#aab7c4'
-                    }
-                }
-            }
-        });
-        cardElement.mount('#card-element');
-
-        const form = document.getElementById('booking-form');
-        const submitButton = document.getElementById('submit-button');
-        const buttonText = document.querySelector('.button-text');
-        const buttonLoading = document.querySelector('.button-loading');
-        const cardErrors = document.getElementById('card-errors');
-        const isShow = <%= isShow %>;
-
-        // Handle quantity changes
-        const updateSummary = () => {
-            let subtotal = 0;
-            document.querySelectorAll('.quantity').forEach((elem, index) => {
-                const quantity = parseInt(elem.textContent);
-                const row = elem.closest('tr');
-                const price = parseFloat(row.dataset.price);
-                const itemTotal = quantity * price;
-                subtotal += itemTotal;
-                document.getElementById(`item-total-${index}`).textContent = itemTotal.toFixed(2);
-                document.getElementById(`item-quantity-${index}`).textContent = quantity;
-                if (isShow) {
-                    document.getElementById(`cart-item-quantity-${index}`).value = quantity;
-                } else {
-                    document.getElementById('single-package-quantity').value = quantity;
-                }
-            });
-            const tax = subtotal * 0.13;
-            const total = subtotal + 34 + 34 + tax;
-            document.getElementById('tax').textContent = tax.toFixed(2);
-            document.getElementById('total').textContent = total.toFixed(2);
-        };
-
-        document.querySelectorAll('.increase-quantity').forEach(button => {
-            button.addEventListener('click', () => {
-                const index = button.dataset.index;
-                const quantityElem = document.getElementById(`quantity-${index}`);
-                let quantity = parseInt(quantityElem.textContent);
-                quantity += 1;
-                quantityElem.textContent = quantity;
-                updateSummary();
-            });
-        });
-
-        document.querySelectorAll('.decrease-quantity').forEach(button => {
-            button.addEventListener('click', () => {
-                const index = button.dataset.index;
-                const quantityElem = document.getElementById(`quantity-${index}`);
-                let quantity = parseInt(quantityElem.textContent);
-                if (quantity <= 1) return; // Prevent quantity < 1
-                quantity -= 1;
-                quantityElem.textContent = quantity;
-                updateSummary();
-            });
-        });
-
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            submitButton.disabled = true;
-            buttonText.style.display = 'none';
-            buttonLoading.style.display = 'inline-flex';
-            cardErrors.textContent = '';
-
-            // Validate email
-            const email = form.querySelector('input[name="email"]').value;
-            const confirmEmail = form.querySelector('input[name="confirm_email"]').value;
-            if (email !== confirmEmail) {
-                cardErrors.textContent = 'Emails do not match';
-                submitButton.disabled = false;
-                buttonText.style.display = 'inline';
-                buttonLoading.style.display = 'none';
-                return;
-            }
-
-            // Create payment intent
-            try {
-                console.log('Creating payment intent for email:', email);
-                const paymentIntentUrl = isShow ? '/packageCart/create-payment-intent' : '/bookPackage/create-payment-intent';
-                const requestBody = isShow ? {
-                    email,
-                    items: Array.from(document.querySelectorAll('.quantity')).map((elem, index) => ({
-                        packageId: document.querySelector(`input[name="items[${index}][packageId]"]`).value,
-                        quantity: parseInt(elem.textContent)
-                    }))
-                } : {
-                    email,
-                    packageId: form.querySelector('input[name="packageId"]').value,
-                    quantity: parseInt(form.querySelector('input[name="quantity"]').value)
-                };
-                console.log('Request body:', requestBody);
-                const response = await fetch(paymentIntentUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
-                const { clientSecret, error } = await response.json();
-
-                if (error) {
-                    console.error('Payment intent error:', error);
-                    cardErrors.textContent = error.message;
-                    submitButton.disabled = false;
-                    buttonText.style.display = 'inline';
-                    buttonLoading.style.display = 'none';
-                    return;
-                }
-                // Confirm card payment
-                console.log('Confirming payment with clientSecret:', clientSecret);
-                const result = await stripe.confirmCardPayment(clientSecret, {
-                    payment_method: {
-                        card: cardElement,
-                        billing_details: {
-                            name: form.querySelector('input[name="firstname_booking"]').value,
-                            email,
-                            phone: form.querySelector('input[name="phone"]').value,
-                            address: {
-                                line1: form.querySelector('input[name="street_1"]').value,
-                                line2: form.querySelector('input[name="street_2"]').value || '',
-                                city: form.querySelector('input[name="city"]').value,
-                                state: form.querySelector('input[name="state"]').value,
-                                postal_code: form.querySelector('input[name="postal_code"]').value || '',
-                                country: form.querySelector('select[name="country"]').value
-                            }
+        document.addEventListener('DOMContentLoaded', function () {
+            const stripe = Stripe('<%= stripeKey %>');
+            const elements = stripe.elements();
+            const cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#32325d',
+                        '::placeholder': {
+                            color: '#aab7c4'
                         }
                     }
+                }
+            });
+            cardElement.mount('#card-element');
+
+            const form = document.getElementById('booking-form');
+            const submitButton = document.getElementById('submit-button');
+            const buttonText = document.querySelector('.button-text');
+            const buttonLoading = document.querySelector('.button-loading');
+            const cardErrors = document.getElementById('card-errors');
+            const isShow = <%= isShow %>;
+
+            // Coupon state
+            let appliedCoupon = null;
+            let originalSubtotal = parseFloat(document.getElementById('total').textContent) - parseFloat(document.getElementById('tax').textContent) - 34 - 34;
+            let originalTax = parseFloat(document.getElementById('tax').textContent);
+            let originalTotal = parseFloat(document.getElementById('total').textContent);
+            let currentDiscount = 0;
+
+          
+
+            // Update summary and persist to server
+            const updateSummary = async () => {
+                originalSubtotal = 0;
+                const items = [];
+                document.querySelectorAll('.quantity').forEach((elem, index) => {
+                    const quantity = parseInt(elem.textContent);
+                    const row = elem.closest('tr');
+                    const price = parseFloat(row.dataset.price);
+                    const packageId = row.querySelector('.increase-quantity').dataset.packageId;
+                    const itemTotal = quantity * price;
+                    originalSubtotal += itemTotal;
+                    items.push({ packageId, quantity });
+                    document.getElementById(`item-total-${index}`).textContent = itemTotal.toFixed(2);
+                    document.getElementById(`item-quantity-${index}`).textContent = quantity;
+                    if (isShow) {
+                        document.getElementById(`cart-item-quantity-${index}`).value = quantity;
+                    } else {
+                        document.getElementById('single-package-quantity').value = quantity;
+                    }
                 });
 
-                if (result.error) {
-                    console.error('Card confirmation error:', result.error);
-                    cardErrors.textContent = result.error.message;
+                originalTax = originalSubtotal * 0.13;
+                originalTotal = originalSubtotal + 34 + 34 + originalTax;
+
+                // Reapply coupon if applied
+                if (appliedCoupon) {
+                    let discount = 0;
+                    if (appliedCoupon.discountType === 'percentage') {
+                        discount = originalSubtotal * (appliedCoupon.discountValue / 100);
+                        if (appliedCoupon.maxDiscount > 0) {
+                            discount = Math.min(discount, appliedCoupon.maxDiscount);
+                        }
+                    } else {
+                        discount = appliedCoupon.discountValue;
+                    }
+                    if (originalSubtotal >= appliedCoupon.minPurchase) {
+                        currentDiscount = discount;
+                        originalTax = (originalSubtotal - discount) * 0.13;
+                        originalTotal = originalSubtotal - discount + 34 + 34 + originalTax;
+                        document.getElementById('coupon-status').textContent = `Coupon applied! Discount: $${discount.toFixed(2)}`;
+                        document.getElementById('coupon-status').style.display = 'block';
+                        document.getElementById('coupon-error').style.display = 'none';
+                    } else {
+                        appliedCoupon = null;
+                        document.getElementById('applied-coupon-code').value = '';
+                        document.getElementById('coupon-input').value = '';
+                        document.getElementById('apply-coupon-btn').style.display = 'inline-block';
+                        document.getElementById('remove-coupon-btn').style.display = 'none';
+                        document.getElementById('coupon-status').style.display = 'none';
+                        document.getElementById('coupon-error').textContent = 'Minimum purchase requirement not met';
+                        document.getElementById('coupon-error').style.display = 'block';
+                        currentDiscount = 0;
+                    }
+                    document.getElementById('discount').textContent = currentDiscount.toFixed(2);
+                } else {
+                    document.getElementById('discount').textContent = '0.00';
+                }
+
+                document.getElementById('tax').textContent = originalTax.toFixed(2);
+                document.getElementById('total').textContent = originalTotal.toFixed(2);
+
+                // Persist quantity changes to server
+                if (isShow && items.length > 0) {
+                    try {
+                        const response = await fetch('/packageCart/update', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ items })
+                        });
+                        const data = await response.json();
+                        if (!data.success) {
+                       
+                        }
+                    } catch (error) {
+                        console.error('Error updating cart:', error);
+     
+                    }
+                }
+            };
+
+            // Quantity controls
+            document.querySelectorAll('.increase-quantity').forEach(button => {
+                button.addEventListener('click', () => {
+                    const index = button.dataset.index;
+                    const quantityElem = document.getElementById(`quantity-${index}`);
+                    let quantity = parseInt(quantityElem.textContent);
+                    quantity += 1;
+                    quantityElem.textContent = quantity;
+                    updateSummary();
+                });
+            });
+
+            document.querySelectorAll('.decrease-quantity').forEach(button => {
+                button.addEventListener('click', () => {
+                    const index = button.dataset.index;
+                    const quantityElem = document.getElementById(`quantity-${index}`);
+                    let quantity = parseInt(quantityElem.textContent);
+                    if (quantity <= 1) return;
+                    quantity -= 1;
+                    quantityElem.textContent = quantity;
+                    updateSummary();
+                });
+            });
+
+            // Form submission with Stripe
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                buttonLoading.style.display = 'inline-flex';
+                cardErrors.textContent = '';
+
+                const email = form.querySelector('input[name="email"]').value;
+                const confirmEmail = form.querySelector('input[name="confirm_email"]').value;
+                if (email !== confirmEmail) {
+                    cardErrors.textContent = 'Emails do not match';
                     submitButton.disabled = false;
                     buttonText.style.display = 'inline';
                     buttonLoading.style.display = 'none';
+                 
                     return;
                 }
 
-                // Set client_secret for form submission
-                document.getElementById('client-secret').value = clientSecret;
-                console.log('Submitting form with client_secret:', clientSecret);
+                try {
+                    const paymentIntentUrl = isShow ? '/packageCart/create-payment-intent' : '/bookPackage/create-payment-intent';
+                    const requestBody = isShow ? {
+                        email,
+                        items: Array.from(document.querySelectorAll('.quantity')).map((elem, index) => ({
+                            packageId: document.querySelector(`input[name="items[${index}][packageId]"]`).value,
+                            quantity: parseInt(elem.textContent)
+                        })),
+                        couponCode: document.getElementById('applied-coupon-code').value
+                    } : {
+                        email,
+                        packageId: form.querySelector('input[name="packageId"]').value,
+                        quantity: parseInt(form.querySelector('input[name="quantity"]').value),
+                        couponCode: document.getElementById('applied-coupon-code').value
+                    };
+                    console.log('Request body:', requestBody);
+                    const response = await fetch(paymentIntentUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+                    const { clientSecret, error } = await response.json();
 
-                // Submit form
-                form.submit();
-            } catch (error) {
-                console.error('Submission error:', error);
-                cardErrors.textContent = 'An error occurred. Please try again.';
-                submitButton.disabled = false;
-                buttonText.style.display = 'inline';
-                buttonLoading.style.display = 'none';
-            }
+                    if (error) {
+                        console.error('Payment intent error:', error);
+                        cardErrors.textContent = error.message;
+                        submitButton.disabled = false;
+                        buttonText.style.display = 'inline';
+                        buttonLoading.style.display = 'none';
+                  
+                        return;
+                    }
+
+                    const result = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: form.querySelector('input[name="firstname_booking"]').value,
+                                email,
+                                phone: form.querySelector('input[name="phone"]').value,
+                                address: {
+                                    line1: form.querySelector('input[name="street_1"]').value,
+                                    line2: form.querySelector('input[name="street_2"]').value || '',
+                                    city: form.querySelector('input[name="city"]').value,
+                                    state: form.querySelector('input[name="state"]').value,
+                                    postal_code: form.querySelector('input[name="postal_code"]').value || '',
+                                    country: form.querySelector('select[name="country"]').value
+                                }
+                            }
+                        }
+                    });
+
+                    if (result.error) {
+                        console.error('Card confirmation error:', result.error);
+                        cardErrors.textContent = result.error.message;
+                        submitButton.disabled = false;
+                        buttonText.style.display = 'inline';
+                        buttonLoading.style.display = 'none';
+                
+                        return;
+                    }
+
+                    document.getElementById('client-secret').value = clientSecret;
+                    console.log('Submitting form with client_secret:', clientSecret);
+                    form.submit();
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    cardErrors.textContent = 'An error occurred. Please try again.';
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonLoading.style.display = 'none';
+                 
+                }
+            });
+
+            // Coupon functionality
+            const applyCoupon = async (code) => {
+                try {
+                    const response = await fetch('/packageCart/applyCoupon', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ couponCode: code })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        let discount = 0;
+                        if (data.coupon.discountType === 'percentage') {
+                            discount = originalSubtotal * (data.coupon.discountValue / 100);
+                            if (data.coupon.maxDiscount > 0) {
+                                discount = Math.min(discount, data.coupon.maxDiscount);
+                            }
+                        } else {
+                            discount = data.coupon.discountValue;
+                        }
+                        if (originalSubtotal >= data.coupon.minPurchase) {
+                            appliedCoupon = data.coupon;
+                            currentDiscount = discount;
+                            document.getElementById('applied-coupon-code').value = code;
+                            document.getElementById('coupon-input').value = code;
+                            document.getElementById('apply-coupon-btn').style.display = 'none';
+                            document.getElementById('remove-coupon-btn').style.display = 'inline-block';
+                            document.getElementById('coupon-status').textContent = `Coupon applied! Discount: $${discount.toFixed(2)}`;
+                            document.getElementById('coupon-status').style.display = 'block';
+                            document.getElementById('coupon-error').style.display = 'none';
+                            document.getElementById('discount').textContent = discount.toFixed(2);
+                            originalTax = (originalSubtotal - discount) * 0.13;
+                            originalTotal = originalSubtotal - discount + 34 + 34 + originalTax;
+                            document.getElementById('tax').textContent = originalTax.toFixed(2);
+                            document.getElementById('total').textContent = originalTotal.toFixed(2);
+                        } else {
+                            document.getElementById('coupon-error').textContent = 'Minimum purchase requirement not met';
+                            document.getElementById('coupon-error').style.display = 'block';
+                            document.getElementById('coupon-status').style.display = 'none';
+                        }
+                    } else {
+                        document.getElementById('coupon-error').textContent = data.message || 'Invalid coupon';
+                        document.getElementById('coupon-error').style.display = 'block';
+                        document.getElementById('coupon-status').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error applying coupon:', error);
+                    document.getElementById('coupon-error').textContent = 'Failed to apply coupon. Please try again.';
+                    document.getElementById('coupon-error').style.display = 'block';
+                    document.getElementById('coupon-status').style.display = 'none';
+       
+                }
+            };
+
+            document.getElementById('apply-coupon-btn').addEventListener('click', () => {
+                const code = document.getElementById('coupon-input').value.trim();
+                if (code) {
+                    applyCoupon(code);
+                } else {
+                    document.getElementById('coupon-error').textContent = 'Please enter a coupon code';
+                    document.getElementById('coupon-error').style.display = 'block';
+                 
+                }
+            });
+
+            document.getElementById('remove-coupon-btn').addEventListener('click', () => {
+                appliedCoupon = null;
+                currentDiscount = 0;
+                document.getElementById('applied-coupon-code').value = '';
+                document.getElementById('coupon-input').value = '';
+                document.getElementById('apply-coupon-btn').style.display = 'inline-block';
+                document.getElementById('remove-coupon-btn').style.display = 'none';
+                document.getElementById('coupon-status').style.display = 'none';
+                document.getElementById('coupon-error').style.display = 'none';
+                document.getElementById('discount').textContent = '0.00';
+                originalTax = originalSubtotal * 0.13;
+                originalTotal = originalSubtotal + 34 + 34 + originalTax;
+                document.getElementById('tax').textContent = originalTax.toFixed(2);
+                document.getElementById('total').textContent = originalTotal.toFixed(2);
+        
+            });
+
+            document.getElementById('available-coupons-link').addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/available-coupons');
+                    const data = await response.json();
+                    if (data.success) {
+                        const overlay = document.createElement('div');
+                        overlay.id = 'popup-overlay';
+                        document.body.appendChild(overlay);
+
+                        const popup = document.createElement('div');
+                        popup.id = 'available-coupons-popup';
+                        popup.innerHTML = `
+                            <i class="fas fa-times close-icon" onclick="closePopup()"></i>
+                            <h5>Available Coupons</h5>
+                            <ul>
+                                ${data.coupons.map(coupon => `
+                                    <li>
+                                        <div class="coupon-details">
+                                            <div class="coupon-code">
+                                                <i class="fas fa-gift text-secondary"></i>
+                                                <span>${coupon.code}</span>
+                                            </div>
+                                            <span class="coupon-save">Save ${coupon.discountType === 'fixed' ? '$' : ''}${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''}</span>
+                                        </div>
+                                        <span id="${coupon._id}" class="apply" onclick="applyFromPopup('${coupon.code}')">Apply</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        `;
+                        document.body.appendChild(popup);
+
+                        setTimeout(() => {
+                            overlay.classList.add('show');
+                            popup.classList.add('show');
+                        }, 10);
+                    } else {
+                        document.getElementById('coupon-error').textContent = data.message || 'No available coupons';
+                        document.getElementById('coupon-error').style.display = 'block';
+      
+                    }
+                } catch (error) {
+                    console.error('Error fetching coupons:', error);
+                    document.getElementById('coupon-error').textContent = 'Failed to load coupons. Please try again.';
+                    document.getElementById('coupon-error').style.display = 'block';
+      
+                }
+            });
+
+            window.applyFromPopup = (code) => {
+                document.getElementById('coupon-input').value = code;
+                applyCoupon(code);
+                closePopup();
+            };
+
+            window.closePopup = () => {
+                const popup = document.getElementById('available-coupons-popup');
+                const overlay = document.getElementById('popup-overlay');
+                if (popup && overlay) {
+                    popup.classList.remove('show');
+                    overlay.classList.remove('show');
+                    setTimeout(() => {
+                        popup.remove();
+                        overlay.remove();
+                    }, 500);
+                }
+            };
         });
     </script>
 </body>

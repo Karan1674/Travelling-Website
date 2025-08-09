@@ -146,6 +146,14 @@
                                                 <td><strong>Tax (13%)</strong></td>
                                                 <td class="text-right">$<%= tax.toFixed(2) %></td>
                                             </tr>
+                                            <tr>
+                                                <td><strong>Discount</strong></td>
+                                                <td class="text-right">$<%= booking.discount %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Applied Coupon Code</strong></td>
+                                                <td class="text-right"><%= booking.couponCode %></td>
+                                            </tr>
                                             <tr class="total">
                                                 <td><strong>Total cost</strong></td>
                                                 <td class="text-right"><strong>$<%= booking && booking.total ? booking.total.toFixed(2) : '0.00' %></strong></td>

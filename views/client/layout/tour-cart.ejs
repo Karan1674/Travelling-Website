@@ -75,11 +75,11 @@
                                 </table>
                             </div>
                             <div class="updateArea">
-                                <div class="input-group">
+                                <!-- <div class="input-group">
                                     <input type="text" class="form-control" placeholder="I have a discount coupon">
                                     <a href="#" class="outline-primary">apply coupon</a>
                                 </div>
-                                <a href="#" class="outline-primary update-btn" id="update-cart">update cart</a>
+                                <a href="#" class="outline-primary update-btn" id="update-cart">update cart</a> -->
                             </div>
                             <div class="totalAmountArea">
                                 <ul class="list-unstyled">
@@ -157,7 +157,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.reload()
+                        // window.location.reload()
                         updateTotals();
                     } else {
                         console.log('Error updating cart: ' + data.message);
@@ -207,13 +207,7 @@
                 });
             });
 
-            // Disable Update Cart button
-            const updateCartButton = document.getElementById('update-cart');
-            if (updateCartButton) {
-                updateCartButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                });
-            }
+  
         }
     </script>
 </body>

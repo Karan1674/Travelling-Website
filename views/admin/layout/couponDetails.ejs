@@ -40,8 +40,29 @@
                                         <p ><strong>Created By:</strong> <%= coupon.createdByModel === 'Admin' ? 'Admin' : 'Agent' %> (ID: <%= coupon.createdBy %>)
                                         </p>
                                     </div>
+                
+                                </div>
+                            <% } %>
+                        </div>
+
+                        
+                    </div>
+                    
+                </div>
+
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box">
+                            <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">Used By</h4>
+                            </div>
+                            <% if (!coupon) { %>
+                                <p>No coupon found or you do not have access.</p>
+                            <% } else { %>
+                                <div class="row">
+
                                     <div class="col-sm-12">
-                                        <h5>Used By</h5>
                                         <% if (coupon.usedBy && coupon.usedBy.length > 0) { %>
                                             <div class="table-responsive">
                                                 <table class="table">
@@ -70,7 +91,10 @@
                                 </div>
                             <% } %>
                         </div>
+
+                        
                     </div>
+                    
                 </div>
             </div>
             <!-- Content / End -->

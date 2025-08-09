@@ -492,40 +492,27 @@
                                             <div class="itinerary-content">
                                                 <h3>Itinerary Overview <span>( <%= package.tripDuration?.days || 4 %> days )</span></h3>
                                                 <p>
-                                                    <%= package.itineraryDescription || 'Dolores maiores dicta dolore. Natoque placeat libero sunt sagittis debitis? Egestas non non qui quos, semper aperiam lacinia eum nam! Pede beatae. Soluta, convallis irure accusamus voluptatum ornare saepe cupidatat.' %>
+                                                    <%= package.programDescription || 'Dolores maiores dicta dolore. Natoque placeat libero sunt sagittis debitis? Egestas non non qui quos, semper aperiam lacinia eum nam! Pede beatae. Soluta, convallis irure accusamus voluptatum ornare saepe cupidatat.' %>
                                                 </p>
                                             </div>
                                             <div class="itinerary-timeline-wrap">
-                                                <ul>
+                                                <% if (package.programDays && package.programDays.length > 0) { %>
+
+                                                    <ul>
+                                                    <% package.programDays.forEach((day, index) => { %>
                                                     <li>
                                                         <div class="timeline-content">
-                                                            <div class="day-count">Day <span>1</span></div>
-                                                            <h4>Ancient Rome Visit</h4>
-                                                            <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
+                                                            <div class="day-count">Day <span><%= day.day%></span></div>
+                                                            <h4><%= day.title%></h4>
+                                                            <p><%= day.description%></p>
                                                         </div>
                                                     </li>
-                                                    <li>
-                                                        <div class="timeline-content">
-                                                            <div class="day-count">Day <span>2</span></div>
-                                                            <h4>Classic Rome Sightseeing</h4>
-                                                            <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div class="timeline-content">
-                                                            <div class="day-count">Day <span>3</span></div>
-                                                            <h4>Vatican City Visit</h4>
-                                                            <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div class="timeline-content">
-                                                            <div class="day-count">Day <span>4</span></div>
-                                                            <h4>Italian Food Tour</h4>
-                                                            <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                        </div>
-                                                    </li>
+                                                    <% }) %>
                                                 </ul>
+                                    
+                                            <% } else { %>
+                                            <p class="text-muted">No Programs scheduled for the day.</p>
+                                            <% } %>
                                             </div>
                                         </div>
                                         <!-- Detailed Itinerary Tab -->
