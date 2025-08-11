@@ -1,7 +1,7 @@
 const express = require('express');
-const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon } = require('../controller/clientController');
+const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers } = require('../controller/clientController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
-const { uploadProfilePic } = require('../middleware/multer');
+const { uploadProfilePic, uploadCareerCv } = require('../middleware/multer');
 
 const router = express.Router();
 
@@ -47,5 +47,13 @@ router.get('/services',isAuthenticated, getServicePage);
 
 router.get('/available-coupons', isAuthenticated, getAvailableCoupons);
 router.post('/packageCart/applyCoupon', isAuthenticated, applyCoupon);
+
+
+router.get('/careers', isAuthenticated, getCareers);
+router.get('/careers/:id',  isAuthenticated, getCareerById);
+router.post('/careers/apply', isAuthenticated, uploadCareerCv.single('cv'), applyForCareer);
+router.post('/careers/:id/apply', isAuthenticated, uploadCareerCv.single('cv'), applyForCareer);
+
+router.get('/applied-careers', isAuthenticated, getAppliedCareers);
 
 module.exports = router;

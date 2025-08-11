@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h4 style="margin: 0; color: #333;">Add Career</h4>
+                                <a href="/career-list" class="btn btn-secondary" style="transition: background 0.3s;" aria-label="Back to career list">Back to List</a>
+                            </div>
+                            <form action="/add-career" method="POST" enctype="multipart/form-data">
+                                <div class="row">
+                                    <!-- Simple Input Fields -->
+                                    <div class="col-md-12">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Title*</label>
+                                                    <input type="text" name="title" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Employment Type*</label>
+                                                    <select name="employmentType" class="form-control" required>
+                                                        <option value="Full Time">Full Time</option>
+                                                        <option value="Part Time">Part Time</option>
+                                                        <option value="Full Time / Part Time">Full Time / Part Time</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Short Description*</label>
+                                                    <input type="text" name="shortDescription" class="form-control" maxlength="200" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Vacancies*</label>
+                                                    <input type="number" name="vacancies" class="form-control" min="1" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Salary*</label>
+                                                    <input type="text" name="salary" value="Negotiable" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Image*</label>
+                                                    <input type="file" name="careerPic" id="imageInput" style="height: 100%;" accept="image/*" class="form-control" required>
+                                                </div>
+                                            </div>
+                                           
+                                        </div>
+                                    </div>
+                                    <!-- Jodit Editor Fields -->
+                                    <div class="col-md-12">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Description*</label>
+                                                    <textarea name="description" id="description" class="form-control" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Overview*</label>
+                                                    <textarea name="overview" id="overview" class="form-control" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Experience*</label>
+                                                    <textarea name="experience" id="experience" class="form-control" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Requirements*</label>
+                                                    <textarea name="requirements" id="requirements" class="form-control" required></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Active</label>
+                                            <select name="isActive" class="form-control">
+                                                <option value="true">Yes</option>
+                                                <option value="false">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">Add Career</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <!-- Include Jodit Editor CSS and JS from CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.js"></script>
+    <script>
+        // Initialize Jodit Editor for description, overview, experience, and requirements
+        document.addEventListener('DOMContentLoaded', () => {
+            const fields = ['description', 'overview', 'experience', 'requirements'];
+            fields.forEach(field => {
+                Jodit.make(`#${field}`, {
+                    height: 300,
+                    toolbarAdaptive: false,
+                    buttons: [
+                        'bold', 'italic', 'underline', '|',
+                        'ul', 'ol', '|',
+                        'font', 'fontsize', 'paragraph', '|',
+                        'left', 'center', 'right', 'justify', '|',
+                        'undo', 'redo', '|',
+                        'link', 'hr', 
+                    ],
+                    placeholder: `Enter ${field.charAt(0).toUpperCase() + field.slice(1)}...`,
+                    removeButtons: ['image', 'video', 'file', 'source'],
+                    uploader: { insertImageAsBase64URI: true },
+                    beautyHTML: true,
+                    cleanHTML: {
+                        removeEmptyElements: true,
+                        fillEmptyParagraph: false
+                    }
+                });
+            });
+
+        });
+    </script>
+    <style>
+     
+      
+    </style>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+</body>
+</html>

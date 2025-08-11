@@ -12,6 +12,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 import Stripe from 'stripe';
 import reviewSchema from '../models/reviewSchema.js';
 import couponSchema from '../models/couponSchema.js';
+import CareerSchema from '../models/CareerSchema.js';
+import ApplicationSchema from '../models/ApplicationSchema.js';
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const AdminDashboard = async (req, res) => {
@@ -1646,22 +1648,47 @@ export const getBookings = async (req, res) => {
             ].filter(condition => condition !== null);
         }
 
+        // Determine package IDs based on user role
+        let packageIds = [];
         if (isAdmin) {
-            const adminPackageIds = await packageModel.find({ adminId: userId }).distinct('_id');
-            if (adminPackageIds.length > 0) {
-                searchQuery['items.packageId'] = { $in: adminPackageIds };
-            } else {
-                searchQuery['items.packageId'] = { $in: [] };
-            }
+            // Admin sees their own packages and their agents' packages
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            packageIds = await packageModel.find({
+
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            }).distinct('_id');
         } else {
-            const agentPackageIds = await packageModel.find({ adminId: userData.admin }).distinct('_id');
-            if (agentPackageIds.length > 0) {
-                searchQuery['items.packageId'] = { $in: agentPackageIds };
-            } else {
-                searchQuery['items.packageId'] = { $in: [] };
-            }
+            // Agent sees their own packages and their admin's packages
+            const adminId = userData.admin; // Assuming agentModel has admin field
+            packageIds = await packageModel.find({
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: adminId, createdByModel: 'Admin' }
+                ]
+            }).distinct('_id');
         }
 
+        // Only add packageId filter if packages exist
+        if (packageIds.length > 0) {
+            searchQuery['items.packageId'] = { $in: packageIds };
+        } else if (!search) {
+            // If no packages and no search term, return no bookings
+            return res.render('admin/layout/db-booking', {
+                bookings: [],
+                currentPage: 1,
+                totalPages: 1,
+                user: userData,
+                isAdmin,
+                search,
+                message: 'No packages found for this user',
+                type: 'info'
+            });
+        }
+
+  
         const bookings = await packageBookingSchema.find(searchQuery)
             .populate('userId', 'firstName lastName email')
             .populate('items.packageId', 'title')
@@ -2366,8 +2393,8 @@ export const updateCoupon = async (req, res) => {
                 usageLimit: parseInt(usageLimit),
                 restrictToUser: userIdRestrict,
                 isActive: isActive === 'true',
-                createdBy,
-                createdByModel
+                // createdBy,
+                // createdByModel
             },
             { new: true, runValidators: true }
         );
@@ -2528,6 +2555,623 @@ export const renderCouponDetails = async (req, res) => {
     } catch (error) {
         console.error('Error fetching coupon details:', error);
         req.session.message = 'Error fetching coupon details';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+
+
+// Get career list for admin/agent
+export const getCareerList = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { page = 1, search = '' } = req.query;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        let query = {};
+        if (search) {
+            query.title = { $regex: search, $options: 'i' };
+        }
+
+        const careers = await CareerSchema.find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const totalCareers = await CareerSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalCareers / limit) || 1;
+
+        res.render('admin/layout/careerList', {
+            allCareers: careers,
+            search,
+            currentPage: parseInt(page),
+            totalPages,
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching career list:', error);
+        req.session.message = 'Error fetching career list';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+// Get add career page for admin/agent
+export const getAddCareerPage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('admin/layout/addCareer', {
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error rendering add career page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error rendering add career page';
+        req.session.type = 'error';
+        res.status(500).redirect('/loginPage');
+    }
+};
+
+
+export const addCareer = async (req, res) => {
+        try {
+            const userId = req.id;
+         
+            req.session = req.session || {};
+
+            if (!userId) {
+                req.session.message = 'Unauthorized: Admin or Agent access required';
+                req.session.type = 'error';
+                return res.redirect('/add-career');
+            }
+
+            const isAdmin = req.isAdmin;
+            let userData = await adminModel.findById(userId);
+            let createdBy, createdByModel;
+            if (isAdmin) {
+                createdBy = userId;
+                createdByModel = 'Admin';
+            } else {
+                userData = await agentModel.findById(userId);
+                if (!userData) {
+                    req.session.message = 'User not found';
+                    req.session.type = 'error';
+                    return res.redirect('/');
+                }
+                createdBy = userId;
+                createdByModel = 'Agent';
+            }
+    
+
+            const {
+                title, employmentType, shortDescription, description,
+                overview, experience, requirements, vacancies, salary,isActive
+            } = req.body;
+
+            if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
+                req.session.message = 'All fields are required';
+                req.session.type = 'error';
+                return res.redirect('/add-career');
+            }
+
+            if (!req.file) {
+                req.session.message = 'Image is required';
+                req.session.type = 'error';
+                return res.redirect('/add-career');
+            }
+
+            const newCareer = new CareerSchema({
+                title,
+                employmentType,
+                shortDescription,
+                description,
+                overview,
+                experience,
+                isActive,
+                requirements,
+                vacancies: parseInt(vacancies),
+                salary,
+                image: req.file.filename,
+                createdBy: createdBy,
+                createdByModel: createdByModel
+            });
+
+            await newCareer.save();
+            req.session.message = 'Career added successfully';
+            req.session.type = 'success';
+            res.redirect('/career-list');
+        } catch (error) {
+            console.error('Error adding career:', error);
+            req.session.message = 'Server error adding career';
+            req.session.type = 'error';
+            res.redirect('/add-career');
+        }
+}
+
+
+// Get edit career page for admin/agent
+export const getEditCareerPage = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const career = await CareerSchema.findById(req.params.id);
+        if (!career) {
+            req.session.message = 'Career not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+        res.render('admin/layout/editCareer', {
+            career,
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error rendering edit career page:', error);
+        req.session.message = 'Server error rendering edit career page';
+        req.session.type = 'error';
+        res.status(500).redirect('/career-list');
+    }
+};
+
+// Edit career
+export const editCareer =async (req, res) => {
+        try {
+            const userId = req.id;
+            req.session = req.session || {};
+
+            if (!userId) {
+                req.session.message = 'Unauthorized: Admin or Agent access required';
+                req.session.type = 'error';
+                return res.redirect('/edit-career/' + req.params.id);
+            }
+
+            const career = await CareerSchema.findById(req.params.id);
+            if (!career) {
+                req.session.message = 'Career not found';
+                req.session.type = 'error';
+                return res.redirect('/career-list');
+            }
+
+            const {
+                title, employmentType, shortDescription, description,
+                overview, experience, requirements, vacancies, salary,isActive
+            } = req.body;
+
+            if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
+                req.session.message = 'All fields are required';
+                req.session.type = 'error';
+                return res.redirect('/edit-career/' + req.params.id);
+            }
+
+            career.title = title;
+            career.employmentType = employmentType;
+            career.shortDescription = shortDescription;
+            career.description = description;
+            career.overview = overview;
+            career.experience = experience;
+            career.requirements = requirements;
+            career.vacancies = parseInt(vacancies);
+            career.salary = salary;
+            career.isActive= isActive
+
+
+            if (req.file) {
+                // Delete old image if exists
+                if (career.image) {
+                    try {
+                    const oldImagePath = join(__dirname, '/Uploads/career');
+                    await fs.unlink(join(oldImagePath, career.image));
+                    console.log('Deleted old career picture:', career.image);
+
+                } catch (err) {
+                    if (err.code !== 'ENOENT') {
+                        console.error('Error deleting career picture:', err);
+                    }
+                }
+                }
+                career.image = req.file.path;
+            }
+
+            await career.save();
+            req.session.message = 'Career updated successfully';
+            req.session.type = 'success';
+            res.redirect('/career-list');
+        } catch (error) {
+            console.error('Error editing career:', error);
+            req.session.message = 'Server error editing career';
+            req.session.type = 'error';
+            res.redirect('/edit-career/' + req.params.id);
+        }
+}
+
+
+
+
+// Get career detail for admin/agent
+export const getCareerDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const career = await CareerSchema.findById(req.params.id).populate({
+            path: 'createdBy',
+            select: 'firstName lastName email',
+            model: req.createdByModel // Dynamically resolved
+        });
+
+        if (!career) {
+            req.session.message = 'Career not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+        // Fetch applications for this career
+        const applications = await ApplicationSchema.find({ careerId: req.params.id }).populate({
+            path: 'userId',
+            select: 'firstName lastName email',
+            model: 'User'
+        }).sort({ createdAt: -1 });
+
+        res.render('admin/layout/careerDetail', {
+            career,
+            applications, // Pass applications to the view
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching career detail:', error);
+        req.session.message = 'Error fetching career detail';
+        req.session.type = 'error';
+        res.status(500).redirect('/career-list');
+    }
+};
+
+
+
+export const deleteCareer = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+        const career = await CareerSchema.findById(req.params.id);
+        if (!career) {
+            req.session.message = 'Career not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+
+        if (career.image) {
+            console.log("ghj")
+            try {
+            const oldImagePath = join(__dirname, '../Uploads/career');
+            await fs.unlink(join(oldImagePath, career.image));
+            console.log('Deleted old career picture:', career.image);
+
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                console.error('Error deleting career picture:', err);
+            }
+        }
+    }
+
+
+        await CareerSchema.deleteOne({ _id: career._id });
+
+        req.session.message = 'Career deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/career-list');
+    } catch (error) {
+        console.error('Error deleting career:', error);
+        req.session.message = 'Server error deleting career';
+        req.session.type = 'error';
+        res.redirect('/career-list');
+    }
+};
+
+// Get application detail for admin/agent
+export const getApplicationDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+const isAdmin= req.isAdmin
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/login');
+        }
+        
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const application = await ApplicationSchema.findById(req.params.id)
+            .populate({
+                path: 'userId',
+                select: 'firstName lastName email'
+            })
+            .populate({
+                path: 'careerId',
+                select: 'title'
+            });
+
+        if (!application) {
+            req.session.message = 'Application not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+
+        res.render('admin/layout/application-detail', {
+            application,
+            isAdmin,
+            user:userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+      
+    } catch (error) {
+        console.error('Error fetching application detail:', error);
+        req.session.message = 'Server error fetching application detail';
+        req.session.type = 'error';
+        res.redirect('/career-list');
+    }
+};
+
+// Update application status
+export const updateApplicationStatus = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/application-detail/' + req.params.id);
+        }
+
+        
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { status } = req.body;
+        if (!['pending', 'accepted', 'rejected'].includes(status)) {
+            req.session.message = 'Invalid status';
+            req.session.type = 'error';
+            return res.redirect('/application-detail/' + req.params.id);
+        }
+
+        const application = await ApplicationSchema.findById(req.params.id);
+        if (!application) {
+            req.session.message = 'Application not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+        application.status = status;
+        await application.save();
+
+        req.session.message = 'Application status updated successfully';
+        req.session.type = 'success';
+        res.redirect('/application-detail/' + req.params.id);
+    } catch (error) {
+        console.error('Error updating application status:', error);
+        req.session.message = 'Server error updating application status';
+        req.session.type = 'error';
+        res.redirect('/application-detail/' + req.params.id);
+    }
+};
+
+
+
+// Get application list for admin/agent
+export const getApplicationList = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { page = 1, search = '' } = req.query;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        // Determine which careers the user can access
+        let careerQuery = {};
+        if (isAdmin) {
+            // Admins see applications for careers they created or their agents created
+            const agents = await agentModel.find({ admin: userId }).select('_id');
+            const agentIds = agents.map(agent => agent._id);
+            careerQuery = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            // Agents see applications for careers they created or their admin created
+            careerQuery = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        // Get career IDs that match the query
+        const accessibleCareers = await CareerSchema.find(careerQuery).select('_id');
+        const careerIds = accessibleCareers.map(career => career._id);
+
+        // Build application query
+        let applicationQuery = { careerId: { $in: careerIds } };
+        if (search) {
+            applicationQuery.$or = [
+                { 'userId.firstName': { $regex: search, $options: 'i' } },
+                { 'userId.lastName': { $regex: search, $options: 'i' } },
+                { 'careerId.title': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Fetch applications
+        const applications = await ApplicationSchema.find(applicationQuery)
+            .populate({
+                path: 'userId',
+                select: 'firstName lastName email'
+            })
+            .populate({
+                path: 'careerId',
+                select: 'title'
+            })
+            .skip(skip)
+            .limit(limit)
+            .sort({ appliedAt: -1 })
+            .lean();
+
+        const totalApplications = await ApplicationSchema.countDocuments(applicationQuery);
+        const totalPages = Math.ceil(totalApplications / limit) || 1;
+
+        res.render('admin/layout/applicationList', {
+            allApplications: applications,
+            search,
+            currentPage: parseInt(page),
+            totalPages,
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching application list:', error);
+        req.session.message = 'Error fetching application list';
         req.session.type = 'error';
         res.status(500).redirect('/loginPage');
     }

@@ -13,6 +13,8 @@ import mongoose from 'mongoose';
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import CareerSchema from '../models/CareerSchema.js';
+import ApplicationSchema from '../models/ApplicationSchema.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -2188,6 +2190,259 @@ export const getServicePage = async (req, res) => {
             error: 'Server error while loading the Service page',
             message: req.session.message,
             type: req.session.type
+        });
+    }
+};
+
+
+// Get all active careers for Career page
+export const getCareers = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.status(401).render('client/layout/services', {
+                user: null,
+                message: req.session.message,
+                type: req.session.type
+            });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.render('client/layout/services', {
+                user: null,
+                message: req.session.message,
+                type: req.session.type
+            });
+        }
+        
+        const careers = await CareerSchema.find({ isActive: true });
+        res.render('client/layout/career', { 
+            careers, 
+            user,
+            message: req.session?.message,
+            type: req.session?.type
+        });
+
+    } catch (error) {
+        console.error('Error fetching careers:', error);
+        req.session.message = 'Server error fetching careers';
+        req.session.type = 'error';
+        res.status(500).render('client/layout/error', { error: 'Server error' });
+    }
+};
+
+
+export const getCareerById = async (req, res) => {
+    try {
+
+
+        const userId = req.id;
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.status(401).render('client/layout/services', {
+                user: null,
+                message: req.session.message,
+                type: req.session.type
+            });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.render('client/layout/services', {
+                user: null,
+                message: req.session.message,
+                type: req.session.type
+            });
+        } 
+
+        const career = await CareerSchema.findById(req.params.id).populate({
+            path: 'createdBy',
+            select: 'firstName lastName email',
+        });
+        if (!career || !career.isActive) {
+            req.session.message = 'Career not found or inactive';
+            req.session.type = 'error';
+            return res.redirect('/careers');
+        }
+
+        const application = await ApplicationSchema.findOne({ 
+            careerId: req.params.id, 
+            userId
+        }) ;
+
+        res.render('client/layout/career-detail', { 
+            career, 
+            application,
+            user, 
+            message: req.session?.message,
+            type: req.session?.type
+        });
+
+    } catch (error) {
+        console.error('Error fetching career:', error);
+        req.session.message = 'Server error fetching career';
+        req.session.type = 'error';
+        res.status(500).render('client/layout/error', { error: 'Server error' });
+    }
+};
+
+
+
+// Submit application for a career
+export const applyForCareer = async (req, res) => {
+        try {
+            const userId = req.id; 
+            if (!userId) {
+                req.session.message = 'Please log in to apply';
+                req.session.type = 'error';
+                return res.redirect('/careers');
+            }
+
+            const user = await userModel.findById(userId);
+            if (!user) {
+                req.session = req.session || {};
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/')
+            }
+
+
+            const { careerId } = req.body;
+            const career = await CareerSchema.findById(careerId || req.params.id);
+            if (!career || !career.isActive) {
+                req.session.message = 'Career not found or inactive';
+                req.session.type = 'error';
+                return res.redirect('/careers');
+            }
+
+            if (!req.file) {
+                req.session.message = 'CV is required';
+                req.session.type = 'error';
+                return res.redirect(`/careers/${career._id}`);
+            }
+
+            // Check for duplicate application
+            const existingApplication = await ApplicationSchema.findOne({ careerId: career._id, userId });
+            if (existingApplication) {
+                req.session.message = 'You have already applied for this career';
+                req.session.type = 'error';
+                return res.redirect(`/careers/${career._id}`);
+            }
+
+            // Create application
+            await ApplicationSchema.create({
+                careerId: career._id,
+                userId,
+                cvFileName: req.file.filename,
+                status: 'pending'
+            });
+
+            req.session.message = 'Application submitted successfully';
+            req.session.type = 'success';
+            res.redirect(`/careers/${career._id}`);
+        } catch (error) {
+            console.error('Error applying for career:', error);
+            req.session.message = 'Error submitting application';
+            req.session.type = 'error';
+            res.redirect('/careers');
+        }
+}
+
+
+
+
+export const getAppliedCareers = async (req, res) => {
+    try {
+        const userId = req.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const search = req.query.search || '';
+
+        // Validate user
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        // Build search query for applications
+        const searchQuery = {
+            userId,
+            $or: [
+                { status: { $regex: search, $options: 'i' } },
+                { 'careerId.title': { $regex: search, $options: 'i' } }
+            ]
+        };
+
+        // Fetch applications with populated career data
+        const applications = await ApplicationSchema.find({ userId })
+            .populate({
+                path: 'careerId',
+                match: { 
+                    title: { $regex: search, $options: 'i' },
+                    isActive: true // Only include active careers
+                },
+                select: 'title employmentType shortDescription salary'
+            })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        // Filter out applications where careerId didn't match the populate criteria
+        const filteredApplications = applications.filter(app => app.careerId);
+
+        // Count total matching applications
+        const totalApplications = await ApplicationSchema.find({ userId })
+            .populate({
+                path: 'careerId',
+                match: { 
+                    title: { $regex: search, $options: 'i' },
+                    isActive: true
+                },
+                select: 'title'
+            })
+            .then(apps => apps.filter(app => app.careerId).length);
+
+        const totalPages = Math.ceil(totalApplications / limit);
+
+        res.render('client/layout/applied-careers', {
+            applications: filteredApplications,
+            currentPage: page,
+            totalPages,
+            user,
+            limit,
+            search,     
+            message: req.session?.message,
+            type: req.session?.type
+        });
+    } catch (error) {
+        console.error('Error fetching applied careers:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading applications';
+        req.session.type = 'error';
+        res.render('client/layout/applied-careers', {
+            applications: [],
+            currentPage: 1,
+            totalPages: 1,
+            user: null,
+            limit: 10,
+            search: '',
+            message: req.session?.message,
+            type: req.session?.type
         });
     }
 };

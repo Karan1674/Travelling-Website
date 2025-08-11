@@ -1,168 +1,186 @@
 <!doctype html>
 <html lang="en">
     <%- include('../partials/Header')%>  
-
-   <body>
-    <%- include('../partials/Loader')%>  
-
-      <div id="page" class="full-page">
-        <%- include('../partials/Navbar')%>  
-
-         <main id="content" class="site-main">
-            <!-- Inner Banner html start-->
-            <section class="inner-banner-wrap">
-               <div class="inner-baner-container" style="background-image: url(assets/images/inner-banner.jpg);">
-                  <div class="container">
-                     <div class="inner-banner-content">
-                        <h1 class="inner-title">Career</h1>
-                     </div>
-                  </div>
-               </div>
-               <div class="inner-shape"></div>
-            </section>
-            <!-- Inner Banner html end-->
-            <div class="carrer-page-section">
-               <div class="container">
-                  <div class="vacancy-section">
-                     <div class="section-heading text-center">
-                        <div class="row">
-                           <div class="col-lg-8 offset-lg-2">
-                              <h5 class="dash-style">VACANCY / CAREERS</h5>
-                              <h2>LET'S JOIN WITH US!</h2>
-                              <p>Mollit voluptatem perspiciatis convallis elementum corporis quo veritatis aliquid blandit, blandit torquent, odit placeat. Adipiscing repudiandae eius cursus? Nostrum magnis maxime curae placeat.</p>
-                           </div>
+    <body>
+        <%- include('../partials/Loader')%>  
+        <div id="page" class="full-page">
+            <%- include('../partials/Navbar')%>  
+            <main id="content" class="site-main">
+                <!-- Inner Banner html start-->
+                <section class="inner-banner-wrap">
+                    <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                        <div class="container">
+                            <div class="inner-banner-content">
+                                <h1 class="inner-title">Career</h1>
+                            </div>
                         </div>
-                     </div>
-                     <div class="vacancy-container">
-                        <div class="row">
-                           <div class="col-lg-7">
-                              <div class="vacancy-content-wrap">
-                                 <div class="row">
-                                    <div class="col-md-6">
-                                       <div class="vacancy-content">
-                                          <h5>Full Time / Part Time</h5>
-                                          <h3>Travel Agent</h3>
-                                          <p>Magna voluptatum dolorem! Dolores! Sociosqu commodo nobis imperdiet lacinia? Magni! Felis, elementum nobis.</p>
-                                          <a href="#" class="button-primary">APPLY NOW</a>
-                                       </div>
+                    </div>
+                    <div class="inner-shape"></div>
+                </section>
+                <!-- Inner Banner html end-->
+                <div class="carrer-page-section">
+                    <div class="container">
+                        <div class="vacancy-section">
+                            <div class="section-heading text-center">
+                                <div class="row">
+                                    <div class="col-lg-8 offset-lg-2">
+                                        <h5 class="dash-style">VACANCY / CAREERS</h5>
+                                        <h2>LET'S JOIN WITH US!</h2>
+                                        <p>Mollit voluptatem perspiciatis convallis elementum corporis quo veritatis aliquid blandit, blandit torquent, odit placeat. Adipiscing repudiandae eius cursus? Nostrum magnis maxime curae placeat.</p>
                                     </div>
-                                    <div class="col-md-6">
-                                       <div class="vacancy-content">
-                                          <h5>Full Time</h5>
-                                          <h3>Front Desk</h3>
-                                          <p>Magna voluptatum dolorem! Dolores! Sociosqu commodo nobis imperdiet lacinia? Magni! Felis, elementum nobis.</p>
-                                          <a href="#" class="button-primary">APPLY NOW</a>
-                                       </div>
+                                </div>
+                            </div>
+                            <div class="vacancy-container">
+                                <div class="row">
+                                    <div class="col-lg-7">
+                                        <div class="vacancy-content-wrap">
+                                            <div class="row">
+                                                <% careers.forEach(career => { %>
+                                                    <div class="col-md-6">
+                                                        <div class="vacancy-content">
+                                                            <h5><%= career.employmentType %></h5>
+                                                            <h3><%= career.title %></h3>
+                                                            <p><%= career.shortDescription %></p>
+                                                            <a href="/careers/<%= career._id %>" class="button-primary">APPLY NOW</a>
+                                                        </div>
+                                                    </div>
+                                                <% }) %>
+                                                <% if (!careers.length) { %>
+                                                    <div class="col-12">
+                                                        <p>No careers available at the moment.</p>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                       <div class="vacancy-content">
-                                          <h5>Part Time</h5>
-                                          <h3>Travel Guide</h3>
-                                          <p>Magna voluptatum dolorem! Dolores! Sociosqu commodo nobis imperdiet lacinia? Magni! Felis, elementum nobis.</p>
-                                          <a href="#" class="button-primary">APPLY NOW</a>
-                                       </div>
+                                    <div class="col-lg-5">
+                                        <div class="vacancy-form">
+                                            <h3>JOIN OUR TEAM</h3>
+                                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus</p>
+                                            <form action="/careers/apply" method="POST" enctype="multipart/form-data" class="form-improved">
+                                                <div class="form-group">
+                                                    <label for="careerId" class="form-label" style="color: #fff;">Select Position</label>
+                                                    <select name="careerId" id="careerId" class="form-control" required>
+                                                        <option value="">Select a Career</option>
+                                                        <% careers.forEach(career => { %>
+                                                            <option value="<%= career._id %>"><%= career.title %></option>
+                                                        <% }) %>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="cv" class="form-label" style="color: #fff;">Upload CV (PDF, DOC, DOCX)</label>
+                                                    <div class="file-upload-wrapper">
+                                                        <input type="file" name="cv" id="cv" accept=".pdf,.doc,.docx,image/*" required>
+                                                        <span class="file-upload-text">Choose file</span>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group mt-5" >
+                                                    <input type="submit" name="submit" value="SEND APPLICATION" class="button-primary">
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                       <div class="vacancy-content">
-                                          <h5>Full Time / Part Time</h5>
-                                          <h3>Tour Supervisor</h3>
-                                          <p>Magna voluptatum dolorem! Dolores! Sociosqu commodo nobis imperdiet lacinia? Magni! Felis, elementum nobis.</p>
-                                          <a href="#" class="button-primary">APPLY NOW</a>
-                                       </div>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                           <div class="col-lg-5">
-                              <div class="vacancy-form">
-                                 <h3>JOIN OUR TEAM</h3>
-                                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus</p>
-                                 <form>
-                                    <p>
-                                       <input type="text" name="name" placeholder="Your Name">
-                                    </p>
-                                    <p>
-                                       <input type="text" name="name" placeholder="Your Name">
-                                    </p>
-                                    <p>
-                                       <input type="text" name="name" placeholder="Your Name">
-                                    </p>
-                                    <p>
-                                       <textarea rows="7" placeholder="Enter your messafe"></textarea>
-                                    </p>
-                                    <p>
-                                       <input type="submit" name="submit" value="SEND APPLICATION">
-                                    </p>
-                                 </form>
-                              </div>
-                           </div>
+                                </div>
+                            </div>
                         </div>
-                     </div>
-                  </div>
-                  <div class="about-service-wrap">
-                     <div class="section-heading">
-                        <div class="row no-gutters align-items-end">
-                           <div class="col-lg-6">
-                              <h5 class="dash-style">OUR BENEFITS</h5>
-                              <h2>OUR TRAVEL AGENCY HAS BEEN BEST AMONG OTHERS SINCE 1982</h2>
-                           </div>
-                           <div class="col-lg-6">
-                              <div class="section-disc">
-                                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.Placeat nostrud natus tempora justo. Laboriosam, eget mus nostrud natus tempora.</p>
-                                 <p>Lorem ipsum dolor sit amet, consec tetur adipiscing eliting dolor sit amet. Placeat nostrud natus tempora justo nostrud natus tempora.</p>
-                              </div>
-                           </div>
+                        <div class="about-service-wrap">
+                            <div class="section-heading">
+                                <div class="row no-gutters align-items-end">
+                                    <div class="col-lg-6">
+                                        <h5 class="dash-style">OUR BENEFITS</h5>
+                                        <h2>OUR TRAVEL AGENCY HAS BEEN BEST AMONG OTHERS SINCE 1982</h2>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="section-disc">
+                                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.Placeat nostrud natus tempora justo. Laboriosam, eget mus nostrud natus tempora.</p>
+                                            <p>Lorem ipsum dolor sit amet, consec tetur adipiscing eliting dolor sit amet. Placeat nostrud natus tempora justo nostrud natus tempora.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="about-service-container">
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="about-service">
+                                            <div class="about-service-icon">
+                                                <img src="assets/images/icon19.png" alt="">
+                                            </div>
+                                            <div class="about-service-content">
+                                                <h4>Award winning</h4>
+                                                <p>Lorem ipsum dolor sit amet, consec teturing.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="about-service">
+                                            <div class="about-service-icon">
+                                                <img src="assets/images/icon20.png" alt="">
+                                            </div>
+                                            <div class="about-service-content">
+                                                <h4>Well allowance</h4>
+                                                <p>Lorem ipsum dolor sit amet, consec teturing.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="about-service">
+                                            <div class="about-service-icon">
+                                                <img src="assets/images/icon21.png" alt="">
+                                            </div>
+                                            <div class="about-service-content">
+                                                <h4>Full Insurance</h4>
+                                                <p>Lorem ipsum dolor sit amet, consec teturing.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                     </div>
-                     <div class="about-service-container">
-                        <div class="row">
-                           <div class="col-lg-4">
-                              <div class="about-service">
-                                 <div class="about-service-icon">
-                                    <img src="assets/images/icon19.png" alt="">
-                                 </div>
-                                 <div class="about-service-content">
-                                    <h4>Award winning</h4>
-                                    <p>Lorem ipsum dolor sit amet, consec teturing.</p>
-                                 </div>
-                              </div>
-                           </div>
-                           <div class="col-lg-4">
-                              <div class="about-service">
-                                 <div class="about-service-icon">
-                                    <img src="assets/images/icon20.png" alt="">
-                                 </div>
-                                 <div class="about-service-content">
-                                    <h4>Well allowance</h4>
-                                    <p>Lorem ipsum dolor sit amet, consec teturing.</p>
-                                 </div>
-                              </div>
-                           </div>
-                           <div class="col-lg-4">
-                              <div class="about-service">
-                                 <div class="about-service-icon">
-                                    <img src="assets/images/icon21.png" alt="">
-                                 </div>
-                                 <div class="about-service-content">
-                                    <h4>Full Insurance</h4>
-                                    <p>Lorem ipsum dolor sit amet, consec teturing.</p>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </main>
-       
-<%- include('../partials/Footer')%>  
-
-         <!-- header html end -->
-      </div>
-      <%- include('../../shared/partials/toaster') %>
-
-      <!-- JavaScript -->
-<%- include('../partials/Script')%>  
-   </body>
+                    </div>
+                </div>
+            </main>
+            <%- include('../partials/Footer')%>  
+        </div>
+        <%- include('../../shared/partials/toaster') %>
+        <%- include('../partials/Script')%>  
+    </body>
+    <script>
+        document.getElementById('cv').addEventListener('change', function(event) {
+        const fileName = event.target.files[0] ? event.target.files[0].name : 'Choose file';
+        document.querySelector('.file-upload-text').textContent = fileName;
+    });
+    </script>
+    
+    <style>
+    
+    
+    
+    
+    
+    
+    .file-upload-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 0.75rem;
+        background: #fff;
+    }
+    
+    .file-upload-wrapper input[type="file"] {
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .file-upload-text {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    
+    </style>
 </html>

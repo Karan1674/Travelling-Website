@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h4 style="margin: 0; color: #333;">Career List</h4>
+                                <a href="/add-career" class="btn btn-primary" style="transition: background 0.3s;">Add Career</a>
+                            </div>
+
+                            <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <form id="search-form" action="/career-list" method="get" style="flex: 1; margin-right: 20px;">
+                                    <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                                        <input type="text" name="search" id="search-input" placeholder="Search by Career Title" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <button type="submit" aria-label="Search packages" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-search" style="color: #007bff;"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Employment Type</th>
+                                            <th>Vacancies</th>
+                                            <th>Salary</th>
+                                            <th>Active</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% allCareers.forEach(career => { %>
+                                            <tr>
+                                                <td><%= career.title %></td>
+                                                <td><%= career.employmentType %></td>
+                                                <td><%= career.vacancies %></td>
+                                                <td><%= career.salary %></td>
+                                                <td>
+                                                    <span class="badge badge-<%= career.isActive === true ? 'success' : 'danger' %>">
+                                                        <%= career.isActive ? 'Active' : 'Disabled' %>
+                                                    </span>
+                                                </td>
+
+
+                                                <td>
+                                                    <a href="/career-detail/<%= career._id %>" class="badge badge-info text-white" title="Preview Package"><i class="far fa-eye"></i></a>
+                                                    <span class="badge badge-success "  style="cursor: pointer;" onclick="window.location.href='/edit-career/<%= career._id %>'"><i class="far fa-edit"></i></span>
+                                                    <!-- <span class="badge badge-danger delete-btn"  style="cursor: pointer;" data-itemId="<%= career._id %>"><i class="far fa-trash-alt"></i></span> -->
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <%- include('../partials/pagination') %>
+
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/deletePopup', { entityName: 'Career', deleteEndpoint: '/delete-career', buttonClass: 'delete-btn' }) %>
+
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+
+        // Handle form submission
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+        });
+    });
+</script>
+
+</html>

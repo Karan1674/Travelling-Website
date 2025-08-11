@@ -1,8 +1,8 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
-const { uploadProfilePic, uploadGallery } = require('../middleware/multer');
+const { uploadProfilePic, uploadGallery, uploadCareerPic } = require('../middleware/multer');
 const router = express.Router();
 
 
@@ -34,11 +34,12 @@ router.get('/db-active-packages', isAuthenticated, isAdminCheck, (req, res) => g
 router.get('/db-pending-packages', isAuthenticated, isAdminCheck, (req, res) => getPackagesByStatus({ ...req, query: { ...req.query, status: 'Pending' } }, res));
 router.get('/db-expired-packages', isAuthenticated, isAdminCheck, (req, res) => getPackagesByStatus({ ...req, query: { ...req.query, status: 'Expired' } }, res));
 
-router.get('/db-user-dashboard', isAuthenticated, isAdminCheck, getUserDashboard);
 router.get('/db-package-dashboard', isAuthenticated, isAdminCheck, getPackageDashboard);
+router.get('/package-preview/:packageId' ,isAuthenticated,isAdminCheck,packagePreview)
 
 
 
+router.get('/db-user-dashboard', isAuthenticated, isAdminCheck, getUserDashboard);
 router.get('/admin-agent-profile',isAuthenticated, isAdminCheck, getAdminAgentProfile);
 router.post('/admin-agent-profile/update',isAuthenticated,isAdminCheck, uploadProfilePic.single('profilePic'), updateAdminAgentProfile);
 
@@ -49,7 +50,6 @@ router.post('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, ed
 router.get('/admin/bookings/delete/:bookingId', isAuthenticated, isAdminCheck,deleteBooking);
 
 
-router.get('/package-preview/:packageId' ,isAuthenticated,isAdminCheck,packagePreview)
 
 
 router.get('/coupon-list', isAuthenticated,isAdminCheck,renderCouponList);
@@ -59,5 +59,20 @@ router.get('/edit-coupon/:couponId', isAuthenticated, isAdminCheck, renderEditCo
 router.post('/edit-coupon/:couponId',  isAuthenticated, isAdminCheck, updateCoupon);
 router.get('/delete-coupon/:couponId', isAuthenticated, isAdminCheck, deleteCoupon);
 router.get('/coupon-details/:couponId', isAuthenticated, isAdminCheck, renderCouponDetails);
+
+
+
+router.get('/career-list', isAuthenticated, isAdminCheck, getCareerList);
+router.get('/add-career', isAuthenticated, isAdminCheck, getAddCareerPage);
+router.post('/add-career',isAuthenticated, isAdminCheck, uploadCareerPic.single('careerPic'), addCareer);
+router.get('/edit-career/:id', isAuthenticated, isAdminCheck, getEditCareerPage);
+router.post('/edit-career/:id', isAuthenticated, isAdminCheck, uploadCareerPic.single('careerPic'),  editCareer);
+router.get('/career-detail/:id',  isAuthenticated, isAdminCheck, getCareerDetail);
+router.get('/delete-career/:id', isAuthenticated, isAdminCheck, deleteCareer);
+
+
+router.get('/application-list', isAuthenticated, isAdminCheck, getApplicationList);
+router.get('/application-detail/:id',  isAuthenticated, isAdminCheck, getApplicationDetail);
+router.post('/application-detail/:id/update',  isAuthenticated, isAdminCheck, updateApplicationStatus);
 
 module.exports = router;
