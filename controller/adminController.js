@@ -14,7 +14,12 @@ import reviewSchema from '../models/reviewSchema.js';
 import couponSchema from '../models/couponSchema.js';
 import CareerSchema from '../models/CareerSchema.js';
 import ApplicationSchema from '../models/ApplicationSchema.js';
+import GuideSchema from '../models/GuideSchema.js';
+import GallerySchema from '../models/GallerySchema.js';
+
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+
 
 export const AdminDashboard = async (req, res) => {
     try {
@@ -28,16 +33,16 @@ export const AdminDashboard = async (req, res) => {
             return res.redirect('/loginPage');
         }
 
-    let userData;
-    if (isAdmin) {
-         userData = await adminModel.findById(userId);
-    }
-    else{
-         userData = await agentModel.findById(userId);
-    }
+        let userData;
+        if (isAdmin) {
+            userData = await adminModel.findById(userId);
+        }
+        else {
+            userData = await agentModel.findById(userId);
+        }
 
-    
-    if (!userData) {
+
+        if (!userData) {
             req.session.message = 'Admin not found';
             req.session.type = 'error';
             return res.redirect('/loginPage');
@@ -54,12 +59,7 @@ export const AdminDashboard = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error loading dashboard';
         req.session.type = 'error';
-        res.status(500).render('admin/layout/AdminDashboard', {
-            user: null,
-            isAdmin,
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -119,7 +119,7 @@ export const getAllAgents = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching agents';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -153,7 +153,7 @@ export const getNewAgentPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering page';
         req.session.type = 'error';
-        res.status(500).redirect('/AdminDashboard');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -228,7 +228,7 @@ export const newAgent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error during agent registration';
         req.session.type = 'error';
-        return res.redirect('/new-agent');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -277,7 +277,7 @@ export const editAgentPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error loading edit page';
         req.session.type = 'error';
-        res.status(500).redirect('/AdminDashboard');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -366,7 +366,7 @@ export const editAgent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Failed to update agent';
         req.session.type = 'error';
-        res.status(500).json({ error: "Failed to update Agent", message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -419,7 +419,7 @@ export const getAgentDetails = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching agent details';
         req.session.type = 'error';
-        res.redirect('/db-admin-created-agents');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -464,7 +464,7 @@ export const deleteAgent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Failed to delete agent';
         req.session.type = 'error';
-        res.status(500).json({ error: "Failed to delete agent", message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -532,7 +532,7 @@ export const getSignedInUsers = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching users';
         req.session.type = 'error';
-        res.redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -591,7 +591,7 @@ export const getUserDetails = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching user details';
         req.session.type = 'error';
-        res.redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -630,7 +630,7 @@ export const addPackagePage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering add package page';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -683,7 +683,7 @@ export const editPackagePage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering edit package page';
         req.session.type = 'error';
-        res.status(500).redirect('/db-all-packages');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -933,7 +933,7 @@ export const addPackage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error adding package';
         req.session.type = 'error';
-        res.status(500).json({ error: 'Server error', message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1160,7 +1160,7 @@ export const editPackage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error updating package';
         req.session.type = 'error';
-        res.status(500).json({ error: 'Server error', message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1219,6 +1219,7 @@ export const getAllPackages = async (req, res) => {
 
         const allPackages = await packageModel
             .find(query)
+            .populate('createdBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -1240,10 +1241,9 @@ export const getAllPackages = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching packages';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
-
 
 export const deletePackage = async (req, res) => {
     try {
@@ -1300,7 +1300,7 @@ export const deletePackage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Failed to delete package';
         req.session.type = 'error';
-        res.status(500).json({ error: 'Failed to delete package', message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1326,18 +1326,37 @@ export const getPackagesByStatus = async (req, res) => {
         }
 
         let userData = await adminModel.findById(userId);
-        let createdId = userId;
-        if (!userData) {
+
+        let query = {};
+
+        if (isAdmin) {
+            // Admin can see their own packages and those created by their agents
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' },
+                ],
+                status: status
+            };
+        } else {
             userData = await agentModel.findById(userId);
             if (!userData) {
                 req.session.message = 'User not found';
                 req.session.type = 'error';
                 return res.status(401).redirect('/loginPage');
             }
-            createdId = userData.admin;
+            // Agent can see their own packages, their admin's packages, and other agents' packages under the same admin
+            const adminId = userData.admin;
+            const agentIds = await agentModel.find({ admin: adminId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: adminId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ],
+                status: status
+            };
         }
-
-        let query = { adminId: createdId, status };
 
         if (search) {
             query.title = { $regex: search, $options: 'i' };
@@ -1350,6 +1369,7 @@ export const getPackagesByStatus = async (req, res) => {
         const totalPages = Math.ceil(totalPackages / limit) || 1;
 
         const allPackages = await packageModel.find(query)
+            .populate('createdBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -1372,7 +1392,7 @@ export const getPackagesByStatus = async (req, res) => {
         req.session = req.session || {};
         req.session.message = `Server error fetching ${req.query.status} packages`;
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1406,7 +1426,7 @@ export const getUserDashboard = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering user dashboard';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1440,7 +1460,7 @@ export const getPackageDashboard = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering package dashboard';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1488,12 +1508,7 @@ export const getAdminAgentProfile = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching profile';
         req.session.type = 'error';
-        res.status(500).render('admin/layout/adminAgentProfile', {
-            user: null,
-            isAdmin,
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1601,7 +1616,7 @@ export const updateAdminAgentProfile = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error updating profile';
         req.session.type = 'error';
-        res.status(500).json({ error: 'Server error while updating profile', message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1688,7 +1703,7 @@ export const getBookings = async (req, res) => {
             });
         }
 
-  
+
         const bookings = await packageBookingSchema.find(searchQuery)
             .populate('userId', 'firstName lastName email')
             .populate('items.packageId', 'title')
@@ -1714,16 +1729,7 @@ export const getBookings = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching bookings';
         req.session.type = 'error';
-        res.status(500).render('admin/layout/db-booking', {
-            bookings: [],
-            currentPage: 1,
-            totalPages: 1,
-            user: null,
-            isAdmin,
-            search: '',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1783,7 +1789,7 @@ export const getEditBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching booking';
         req.session.type = 'error';
-        res.status(500).redirect('/admin/bookings');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1843,7 +1849,7 @@ export const editBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error editing booking';
         req.session.type = 'error';
-        res.status(500).redirect('/admin/bookings');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1875,7 +1881,7 @@ export const deleteBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error deleting booking';
         req.session.type = 'error';
-        res.status(500).redirect('/admin/bookings');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1940,19 +1946,9 @@ export const packagePreview = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error fetching package preview';
         req.session.type = 'error';
-        res.status(500).render('admin/layout/packagePreview', {
-            package: null,
-            isAdmin,
-            bookings: [],
-            reviews: [],
-            user: null,
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 export const renderCouponList = async (req, res) => {
     try {
@@ -2009,6 +2005,7 @@ export const renderCouponList = async (req, res) => {
 
         // Fetch coupons
         const coupons = await couponSchema.find(query)
+            .populate('createdBy', 'firstName lastName email')
             .lean()
             .skip(skip)
             .limit(limit)
@@ -2032,11 +2029,9 @@ export const renderCouponList = async (req, res) => {
         console.error('Error fetching coupon list:', error);
         req.session.message = 'Error fetching coupon list';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 
 // Render Add Coupon Page
@@ -2070,11 +2065,9 @@ export const renderAddCoupon = async (req, res) => {
         console.error('Error rendering add coupon page:', error);
         req.session.message = 'Error rendering add coupon page';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 // Function to generate a random coupon code
 function generateRandomCode(length = 8) {
@@ -2085,8 +2078,6 @@ function generateRandomCode(length = 8) {
     }
     return code;
 }
-
-
 
 // Create New Coupon
 export const createCoupon = async (req, res) => {
@@ -2166,7 +2157,7 @@ export const createCoupon = async (req, res) => {
         let userIdRestrict = null;
         if (restrictToUser) {
 
-            const user = await userModel.findOne({email: restrictToUser});
+            const user = await userModel.findOne({ email: restrictToUser });
             if (!user) {
                 req.session.message = 'User not found';
                 req.session.type = 'error';
@@ -2177,7 +2168,7 @@ export const createCoupon = async (req, res) => {
 
         // Create coupon
         const couponData = {
-            
+
             // code: code.toUpperCase(),
             discountType,
             discountValue: parseFloat(discountValue),
@@ -2191,44 +2182,44 @@ export const createCoupon = async (req, res) => {
             createdByModel
         };
 
- // Handle manual or automatic creation
- if (creationMode === 'manual') {
-    const coupon = new couponSchema({
-        ...couponData,
-        code: code.toUpperCase()
-    });
-    await coupon.save();
-    req.session.message = 'Coupon created successfully';
-    req.session.type = 'success';
-} else {
-    const numToGenerate = parseInt(numCoupons);
-    const coupons = [];
-    for (let i = 0; i < numToGenerate; i++) {
-        let uniqueCode;
-        let attempts = 0;
-        const maxAttempts = 10;
+        // Handle manual or automatic creation
+        if (creationMode === 'manual') {
+            const coupon = new couponSchema({
+                ...couponData,
+                code: code.toUpperCase()
+            });
+            await coupon.save();
+            req.session.message = 'Coupon created successfully';
+            req.session.type = 'success';
+        } else {
+            const numToGenerate = parseInt(numCoupons);
+            const coupons = [];
+            for (let i = 0; i < numToGenerate; i++) {
+                let uniqueCode;
+                let attempts = 0;
+                const maxAttempts = 10;
 
-        // Generate unique code
-        do {
-            uniqueCode = generateRandomCode();
-            attempts++;
-            if (attempts > maxAttempts) {
-                req.session.message = 'Unable to generate unique coupon codes';
-                req.session.type = 'error';
-                return res.redirect('/new-coupon');
+                // Generate unique code
+                do {
+                    uniqueCode = generateRandomCode();
+                    attempts++;
+                    if (attempts > maxAttempts) {
+                        req.session.message = 'Unable to generate unique coupon codes';
+                        req.session.type = 'error';
+                        return res.redirect('/new-coupon');
+                    }
+                } while (await couponSchema.findOne({ code: uniqueCode }));
+
+                coupons.push({
+                    ...couponData,
+                    code: uniqueCode
+                });
             }
-        } while (await couponSchema.findOne({ code: uniqueCode }));
 
-        coupons.push({
-            ...couponData,
-            code: uniqueCode
-        });
-    }
-
-    await couponSchema.insertMany(coupons);
-    req.session.message = `${numToGenerate} coupons generated successfully`;
-    req.session.type = 'success';
-}
+            await couponSchema.insertMany(coupons);
+            req.session.message = `${numToGenerate} coupons generated successfully`;
+            req.session.type = 'success';
+        }
 
 
         res.redirect('/coupon-list');
@@ -2236,7 +2227,7 @@ export const createCoupon = async (req, res) => {
         console.error('Error creating coupon:', error);
         req.session.message = 'Error creating coupon';
         req.session.type = 'error';
-        res.redirect('/new-coupon');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -2303,7 +2294,7 @@ export const renderEditCoupon = async (req, res) => {
         console.error('Error fetching coupon:', error);
         req.session.message = 'Error fetching coupon';
         req.session.type = 'error';
-        res.redirect('/coupon-list');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -2370,8 +2361,8 @@ export const updateCoupon = async (req, res) => {
         // Validate restrictToUser (if provided)
         let userIdRestrict = null;
         if (restrictToUser) {
-           
-            const user = await userModel.findOne({email: restrictToUser});
+
+            const user = await userModel.findOne({ email: restrictToUser });
             if (!user) {
                 req.session.message = 'User not found';
                 req.session.type = 'error';
@@ -2412,11 +2403,9 @@ export const updateCoupon = async (req, res) => {
         console.error('Error updating coupon:', error);
         req.session.message = 'Error updating coupon';
         req.session.type = 'error';
-        res.redirect(`/edit-coupon/${req.params.couponId}`);
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 // Delete Coupon
 export const deleteCoupon = async (req, res) => {
@@ -2428,7 +2417,7 @@ export const deleteCoupon = async (req, res) => {
             req.session.type = 'error';
             return res.redirect('/');
         }
-    
+
         const isAdmin = req.isAdmin;
         let userData = await adminModel.findById(userId);
         if (!userData) {
@@ -2439,11 +2428,11 @@ export const deleteCoupon = async (req, res) => {
                 return res.redirect('/');
             }
         }
-  
+
 
         const { couponId } = req.params;
         let query = { _id: couponId };
-     
+
         if (isAdmin) {
             const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
             query.$or = [
@@ -2479,11 +2468,9 @@ export const deleteCoupon = async (req, res) => {
         console.error('Error deleting coupon:', error);
         req.session.message = 'Error deleting coupon';
         req.session.type = 'error';
-        res.redirect('/coupon-list');
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 // Render Coupon Details
 export const renderCouponDetails = async (req, res) => {
@@ -2556,12 +2543,9 @@ export const renderCouponDetails = async (req, res) => {
         console.error('Error fetching coupon details:', error);
         req.session.message = 'Error fetching coupon details';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
-
-
-
 
 // Get career list for admin/agent
 export const getCareerList = async (req, res) => {
@@ -2597,10 +2581,13 @@ export const getCareerList = async (req, res) => {
         }
 
         const careers = await CareerSchema.find(query)
+            .populate('createdBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
             .lean();
+
+
 
         const totalCareers = await CareerSchema.countDocuments(query);
         const totalPages = Math.ceil(totalCareers / limit) || 1;
@@ -2619,7 +2606,7 @@ export const getCareerList = async (req, res) => {
         console.error('Error fetching career list:', error);
         req.session.message = 'Error fetching career list';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -2658,86 +2645,85 @@ export const getAddCareerPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error rendering add career page';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
     }
 };
 
 
 export const addCareer = async (req, res) => {
-        try {
-            const userId = req.id;
-         
-            req.session = req.session || {};
+    try {
+        const userId = req.id;
 
-            if (!userId) {
-                req.session.message = 'Unauthorized: Admin or Agent access required';
-                req.session.type = 'error';
-                return res.redirect('/add-career');
-            }
+        req.session = req.session || {};
 
-            const isAdmin = req.isAdmin;
-            let userData = await adminModel.findById(userId);
-            let createdBy, createdByModel;
-            if (isAdmin) {
-                createdBy = userId;
-                createdByModel = 'Admin';
-            } else {
-                userData = await agentModel.findById(userId);
-                if (!userData) {
-                    req.session.message = 'User not found';
-                    req.session.type = 'error';
-                    return res.redirect('/');
-                }
-                createdBy = userId;
-                createdByModel = 'Agent';
-            }
-    
-
-            const {
-                title, employmentType, shortDescription, description,
-                overview, experience, requirements, vacancies, salary,isActive
-            } = req.body;
-
-            if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
-                req.session.message = 'All fields are required';
-                req.session.type = 'error';
-                return res.redirect('/add-career');
-            }
-
-            if (!req.file) {
-                req.session.message = 'Image is required';
-                req.session.type = 'error';
-                return res.redirect('/add-career');
-            }
-
-            const newCareer = new CareerSchema({
-                title,
-                employmentType,
-                shortDescription,
-                description,
-                overview,
-                experience,
-                isActive,
-                requirements,
-                vacancies: parseInt(vacancies),
-                salary,
-                image: req.file.filename,
-                createdBy: createdBy,
-                createdByModel: createdByModel
-            });
-
-            await newCareer.save();
-            req.session.message = 'Career added successfully';
-            req.session.type = 'success';
-            res.redirect('/career-list');
-        } catch (error) {
-            console.error('Error adding career:', error);
-            req.session.message = 'Server error adding career';
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
             req.session.type = 'error';
-            res.redirect('/add-career');
+            return res.redirect('/add-career');
         }
-}
 
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        let createdBy, createdByModel;
+        if (isAdmin) {
+            createdBy = userId;
+            createdByModel = 'Admin';
+        } else {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            createdBy = userId;
+            createdByModel = 'Agent';
+        }
+
+
+        const {
+            title, employmentType, shortDescription, description,
+            overview, experience, requirements, vacancies, salary, isActive
+        } = req.body;
+
+        if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
+            req.session.message = 'All fields are required';
+            req.session.type = 'error';
+            return res.redirect('/add-career');
+        }
+
+        if (!req.file) {
+            req.session.message = 'Image is required';
+            req.session.type = 'error';
+            return res.redirect('/add-career');
+        }
+
+        const newCareer = new CareerSchema({
+            title,
+            employmentType,
+            shortDescription,
+            description,
+            overview,
+            experience,
+            isActive,
+            requirements,
+            vacancies: parseInt(vacancies),
+            salary,
+            image: req.file.filename,
+            createdBy: createdBy,
+            createdByModel: createdByModel
+        });
+
+        await newCareer.save();
+        req.session.message = 'Career added successfully';
+        req.session.type = 'success';
+        res.redirect('/career-list');
+    } catch (error) {
+        console.error('Error adding career:', error);
+        req.session.message = 'Server error adding career';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+}
 
 // Get edit career page for admin/agent
 export const getEditCareerPage = async (req, res) => {
@@ -2781,57 +2767,57 @@ export const getEditCareerPage = async (req, res) => {
         console.error('Error rendering edit career page:', error);
         req.session.message = 'Server error rendering edit career page';
         req.session.type = 'error';
-        res.status(500).redirect('/career-list');
+        res.status(500).redirect('/error');
     }
 };
 
 // Edit career
-export const editCareer =async (req, res) => {
-        try {
-            const userId = req.id;
-            req.session = req.session || {};
+export const editCareer = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
 
-            if (!userId) {
-                req.session.message = 'Unauthorized: Admin or Agent access required';
-                req.session.type = 'error';
-                return res.redirect('/edit-career/' + req.params.id);
-            }
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/edit-career/' + req.params.id);
+        }
 
-            const career = await CareerSchema.findById(req.params.id);
-            if (!career) {
-                req.session.message = 'Career not found';
-                req.session.type = 'error';
-                return res.redirect('/career-list');
-            }
+        const career = await CareerSchema.findById(req.params.id);
+        if (!career) {
+            req.session.message = 'Career not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
 
-            const {
-                title, employmentType, shortDescription, description,
-                overview, experience, requirements, vacancies, salary,isActive
-            } = req.body;
+        const {
+            title, employmentType, shortDescription, description,
+            overview, experience, requirements, vacancies, salary, isActive
+        } = req.body;
 
-            if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
-                req.session.message = 'All fields are required';
-                req.session.type = 'error';
-                return res.redirect('/edit-career/' + req.params.id);
-            }
+        if (!title || !employmentType || !shortDescription || !description || !overview || !experience || !requirements || !vacancies || !salary) {
+            req.session.message = 'All fields are required';
+            req.session.type = 'error';
+            return res.redirect('/edit-career/' + req.params.id);
+        }
 
-            career.title = title;
-            career.employmentType = employmentType;
-            career.shortDescription = shortDescription;
-            career.description = description;
-            career.overview = overview;
-            career.experience = experience;
-            career.requirements = requirements;
-            career.vacancies = parseInt(vacancies);
-            career.salary = salary;
-            career.isActive= isActive
+        career.title = title;
+        career.employmentType = employmentType;
+        career.shortDescription = shortDescription;
+        career.description = description;
+        career.overview = overview;
+        career.experience = experience;
+        career.requirements = requirements;
+        career.vacancies = parseInt(vacancies);
+        career.salary = salary;
+        career.isActive = isActive
 
 
-            if (req.file) {
-                // Delete old image if exists
-                if (career.image) {
-                    try {
-                    const oldImagePath = join(__dirname, '/Uploads/career');
+        if (req.file) {
+            // Delete old image if exists
+            if (career.image) {
+                try {
+                    const oldImagePath = join(__dirname, '../Uploads/career');
                     await fs.unlink(join(oldImagePath, career.image));
                     console.log('Deleted old career picture:', career.image);
 
@@ -2840,23 +2826,21 @@ export const editCareer =async (req, res) => {
                         console.error('Error deleting career picture:', err);
                     }
                 }
-                }
-                career.image = req.file.path;
             }
-
-            await career.save();
-            req.session.message = 'Career updated successfully';
-            req.session.type = 'success';
-            res.redirect('/career-list');
-        } catch (error) {
-            console.error('Error editing career:', error);
-            req.session.message = 'Server error editing career';
-            req.session.type = 'error';
-            res.redirect('/edit-career/' + req.params.id);
+            career.image = req.file.filename;
         }
+
+        await career.save();
+        req.session.message = 'Career updated successfully';
+        req.session.type = 'success';
+        res.redirect('/career-list');
+    } catch (error) {
+        console.error('Error editing career:', error);
+        req.session.message = 'Server error editing career';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
 }
-
-
 
 
 // Get career detail for admin/agent
@@ -2914,10 +2898,9 @@ export const getCareerDetail = async (req, res) => {
         console.error('Error fetching career detail:', error);
         req.session.message = 'Error fetching career detail';
         req.session.type = 'error';
-        res.status(500).redirect('/career-list');
+        res.status(500).redirect('/error');
     }
 };
-
 
 
 export const deleteCareer = async (req, res) => {
@@ -2940,18 +2923,18 @@ export const deleteCareer = async (req, res) => {
 
 
         if (career.image) {
-            console.log("ghj")
-            try {
-            const oldImagePath = join(__dirname, '../Uploads/career');
-            await fs.unlink(join(oldImagePath, career.image));
-            console.log('Deleted old career picture:', career.image);
 
-        } catch (err) {
-            if (err.code !== 'ENOENT') {
-                console.error('Error deleting career picture:', err);
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/career');
+                await fs.unlink(join(oldImagePath, career.image));
+                console.log('Deleted old career picture:', career.image);
+
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    console.error('Error deleting career picture:', err);
+                }
             }
         }
-    }
 
 
         await CareerSchema.deleteOne({ _id: career._id });
@@ -2963,7 +2946,7 @@ export const deleteCareer = async (req, res) => {
         console.error('Error deleting career:', error);
         req.session.message = 'Server error deleting career';
         req.session.type = 'error';
-        res.redirect('/career-list');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -2972,13 +2955,13 @@ export const getApplicationDetail = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
-const isAdmin= req.isAdmin
+        const isAdmin = req.isAdmin
         if (!userId) {
             req.session.message = 'Unauthorized: Admin or Agent access required';
             req.session.type = 'error';
             return res.redirect('/login');
         }
-        
+
         let userData = await adminModel.findById(userId);
         if (!userData) {
             userData = await agentModel.findById(userId);
@@ -3010,16 +2993,16 @@ const isAdmin= req.isAdmin
         res.render('admin/layout/application-detail', {
             application,
             isAdmin,
-            user:userData,
+            user: userData,
             message: req.session?.message || null,
             type: req.session?.type || null
         });
-      
+
     } catch (error) {
         console.error('Error fetching application detail:', error);
         req.session.message = 'Server error fetching application detail';
         req.session.type = 'error';
-        res.redirect('/career-list');
+        res.status(500).redirect('/error');
     }
 };
 
@@ -3035,7 +3018,7 @@ export const updateApplicationStatus = async (req, res) => {
             return res.redirect('/application-detail/' + req.params.id);
         }
 
-        
+
         let userData = await adminModel.findById(userId);
         if (!userData) {
             userData = await agentModel.findById(userId);
@@ -3071,11 +3054,9 @@ export const updateApplicationStatus = async (req, res) => {
         console.error('Error updating application status:', error);
         req.session.message = 'Server error updating application status';
         req.session.type = 'error';
-        res.redirect('/application-detail/' + req.params.id);
+        res.status(500).redirect('/error');
     }
 };
-
-
 
 // Get application list for admin/agent
 export const getApplicationList = async (req, res) => {
@@ -3173,6 +3154,638 @@ export const getApplicationList = async (req, res) => {
         console.error('Error fetching application list:', error);
         req.session.message = 'Error fetching application list';
         req.session.type = 'error';
-        res.status(500).redirect('/loginPage');
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get tour guides for admin/agent dashboard
+export const getTourGuides = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { page = 1, search = '' } = req.query;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        // Build query based on user role
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        // Add search functionality
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { role: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const tourGuides = await GuideSchema.find(query)
+            .populate('createdBy', 'firstName lastName email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const totalTourGuides = await GuideSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalTourGuides / limit) || 1;
+
+        res.render('admin/layout/tourGuideList', {
+            allTourGuides: tourGuides, // Renamed to match careerList.ejs
+            search,
+            currentPage: parseInt(page),
+            totalPages,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching tour guides:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching tour guides';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// Get add tour guide page
+export const getAddTourGuide = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('admin/layout/addTourGuide', {
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching add tour guide page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading add tour guide page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Add tour guide
+export const addTourGuide = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+
+        const isAdmin = req.isAdmin;
+        let userData = await adminModel.findById(userId);
+        let createdBy, createdByModel;
+        if (isAdmin) {
+            createdBy = userId;
+            createdByModel = 'Admin';
+        } else {
+            userData = await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+            createdBy = userId;
+            createdByModel = 'Agent';
+        }
+
+        const { name, role, description, facebook, twitter, youtube, instagram, linkedin, isActive } = req.body;
+
+        if (!name || !role || !description || !req.file) {
+            req.session.message = 'All required fields and image are necessary';
+            req.session.type = 'error';
+            return res.redirect('/add-tour-guide');
+        }
+
+        const newTourGuide = new GuideSchema({
+            name,
+            role,
+            description,
+            image: req.file.filename, // Normalize path
+            socialLinks: { facebook, twitter, youtube, instagram, linkedin },
+            createdBy,
+            createdByModel,
+            isActive: isActive === 'true'
+        });
+
+        await newTourGuide.save();
+        req.session.message = 'Tour guide added successfully';
+        req.session.type = 'success';
+        res.redirect('/tour-guide-list');
+    } catch (error) {
+        console.error('Error adding tour guide:', error);
+        req.session.message = 'Server error adding tour guide';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get edit tour guide page
+export const getEditTourGuide = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const tourGuide = await GuideSchema.findById(req.params.id);
+        if (!tourGuide) {
+            req.session.message = 'Tour guide not found';
+            req.session.type = 'error';
+            return res.redirect('/tour-guide-list');
+        }
+
+        // // Check if user has permission to edit
+        // if (!isAdmin && tourGuide.createdBy.toString() !== userId && tourGuide.createdByModel !== 'Admin') {
+        //     req.session.message = 'Unauthorized: You cannot edit this tour guide';
+        //     req.session.type = 'error';
+        //     return res.redirect('/tour-guide-list');
+        // }
+
+        res.render('admin/layout/editTourGuide', {
+            tourGuide,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching tour guide:', error);
+        req.session.message = 'Error fetching tour guide';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update tour guide
+export const updateTourGuide = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect(`/edit-tour-guide/${req.params.id}`);
+        }
+
+        const tourGuide = await GuideSchema.findById(req.params.id);
+        if (!tourGuide) {
+            req.session.message = 'Tour guide not found';
+            req.session.type = 'error';
+            return res.redirect('/tour-guide-list');
+        }
+
+        const { name, role, description, facebook, twitter, youtube, instagram, linkedin, isActive } = req.body;
+
+        if (!name || !role || !description) {
+            req.session.message = 'All required fields are necessary';
+            req.session.type = 'error';
+            return res.redirect(`/edit-tour-guide/${req.params.id}`);
+        }
+
+        const updateData = {
+            name,
+            role,
+            description,
+            socialLinks: { facebook, twitter, youtube, instagram, linkedin },
+            isActive: isActive === 'true'
+        };
+
+        if (req.file) {
+            // Delete old image if exists
+            if (tourGuide.image) {
+                try {
+                    const oldImagePath = join(__dirname, '../Uploads/tourGuides');
+                    await fs.unlink(join(oldImagePath, tourGuide.image));
+                    console.log('Deleted old tourGuide picture:', tourGuide.image);
+                } catch (err) {
+                    if (err.code !== 'ENOENT') {
+                        console.error('Error deleting tourGuide picture:', err);
+                    }
+                }
+            }
+            updateData.image = req.file.filename;
+        }
+
+        await GuideSchema.findByIdAndUpdate(req.params.id, updateData);
+        req.session.message = 'Tour guide updated successfully';
+        req.session.type = 'success';
+        res.redirect('/tour-guide-list');
+    } catch (error) {
+        console.error('Error updating tour guide:', error);
+        req.session.message = 'Server error updating tour guide';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Delete tour guide
+export const deleteTourGuide = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/tour-guide-list');
+        }
+
+        const tourGuide = await GuideSchema.findById(req.params.id);
+        if (!tourGuide) {
+            req.session.message = 'Tour guide not found';
+            req.session.type = 'error';
+            return res.redirect('/tour-guide-list');
+        }
+
+        // // Check if user has permission to delete
+        // if (!req.isAdmin && tourGuide.createdBy.toString() !== userId && tourGuide.createdByModel !== 'Admin') {
+        //     req.session.message = 'Unauthorized: You cannot delete this tour guide';
+        //     req.session.type = 'error';
+        //     return res.redirect('/tour-guide-list');
+        // }
+
+        if (tourGuide.image) {
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/tourGuides');
+                await fs.unlink(join(oldImagePath, tourGuide.image));
+                console.log('Deleted old tourGuide picture:', tourGuide.image);
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    console.error('Error deleting tourGuide picture:', err);
+                }
+            }
+        }
+
+
+        await GuideSchema.findByIdAndDelete(req.params.id);
+        req.session.message = 'Tour guide deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/tour-guide-list');
+    } catch (error) {
+        console.error('Error deleting tour guide:', error);
+        req.session.message = 'Server error deleting tour guide';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+// Get tour guide detail page for admin/agent
+export const getTourGuideDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const tourGuide = await GuideSchema.findById(req.params.id)
+            .populate('createdBy', 'firstName lastName email')
+            .lean();
+
+        if (!tourGuide) {
+            req.session.message = 'Tour guide not found';
+            req.session.type = 'error';
+            return res.redirect('/tour-guide-list');
+        }
+
+        res.render('admin/layout/tourGuideDetail', {
+            tourGuide,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching tour guide details:', error);
+        req.session.message = 'Error fetching tour guide details';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// Get gallery items for admin/agent dashboard with search and pagination
+export const getGalleryDashboard = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { page = 1, search = '' } = req.query;
+        const limit = 12;
+        const skip = (page - 1) * limit;
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        if (search) {
+            query.title = { $regex: search, $options: 'i' };
+        }
+
+        const galleryItems = await GallerySchema.find(query)
+            .populate('createdBy', 'firstName lastName email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const totalItems = await GallerySchema.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit) || 1;
+
+        res.render('admin/layout/galleryDashboard', {
+            galleryItems,
+            search,
+            currentPage: parseInt(page),
+            totalPages,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching gallery items:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching gallery items';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+export const addGalleryItem = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { title, isActive } = req.body;
+        const image = req.file ? req.file.filename : null;
+
+        if (!image) {
+            req.session.message = 'Image is required';
+            req.session.type = 'error';
+            return res.redirect('/galleryDashboard');
+        }
+
+        const galleryItem = new GallerySchema({
+            title,
+            image,
+            isActive: isActive === 'true',
+            createdBy: userId,
+            createdByModel: isAdmin ? 'Admin' : 'Agent'
+        });
+
+        await galleryItem.save();
+        req.session.message = 'Gallery item added successfully';
+        req.session.type = 'success';
+        res.redirect('/galleryDashboard');
+    } catch (error) {
+        console.error('Error adding gallery item:', error);
+        req.session.message = 'Server error adding gallery item';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+
+
+// Edit an existing gallery item
+export const editGalleryItem = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { id, title, isActive } = req.body;
+        const image = req.file ? req.file.filename : null;
+
+        let query = { _id: id };
+
+        const galleryItem = await GallerySchema.findOne(query);
+        if (!galleryItem) {
+            req.session.message = 'Gallery item not found or unauthorized';
+            req.session.type = 'error';
+            return res.redirect('/galleryDashboard');
+        }
+
+        // Delete the previous image if a new one is uploaded
+        if (image && galleryItem.image) {
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/mediaGallery');
+                await fs.unlink(join(oldImagePath, galleryItem.image));
+
+            } catch (fileError) {
+                console.warn('Warning: Could not delete previous image:', fileError.message);
+
+            }
+        }
+
+        galleryItem.title = title;
+        if (image) galleryItem.image = image;
+        galleryItem.isActive = isActive === 'true';
+
+        await galleryItem.save();
+        req.session.message = 'Gallery item updated successfully';
+        req.session.type = 'success';
+        res.redirect('/galleryDashboard');
+    } catch (error) {
+        console.error('Error editing gallery item:', error);
+        req.session.message = 'Server error editing gallery item';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Delete a gallery item
+export const deleteGalleryItem = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const itemId = req.params.id;
+
+        let query = { _id: itemId };
+
+        const galleryItem = await GallerySchema.findOne(query);
+        if (!galleryItem) {
+            req.session.message = 'Gallery item not found or unauthorized';
+            req.session.type = 'error';
+            return res.redirect('/galleryDashboard');
+        }
+
+        // Delete the image file from the filesystem
+        if (galleryItem.image) {
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/mediaGallery');
+                await fs.unlink(join(oldImagePath, galleryItem.image));
+
+            } catch (fileError) {
+                console.warn('Warning: Could not delete previous image:', fileError.message);
+
+            }
+        }
+
+
+        await GallerySchema.deleteOne({ _id: itemId });
+        req.session.message = 'Gallery item deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/galleryDashboard');
+    } catch (error) {
+        console.error('Error deleting gallery item:', error);
+        req.session.message = 'Server error deleting gallery item';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
     }
 };

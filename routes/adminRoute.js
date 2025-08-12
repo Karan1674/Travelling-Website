@@ -1,8 +1,8 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
-const { uploadProfilePic, uploadGallery, uploadCareerPic } = require('../middleware/multer');
+const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadmediaGalleryImage } = require('../middleware/multer');
 const router = express.Router();
 
 
@@ -74,5 +74,21 @@ router.get('/delete-career/:id', isAuthenticated, isAdminCheck, deleteCareer);
 router.get('/application-list', isAuthenticated, isAdminCheck, getApplicationList);
 router.get('/application-detail/:id',  isAuthenticated, isAdminCheck, getApplicationDetail);
 router.post('/application-detail/:id/update',  isAuthenticated, isAdminCheck, updateApplicationStatus);
+
+
+router.get('/tour-guide-list', isAuthenticated, isAdminCheck, getTourGuides);
+router.get('/add-tour-guide', isAuthenticated, isAdminCheck, getAddTourGuide);
+router.post('/add-tour-guide', isAuthenticated, isAdminCheck, uploadTourGuideImage.single('guideImage'), addTourGuide);
+router.get('/edit-tour-guide/:id', isAuthenticated, isAdminCheck, getEditTourGuide);
+router.post('/edit-tour-guide/:id', isAuthenticated, isAdminCheck, uploadTourGuideImage.single('guideImage'), updateTourGuide);
+router.get('/delete-tour-guide/:id', isAuthenticated, isAdminCheck, deleteTourGuide);
+router.get('/tour-guide-detail/:id', isAuthenticated, isAdminCheck, getTourGuideDetail);
+
+
+router.get('/galleryDashboard', isAuthenticated, isAdminCheck, getGalleryDashboard);
+router.post('/add-gallery-item', isAuthenticated, isAdminCheck, uploadmediaGalleryImage.single('image'), addGalleryItem);
+router.post('/edit-gallery-item',  isAuthenticated, isAdminCheck, uploadmediaGalleryImage.single('image'), editGalleryItem);
+router.get('/delete-gallery-item/:id', isAuthenticated, isAdminCheck, deleteGalleryItem);
+
 
 module.exports = router;

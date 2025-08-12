@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body style="background-color: #f7f8fa;">
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+
+            <div class="db-info-wrap" style="padding: 40px 20px;">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="dashboard-box" 
+                             style="background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); padding: 30px; transition: box-shadow 0.3s ease;">
+                            
+                            <!-- Header Controls -->
+                            <div class="header-controls" 
+                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+                                <h3 style="margin: 0; color: #2d3748; font-weight: 700; font-size: 28px;">Tour Guide Details</h3>
+                                <div style="display: flex; gap: 10px;">
+                                    <a href="/tour-guide-list" class="btn btn-secondary" style="border-radius: 6px; padding: 8px 16px; font-size: 14px; transition: all 0.3s;">Back to List</a>
+
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="row align-items-start mb-5">
+                                
+                                <!-- Image Section -->
+                                <div class="col-md-4 text-center">
+                                    <figure class="guide-image" style="margin: 0; width: 220px; height: 220px; margin: 0 auto;">
+                                        <img src="/uploads/tourGuides/<%= tourGuide.image %>" 
+                                             alt="<%= tourGuide.name %>" 
+                                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 4px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.3s ease;"
+                                          >
+                                    </figure>
+                                </div>
+
+                                <!-- Details Section -->
+                                <div class="col-md-8" >
+                                  <div style="display: flex; justify-content: space-between;
+                                  align-items: center; gap: 10px;">
+                                    <h2 style="color: #2d3748; font-weight: 700; font-size: 32px; margin-bottom: 12px; letter-spacing: -0.5px;">
+                                        <%= tourGuide.name %>
+                                    </h2>
+                                    <h5 style="color: #4a5568; font-size: 20px; font-weight: 500; margin-bottom: 20px; background: #edf2f7; padding: 8px 12px; border-radius: 6px; display: inline-block;">
+                                        <%= tourGuide.role %>
+                                    </h5>
+                                  </div>
+                                    <p style="color: #718096; font-size: 16px; line-height: 1.8; margin-bottom: 25px; border-left: 4px solid #e2e8f0; padding-left: 15px;">
+                                        <%= tourGuide.description %>
+                                    </p>
+
+                                    <!-- Status & Creator -->
+                                    <div style="margin-bottom: 20px;">
+                                        <p style="margin-bottom: 12px; color: #2d3748; font-size: 16px;">
+                                            <strong style="font-weight: 600;">Status:</strong> 
+                                            <span class="badge bg-<%= tourGuide.isActive ? 'success' : 'danger' %> text-white" style="padding: 6px 14px; border-radius: 16px; font-size: 14px;">
+                                                <%= tourGuide.isActive ? 'Active' : 'Disabled' %>
+                                            </span>
+                                        </p>
+                                        <p style="margin-bottom: 12px; color: #2d3748; font-size: 16px;">
+                                            <strong style="font-weight: 600;">Created By:</strong> 
+                                            <%= tourGuide.createdBy ? `${tourGuide.createdBy.firstName} ${tourGuide.createdBy.lastName} (${tourGuide.createdBy.email})` : 'Unknown' %>
+                                        </p>
+                                        <p style="margin-bottom: 0; color: #2d3748; font-size: 16px;">
+                                            <strong style="font-weight: 600;">Created At:</strong> 
+                                            <%= new Date(tourGuide.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                        </p>
+                                    </div>
+
+                                    <!-- Social Links -->
+                                    <% if (tourGuide.socialLinks && (tourGuide.socialLinks.facebook || tourGuide.socialLinks.twitter || tourGuide.socialLinks.youtube || tourGuide.socialLinks.instagram || tourGuide.socialLinks.linkedin)) { %>
+                                        <div class="guide-social social-links">
+                                            <ul style="list-style: none; padding: 0; display: flex; gap: 12px; flex-wrap: wrap;">
+                                                <% if (tourGuide.socialLinks.facebook) { %>
+                                                    <li><a href="<%= tourGuide.socialLinks.facebook %>" target="_blank" style="color: #ffffff; background: #3b5998; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s ease;">Facebook</a></li>
+                                                <% } %>
+                                                <% if (tourGuide.socialLinks.twitter) { %>
+                                                    <li><a href="<%= tourGuide.socialLinks.twitter %>" target="_blank" style="color: #ffffff; background: #1da1f2; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s ease;">Twitter</a></li>
+                                                <% } %>
+                                                <% if (tourGuide.socialLinks.youtube) { %>
+                                                    <li><a href="<%= tourGuide.socialLinks.youtube %>" target="_blank" style="color: #ffffff; background: #ff0000; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s ease;">YouTube</a></li>
+                                                <% } %>
+                                                <% if (tourGuide.socialLinks.instagram) { %>
+                                                    <li><a href="<%= tourGuide.socialLinks.instagram %>" target="_blank" style="color: #ffffff; background: #e4405f; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s ease;">Instagram</a></li>
+                                                <% } %>
+                                                <% if (tourGuide.socialLinks.linkedin) { %>
+                                                    <li><a href="<%= tourGuide.socialLinks.linkedin %>" target="_blank" style="color: #ffffff; background: #0077b5; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s ease;">LinkedIn</a></li>
+                                                <% } %>
+                                            </ul>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+
+</body>
+</html>

@@ -6,6 +6,8 @@ import wishlistSchema from '../models/wishlistSchema.js';
 import packageCartSchema from '../models/packageCartSchema.js';
 import packageBookingSchema from '../models/packageBookingSchema.js';
 import couponSchema from '../models/couponSchema.js';
+import GuideSchema from '../models/GuideSchema.js';
+import GallerySchema from '../models/GallerySchema.js';
 
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
@@ -40,7 +42,7 @@ export const signInUserDashboard = async (req, res) => {
             return res.redirect('/loginPage');
         }
 
-   
+
         return res.render('client/layout/Home', {
             user: userData,
             message: req.session?.message,
@@ -51,7 +53,7 @@ export const signInUserDashboard = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error during sign-in';
         req.session.type = 'error';
-        return res.redirect('/loginPage');
+        res.status(500).redirect('/error?status=500&message=Server error during sign-in');
     }
 };
 
@@ -66,9 +68,9 @@ export const destinationPage = async (req, res) => {
             req.session = req.session || {};
             req.session.message = 'User ID not available';
             req.session.type = 'error';
-            return res.redirect('/loginPage');    
+            return res.redirect('/loginPage');
         }
-        
+
         userData = await userModel.findById(userId);
         if (!userData) {
             console.log('No such User Exist in The DataBase');
@@ -89,11 +91,7 @@ export const destinationPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error');
     }
 };
 
@@ -110,7 +108,7 @@ export const tourPackagesPage = async (req, res) => {
             req.session.type = 'error';
             return res.redirect('/loginPage');
         }
-        
+
         userData = await userModel.findById(userId);
         if (!userData) {
             console.log('No such User Exist in The DataBase');
@@ -128,22 +126,22 @@ export const tourPackagesPage = async (req, res) => {
         }
 
         const packages = await packageModel.find(query);
-        
+
         // Fetch reviews for all packages
         const packageIds = packages.map(pkg => pkg._id);
         const reviews = await reviewSchema.find({ packageId: { $in: packageIds } }).sort({ date: -1 });
-       
+
         const wishlist = await wishlistSchema.findOne({ userId });
         const wishlistPackageIds = wishlist ? wishlist.packages.map(id => id.toString()) : [];
         // Attach reviews to each package
         const packagesWithReviews = packages.map(pkg => {
             const pkgReviews = reviews.filter(review => review.packageId.toString() === pkg._id.toString());
             return {
-                ...pkg._doc, 
+                ...pkg._doc,
                 reviews: pkgReviews,
                 reviewCount: pkgReviews.length,
                 isWishlisted: wishlistPackageIds.includes(pkg._id.toString()),
-                averageRating: pkgReviews.length > 0 
+                averageRating: pkgReviews.length > 0
                     ? (pkgReviews.reduce((sum, review) => sum + review.rating, 0) / pkgReviews.length).toFixed(1)
                     : '0'
             };
@@ -160,11 +158,7 @@ export const tourPackagesPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -190,12 +184,12 @@ export const packageDetailPage = async (req, res) => {
             return res.redirect('/loginPage');
         }
         const packageId = req.params.id;
-    
+
         const packageData = await packageModel.findOne({ _id: packageId, status: 'Active' });
 
         const reviews = await reviewSchema.find({ packageId }).sort({ date: -1 });
         const reviewCount = reviews.length;
-  
+
         if (!packageData) {
             req.session = req.session || {};
             req.session.message = 'No package available or the package is not active';
@@ -222,11 +216,7 @@ export const packageDetailPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -234,7 +224,7 @@ export const packageDetailPage = async (req, res) => {
 export const submitReview = async (req, res) => {
     try {
         const { packageId, name, email, rating, subject, comment } = req.body;
-  
+
         // Validate input
         if (!packageId || !name || !email || !rating || !subject || !comment) {
             req.session = req.session || {};
@@ -242,7 +232,7 @@ export const submitReview = async (req, res) => {
             req.session.type = 'error';
             return res.status(400).json({ message: req.session.message, type: req.session.type });
         }
-  
+
         // Create new review
         const review = new reviewSchema({
             packageId,
@@ -252,9 +242,9 @@ export const submitReview = async (req, res) => {
             subject,
             comment,
         });
-  
+
         await review.save();
-  
+
         req.session = req.session || {};
         req.session.message = 'Review submitted successfully';
         req.session.type = 'success';
@@ -264,7 +254,7 @@ export const submitReview = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -317,7 +307,7 @@ export const addToWishlist = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -363,7 +353,7 @@ export const removeFromWishlist = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -390,7 +380,7 @@ export const getWishlist = async (req, res) => {
 
         const wishlist = await wishlistSchema.findOne({ userId }).populate({
             path: 'packages',
-            match: { status: 'Active' } 
+            match: { status: 'Active' }
         });
         const packages = wishlist ? wishlist.packages : [];
 
@@ -402,7 +392,7 @@ export const getWishlist = async (req, res) => {
             return {
                 ...pkg._doc,
                 reviewCount: pkgReviews.length,
-                averageRating: pkgReviews.length > 0 
+                averageRating: pkgReviews.length > 0
                     ? (pkgReviews.reduce((sum, review) => sum + review.rating, 0) / pkgReviews.length).toFixed(1)
                     : '0'
             };
@@ -419,11 +409,7 @@ export const getWishlist = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -449,14 +435,14 @@ export const packageOfferPage = async (req, res) => {
             return res.redirect('/');
         }
 
-        const packages = await packageModel.find({ 
+        const packages = await packageModel.find({
             status: 'Active',
-            salePrice: { $exists: true, $ne: null }, 
-            regularPrice: { $exists: true, $ne: null }, 
-            discount: { $exists: true, $ne: null }, 
-            $expr: { $lt: ['$salePrice', '$regularPrice'] } 
+            salePrice: { $exists: true, $ne: null },
+            regularPrice: { $exists: true, $ne: null },
+            discount: { $exists: true, $ne: null },
+            $expr: { $lt: ['$salePrice', '$regularPrice'] }
         });
-    
+
         const packageIds = packages.map(pkg => pkg._id);
         const reviews = await reviewSchema.find({ packageId: { $in: packageIds } }).sort({ date: -1 });
 
@@ -468,7 +454,7 @@ export const packageOfferPage = async (req, res) => {
             return {
                 ...pkg._doc,
                 reviewCount: pkgReviews.length,
-                averageRating: pkgReviews.length > 0 
+                averageRating: pkgReviews.length > 0
                     ? (pkgReviews.reduce((sum, review) => sum + review.rating, 0) / pkgReviews.length).toFixed(1)
                     : '0',
                 isWishlisted: wishlistPackageIds.includes(pkg._id.toString())
@@ -486,11 +472,7 @@ export const packageOfferPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -535,7 +517,7 @@ export const addToPackageCart = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ success: false, message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -560,18 +542,18 @@ export const getpackageCart = async (req, res) => {
         }
 
         const cart = await packageCartSchema.findOne({ userId }).populate('items.packageId');
-    
+
         if (!cart) {
-            return res.render('client/layout/tour-cart', { 
-                cart: { items: [] }, 
+            return res.render('client/layout/tour-cart', {
+                cart: { items: [] },
                 user: userData,
                 message: req.session?.message || null,
                 type: req.session?.type || null
             });
         }
         console.log(cart)
-        res.render('client/layout/tour-cart', { 
-            cart, 
+        res.render('client/layout/tour-cart', {
+            cart,
             user: userData,
             message: req.session?.message || null,
             type: req.session?.type || null
@@ -581,11 +563,7 @@ export const getpackageCart = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error retrieving cart';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error retrieving cart',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -611,12 +589,12 @@ export const updatePackageCart = async (req, res) => {
         if (req.body.packageId && req.body.quantity) {
             const { packageId, quantity } = req.body;
             const itemIndex = cart.items.findIndex(item => item.packageId.toString() === packageId);
-     
+
             if (itemIndex > -1) {
                 if (quantity <= 0) {
                     cart.items.splice(itemIndex, 1);
                 } else {
-                    cart.items[itemIndex].quantity = quantity; 
+                    cart.items[itemIndex].quantity = quantity;
                 }
             } else {
                 req.session = req.session || {};
@@ -641,7 +619,7 @@ export const updatePackageCart = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ success: false, message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -676,7 +654,7 @@ export const removeFromPackageCart = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ success: false, message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -729,9 +707,9 @@ export const checkoutPackageCart = async (req, res) => {
         }
 
         console.log('Rendering booking with STRIPE_PUBLISHABLE_KEY:', process.env.STRIPE_PUBLISHABLE_KEY);
-        res.render('client/layout/booking', { 
-            cart, 
-            user: userData, 
+        res.render('client/layout/booking', {
+            cart,
+            user: userData,
             stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
             isShow: true,
             message: req.session?.message || null,
@@ -742,11 +720,7 @@ export const checkoutPackageCart = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error during checkout';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error during checkout',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -813,15 +787,9 @@ export const bookSinglePackage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error loading booking page';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error loading booking page',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
-
-
 
 
 export const createPackagePaymentIntent = async (req, res) => {
@@ -936,7 +904,7 @@ export const createPackagePaymentIntent = async (req, res) => {
         const paymentIntent = await stripeInstance.paymentIntents.create({
             amount: Math.round(total * 100), // Convert to cents
             currency: 'usd',
-            metadata: { 
+            metadata: {
                 userId: userId.toString(),
                 couponCode: couponCode || 'none' // Store coupon in metadata
             },
@@ -957,7 +925,7 @@ export const createPackagePaymentIntent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ success: false, message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -1056,8 +1024,8 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
         const paymentIntent = await stripeInstance.paymentIntents.create({
             amount: Math.round(total * 100), // Convert to cents
             currency: 'usd',
-            metadata: { 
-                userId: userId.toString(), 
+            metadata: {
+                userId: userId.toString(),
                 packageId: packageId.toString(),
                 couponCode: couponCode || 'none' // Store coupon in metadata
             },
@@ -1078,7 +1046,7 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).json({ success: false, message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -1104,13 +1072,13 @@ export const confirmPackageBooking = async (req, res) => {
             return res.redirect('/');
         }
 
-        const { 
+        const {
             items, firstname, lastname, email, phone, country, street_1, street_2, city, state, postal_code, notes,
             firstname_booking, client_secret, appliedCouponCode
         } = req.body;
 
         // Validate required fields
-        if (!items || !Array.isArray(items) || items.length === 0 || !firstname_booking || !client_secret || 
+        if (!items || !Array.isArray(items) || items.length === 0 || !firstname_booking || !client_secret ||
             !firstname || !lastname || !email || !phone || !country || !street_1 || !city || !state || !postal_code) {
             console.log('Missing required fields');
             req.session = req.session || {};
@@ -1208,7 +1176,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'Invalid or inactive coupon',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1223,7 +1191,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'Coupon has expired',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1238,7 +1206,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'Coupon usage limit reached',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1253,7 +1221,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'You have already used this coupon',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1268,7 +1236,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'This coupon is not assigned to you',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1293,9 +1261,9 @@ export const confirmPackageBooking = async (req, res) => {
 
                 if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
                     await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
-                        isActive:false
+                        isActive: false
                     });
-    
+
                 }
             } else {
                 console.log('Minimum purchase requirement not met:', coupon.minPurchase);
@@ -1306,7 +1274,7 @@ export const confirmPackageBooking = async (req, res) => {
                     error: 'Minimum purchase requirement not met',
                     user: userData,
                     message: req.session.message,
-                      stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: true,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
@@ -1411,9 +1379,9 @@ export const confirmPackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Booking confirmed successfully';
         req.session.type = 'success';
-        res.render('client/layout/confirmation', { 
-            booking: populatedBooking, 
-            user: userData, 
+        res.render('client/layout/confirmation', {
+            booking: populatedBooking,
+            user: userData,
             paymentDetails,
             isShow: true,
             message: req.session.message,
@@ -1424,11 +1392,7 @@ export const confirmPackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Error confirming booking: ${error.message}`;
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error confirming booking',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -1453,9 +1417,9 @@ export const confirmSinglePackageBooking = async (req, res) => {
             return res.redirect('/');
         }
 
-        const { 
-            packageId, quantity = 1, firstname, lastname, email, phone, country, 
-            street_1, street_2, city, state, postal_code, notes, firstname_booking, client_secret, appliedCouponCode 
+        const {
+            packageId, quantity = 1, firstname, lastname, email, phone, country,
+            street_1, street_2, city, state, postal_code, notes, firstname_booking, client_secret, appliedCouponCode
         } = req.body;
 
         // Validate required fields
@@ -1550,7 +1514,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: false,
-                cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
+                    cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
 
                 });
             }
@@ -1566,8 +1530,8 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: false,
-                cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-                    
+                    cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
+
                 });
             }
             if (coupon.usedCount >= coupon.usageLimit) {
@@ -1597,7 +1561,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-                
+
                 });
             }
             if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
@@ -1613,7 +1577,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-                
+
                 });
             }
             if (subtotal >= coupon.minPurchase) {
@@ -1634,9 +1598,9 @@ export const confirmSinglePackageBooking = async (req, res) => {
 
                 if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
                     await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
-                        isActive:false
+                        isActive: false
                     });
-    
+
                 }
             } else {
                 console.log('Minimum purchase requirement not met:', coupon.minPurchase);
@@ -1743,9 +1707,9 @@ export const confirmSinglePackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Booking confirmed successfully';
         req.session.type = 'success';
-        res.render('client/layout/confirmation', { 
-            booking: populatedBooking, 
-            user: userData, 
+        res.render('client/layout/confirmation', {
+            booking: populatedBooking,
+            user: userData,
             paymentDetails,
             isShow: false,
             message: req.session.message,
@@ -1756,24 +1720,20 @@ export const confirmSinglePackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Error confirming booking: ${error.message}`;
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error confirming booking',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
 export const getAvailableCoupons = async (req, res) => {
     try {
         const userId = req.id;
-        if(!userId){
+        if (!userId) {
             return res.redirect('/')
         }
         const coupons = await couponSchema.find({
             isActive: true,
             expiryDate: { $gte: new Date() },
-            $expr: { $lt: [ "$usedCount", "$usageLimit" ] },
+            $expr: { $lt: ["$usedCount", "$usageLimit"] },
             $or: [
                 { restrictToUser: null },
                 { restrictToUser: userId }
@@ -1783,7 +1743,7 @@ export const getAvailableCoupons = async (req, res) => {
         res.json({ success: true, coupons });
     } catch (error) {
         console.error('Error fetching available coupons:', error);
-        res.json({ success: false, message: 'Error fetching available coupons' });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -1833,12 +1793,9 @@ export const applyCoupon = async (req, res) => {
         });
     } catch (error) {
         console.error('Error applying coupon:', error);
-        return res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).redirect('/error')
     }
 };
-
-
-
 
 
 export const getUserBookings = async (req, res) => {
@@ -1904,7 +1861,7 @@ export const getUserBookings = async (req, res) => {
 
         console.log(`Fetched bookings for user: ${userId}, page: ${page}, total: ${totalBookings}, search: ${search}`);
 
-        res.render('client/layout/userBookings', { 
+        res.render('client/layout/userBookings', {
             bookings,
             user: userData,
             currentPage: page,
@@ -1919,11 +1876,7 @@ export const getUserBookings = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error fetching bookings';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error fetching bookings',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -1966,11 +1919,11 @@ export const getBookingDetails = async (req, res) => {
         };
 
         console.log('Rendering booking details for:', bookingId);
-        res.render('client/layout/bookingDetails', { 
-            booking, 
-            user: userData, 
+        res.render('client/layout/bookingDetails', {
+            booking,
+            user: userData,
             paymentDetails,
-              stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+            stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
             message: req.session?.message || null,
             type: req.session?.type || null
         });
@@ -1979,11 +1932,7 @@ export const getBookingDetails = async (req, res) => {
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : 'Error fetching booking details';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Error fetching booking details',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2008,7 +1957,7 @@ export const getUserProfile = async (req, res) => {
         }
 
         console.log('Rendering user profile for:', userId);
-        res.render('client/layout/userProfile', { 
+        res.render('client/layout/userProfile', {
             user,
             message: req.session?.message || null,
             type: req.session?.type || null
@@ -2018,11 +1967,7 @@ export const getUserProfile = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error while fetching profile';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error while fetching profile',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2098,11 +2043,7 @@ export const updateUserProfile = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error while updating profile';
         req.session.type = 'error';
-        res.status(500).render('client/layout/userProfile', {
-            user: null,
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2119,7 +2060,7 @@ export const getAboutPage = async (req, res) => {
                 type: req.session.type
             });
         }
-        
+
         const user = await userModel.findById(userId);
         if (!user) {
             req.session = req.session || {};
@@ -2142,11 +2083,7 @@ export const getAboutPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error while loading the About page';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error while loading the About page',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2163,7 +2100,7 @@ export const getServicePage = async (req, res) => {
                 type: req.session.type
             });
         }
-        
+
         const user = await userModel.findById(userId);
         if (!user) {
             req.session = req.session || {};
@@ -2186,11 +2123,7 @@ export const getServicePage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error while loading the Service page';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', {
-            error: 'Server error while loading the Service page',
-            message: req.session.message,
-            type: req.session.type
-        });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2221,10 +2154,10 @@ export const getCareers = async (req, res) => {
                 type: req.session.type
             });
         }
-        
+
         const careers = await CareerSchema.find({ isActive: true });
-        res.render('client/layout/career', { 
-            careers, 
+        res.render('client/layout/career', {
+            careers,
             user,
             message: req.session?.message,
             type: req.session?.type
@@ -2234,15 +2167,13 @@ export const getCareers = async (req, res) => {
         console.error('Error fetching careers:', error);
         req.session.message = 'Server error fetching careers';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', { error: 'Server error' });
+        res.status(500).redirect('/error')
     }
 };
 
 
 export const getCareerById = async (req, res) => {
     try {
-
-
         const userId = req.id;
         if (!userId) {
             req.session = req.session || {};
@@ -2265,7 +2196,7 @@ export const getCareerById = async (req, res) => {
                 message: req.session.message,
                 type: req.session.type
             });
-        } 
+        }
 
         const career = await CareerSchema.findById(req.params.id).populate({
             path: 'createdBy',
@@ -2277,15 +2208,15 @@ export const getCareerById = async (req, res) => {
             return res.redirect('/careers');
         }
 
-        const application = await ApplicationSchema.findOne({ 
-            careerId: req.params.id, 
+        const application = await ApplicationSchema.findOne({
+            careerId: req.params.id,
             userId
-        }) ;
+        });
 
-        res.render('client/layout/career-detail', { 
-            career, 
+        res.render('client/layout/career-detail', {
+            career,
             application,
-            user, 
+            user,
             message: req.session?.message,
             type: req.session?.type
         });
@@ -2294,7 +2225,7 @@ export const getCareerById = async (req, res) => {
         console.error('Error fetching career:', error);
         req.session.message = 'Server error fetching career';
         req.session.type = 'error';
-        res.status(500).render('client/layout/error', { error: 'Server error' });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -2302,65 +2233,63 @@ export const getCareerById = async (req, res) => {
 
 // Submit application for a career
 export const applyForCareer = async (req, res) => {
-        try {
-            const userId = req.id; 
-            if (!userId) {
-                req.session.message = 'Please log in to apply';
-                req.session.type = 'error';
-                return res.redirect('/careers');
-            }
-
-            const user = await userModel.findById(userId);
-            if (!user) {
-                req.session = req.session || {};
-                req.session.message = 'No such user exists in the database';
-                req.session.type = 'error';
-                return res.redirect('/')
-            }
-
-
-            const { careerId } = req.body;
-            const career = await CareerSchema.findById(careerId || req.params.id);
-            if (!career || !career.isActive) {
-                req.session.message = 'Career not found or inactive';
-                req.session.type = 'error';
-                return res.redirect('/careers');
-            }
-
-            if (!req.file) {
-                req.session.message = 'CV is required';
-                req.session.type = 'error';
-                return res.redirect(`/careers/${career._id}`);
-            }
-
-            // Check for duplicate application
-            const existingApplication = await ApplicationSchema.findOne({ careerId: career._id, userId });
-            if (existingApplication) {
-                req.session.message = 'You have already applied for this career';
-                req.session.type = 'error';
-                return res.redirect(`/careers/${career._id}`);
-            }
-
-            // Create application
-            await ApplicationSchema.create({
-                careerId: career._id,
-                userId,
-                cvFileName: req.file.filename,
-                status: 'pending'
-            });
-
-            req.session.message = 'Application submitted successfully';
-            req.session.type = 'success';
-            res.redirect(`/careers/${career._id}`);
-        } catch (error) {
-            console.error('Error applying for career:', error);
-            req.session.message = 'Error submitting application';
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Please log in to apply';
             req.session.type = 'error';
-            res.redirect('/careers');
+            return res.redirect('/careers');
         }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/')
+        }
+
+
+        const { careerId } = req.body;
+        const career = await CareerSchema.findById(careerId || req.params.id);
+        if (!career || !career.isActive) {
+            req.session.message = 'Career not found or inactive';
+            req.session.type = 'error';
+            return res.redirect('/careers');
+        }
+
+        if (!req.file) {
+            req.session.message = 'CV is required';
+            req.session.type = 'error';
+            return res.redirect(`/careers/${career._id}`);
+        }
+
+        // Check for duplicate application
+        const existingApplication = await ApplicationSchema.findOne({ careerId: career._id, userId });
+        if (existingApplication) {
+            req.session.message = 'You have already applied for this career';
+            req.session.type = 'error';
+            return res.redirect(`/careers/${career._id}`);
+        }
+
+        // Create application
+        await ApplicationSchema.create({
+            careerId: career._id,
+            userId,
+            cvFileName: req.file.filename,
+            status: 'pending'
+        });
+
+        req.session.message = 'Application submitted successfully';
+        req.session.type = 'success';
+        res.redirect(`/careers/${career._id}`);
+    } catch (error) {
+        console.error('Error applying for career:', error);
+        req.session.message = 'Error submitting application';
+        req.session.type = 'error';
+        res.status(500).redirect('/error')
+    }
 }
-
-
 
 
 export const getAppliedCareers = async (req, res) => {
@@ -2379,20 +2308,12 @@ export const getAppliedCareers = async (req, res) => {
             return res.redirect('/');
         }
 
-        // Build search query for applications
-        const searchQuery = {
-            userId,
-            $or: [
-                { status: { $regex: search, $options: 'i' } },
-                { 'careerId.title': { $regex: search, $options: 'i' } }
-            ]
-        };
 
         // Fetch applications with populated career data
         const applications = await ApplicationSchema.find({ userId })
             .populate({
                 path: 'careerId',
-                match: { 
+                match: {
                     title: { $regex: search, $options: 'i' },
                     isActive: true // Only include active careers
                 },
@@ -2409,7 +2330,7 @@ export const getAppliedCareers = async (req, res) => {
         const totalApplications = await ApplicationSchema.find({ userId })
             .populate({
                 path: 'careerId',
-                match: { 
+                match: {
                     title: { $regex: search, $options: 'i' },
                     isActive: true
                 },
@@ -2425,7 +2346,7 @@ export const getAppliedCareers = async (req, res) => {
             totalPages,
             user,
             limit,
-            search,     
+            search,
             message: req.session?.message,
             type: req.session?.type
         });
@@ -2434,15 +2355,94 @@ export const getAppliedCareers = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error loading applications';
         req.session.type = 'error';
-        res.render('client/layout/applied-careers', {
-            applications: [],
-            currentPage: 1,
-            totalPages: 1,
-            user: null,
-            limit: 10,
-            search: '',
-            message: req.session?.message,
-            type: req.session?.type
+        res.status(500).redirect('/error')
+    }
+};
+
+
+// Get all tour guides 
+export const getTourGuides = async (req, res) => {
+    try {
+        const userId = req.id;
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const tourGuides = await GuideSchema.find({ isActive: true }).sort({ createdAt: -1 });
+        res.render('client/layout/tour-guide', {
+            tourGuides,
+            user,
+            message: req.session?.message || null,
+            type: req.session?.type || null
         });
+    } catch (error) {
+        console.error('Error fetching tour guides:', error);
+        req.session.message = 'Error fetching tour guides';
+        req.session.type = 'error';
+        res.status(500).redirect('/error')
+    }
+};
+
+
+
+export const getGallery = async (req, res) => {
+    try {
+        const userId = req.id;
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const galleryItems = await GallerySchema.find({ isActive: true })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.render('client/layout/gallery', {
+            galleryItems,
+            user,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching gallery items:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error fetching gallery items';
+        req.session.type = 'error';
+        res.status(500).redirect('/error?status=500&message=Error fetching gallery items');
+    }
+};
+
+export const getContinueReadingPage = async (req, res) => {
+    try {
+        const userId = req.id;
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        res.render('client/layout/continueReading', {
+            user,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching continueReading page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error fetching continueReading page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error?status=500&message=Error fetching continueReading page');
     }
 };

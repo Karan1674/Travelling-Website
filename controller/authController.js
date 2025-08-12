@@ -32,13 +32,13 @@ export const homePage = async (req, res) => {
         }
 
 
-        return res.render('client/layout/Home', { user: null ,message: req.session?.message, type: req.session?.type });
+        return res.render('client/layout/Home', { user: null, message: req.session?.message, type: req.session?.type });
     } catch (error) {
         console.error("Home page error:", error);
         req.session = req.session || {};
         req.session.message = 'Internal server error';
         req.session.type = 'error';
-        return res.render('client/layout/Home', { user: null ,message: req.session?.message, type: req.session?.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -74,7 +74,7 @@ export const adminRegister = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error during registration';
         req.session.type = 'error';
-        res.redirect('/signupPage');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -86,7 +86,7 @@ export const getSignupPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Internal server error';
         req.session.type = 'error';
-        res.render('shared/layout/sign-up', { message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -129,7 +129,7 @@ export const signupUser = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error during signup';
         req.session.type = 'error';
-        res.redirect('/signupUser');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -174,7 +174,7 @@ export const loginPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Internal server error';
         req.session.type = 'error';
-        res.render('shared/layout/login', { message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -245,7 +245,7 @@ export const loginUserOrAdmin = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error during login';
         req.session.type = 'error';
-        res.redirect('/loginPage');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -261,7 +261,7 @@ export const logoutUser = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Error during logout';
         req.session.type = 'error';
-        res.redirect('/');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -273,7 +273,7 @@ export const forgetPasswordPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.render('shared/layout/forget', { message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -319,13 +319,13 @@ export const forgetPassword = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Password reset link sent';
         req.session.type = 'success';
-        res.render('shared/layout/forget-confirmation', { resetUrl, email , message: req.session?.message || null, type: req.session?.type || null });
+        res.render('shared/layout/forget-confirmation', { resetUrl, email, message: req.session?.message || null, type: req.session?.type || null });
     } catch (error) {
         console.error('Error in forgetPassword:', error);
         req.session = req.session || {};
         req.session.message = 'Failed to process password reset request';
         req.session.type = 'error';
-        res.redirect('/forgetPasswordPage');
+        res.status(500).redirect('/error')
     }
 };
 
@@ -372,7 +372,7 @@ export const resetPasswordPage = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.render('shared/layout/reset-password', { message: req.session.message, type: req.session.type });
+        res.status(500).redirect('/error')
     }
 };
 
@@ -441,7 +441,7 @@ export const resetPassword = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Failed to reset password';
         req.session.type = 'error';
-        res.redirect(`/reset-password?token=${token}&type=${type}`);
+        res.status(500).redirect('/error')
     }
 };
 
@@ -453,6 +453,31 @@ export const clearSessionMessage = async (req, res) => {
         res.status(200).send('Session message cleared');
     } catch (error) {
         console.error('Error clearing session message:', error);
-        res.status(500).send('Error clearing session message');
+        res.status(500).redirect('/error')
+    }
+};
+
+export const getErrorPage = async (req, res) => {
+    try {
+        const status = parseInt(req.query.status) || 500;
+        const textMessage = req.query.message || 'Something Went Wrong';
+
+        res.status(status).render('shared/layout/error', {
+            status,
+            textMessage,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error rendering error page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error rendering error page';
+        req.session.type = 'error';
+        res.status(500).render('shared/layout/error', {
+            status: 500,
+            textMessage: 'Internal Server Error',
+            message: req.session.message,
+            type: req.session.type
+        });
     }
 };

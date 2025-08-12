@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<%- include("../partials/Header.ejs") %>
+<style>
+    .error-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+}
+.error-from-wrap {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+.error-content {
+    color: #333;
+}
+.error-code {
+    font-size: 80px;
+    font-weight: bold;
+    color: #dc3545;
+    margin-bottom: 20px;
+}
+.error-message {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+.error-content p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+}
+.error-content .button-primary {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+.error-content .site-title {
+    margin-bottom: 30px;
+}
+.error-content .site-title img {
+    max-width: 150px;
+}
+</style>
+<body>
+    <div class="error-page" style="background-image: url(/assets/images/bg.jpg);">
+        <div class="error-from-wrap">
+            <div class="error-content text-center">
+                <h1 class="site-title">
+                    <a href="#">
+                        <img src="/admin/assets/images/logo.png" alt="Site Logo">
+                    </a>
+                </h1>
+                <h2 class="error-code"><%= status || '500' %></h2>
+                <h3 class="error-message"><%= textMessage || 'Something Went Wrong' %></h3>
+                <p>Sorry, an error has occurred. Please try again or return to the home page.</p>
+                <div class="form-group">
+                    <a href="/" class="button-primary w-100">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('../partials/toaster') %>
+    <%- include('../partials/script') %>
+</body>
+</html>

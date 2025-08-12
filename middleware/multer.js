@@ -103,3 +103,52 @@ export const uploadCareerCv = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+
+
+// Multer setup for tour guide image upload
+const tourGuideStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/tourGuides'));
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+export const uploadTourGuideImage = multer({
+    storage: tourGuideStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed'), false);
+        }
+        cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+
+
+
+
+
+
+// Multer setup for tour guide image upload
+const mediaGalleryStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/mediaGallery'));
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+export const uploadmediaGalleryImage = multer({
+    storage: mediaGalleryStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed'), false);
+        }
+        cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});

@@ -1,5 +1,5 @@
 const express = require('express');
-const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers } = require('../controller/clientController');
+const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers, getTourGuides, getGallery, getContinueReadingPage } = require('../controller/clientController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { uploadProfilePic, uploadCareerCv } = require('../middleware/multer');
 
@@ -55,5 +55,11 @@ router.post('/careers/apply', isAuthenticated, uploadCareerCv.single('cv'), appl
 router.post('/careers/:id/apply', isAuthenticated, uploadCareerCv.single('cv'), applyForCareer);
 
 router.get('/applied-careers', isAuthenticated, getAppliedCareers);
+
+router.get('/tour-guide', isAuthenticated, getTourGuides);
+
+router.get('/gallery', isAuthenticated, getGallery);
+
+router.get('/continue-reading', isAuthenticated, getContinueReadingPage);
 
 module.exports = router;

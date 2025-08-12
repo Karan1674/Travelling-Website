@@ -34,6 +34,7 @@
                                             <th>Employment Type</th>
                                             <th>Vacancies</th>
                                             <th>Salary</th>
+                                            <th>Created By</th>
                                             <th>Active</th>
                                             <th>Actions</th>
                                         </tr>
@@ -45,6 +46,8 @@
                                                 <td><%= career.employmentType %></td>
                                                 <td><%= career.vacancies %></td>
                                                 <td><%= career.salary %></td>
+                                                <td><%= career.createdBy ? `${career.createdBy.firstName} ${career.createdBy.lastName}` : 'Unknown' %></td>
+
                                                 <td>
                                                     <span class="badge badge-<%= career.isActive === true ? 'success' : 'danger' %>">
                                                         <%= career.isActive ? 'Active' : 'Disabled' %>

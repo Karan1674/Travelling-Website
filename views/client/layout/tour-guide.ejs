@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+<%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <!-- Inner Banner html start-->
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Our Tour Guides</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <!-- Inner Banner html end-->
+            <!-- guide html start -->
+            <div class="guide-page-section" >
+                <div class="container">
+                    
+                    <div class="row">
+                        <% if (tourGuides && tourGuides.length > 0) { %>
+                            <% tourGuides.forEach(guide => { %>
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="guide-content-wrap text-center" >
+                                        <figure class="guide-image">
+                                            <img src="/uploads/tourGuides/<%= guide.image %>" alt="<%= guide.name %>">
+                                        </figure>
+                                        <div class="guide-content" >
+                                            <h3 ><%= guide.name %></h3>
+                                            <h5><%= guide.role %></h5>
+                                            <p ><%= guide.description %></p>
+                                            <div class="guide-social social-links">
+                                                <ul >
+                                                    <% if (guide.socialLinks.facebook) { %>
+                                                        <li><a href="<%= guide.socialLinks.facebook %>" target="_blank"><i class="fab fa-facebook-f" aria-hidden="true"></i></a></li>
+                                                    <% } %>
+                                                    <% if (guide.socialLinks.twitter) { %>
+                                                        <li><a href="<%= guide.socialLinks.twitter %>" target="_blank"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+                                                    <% } %>
+                                                    <% if (guide.socialLinks.youtube) { %>
+                                                        <li><a href="<%= guide.socialLinks.youtube %>" target="_blank"><i class="fab fa-youtube" aria-hidden="true"></i></a></li>
+                                                    <% } %>
+                                                    <% if (guide.socialLinks.instagram) { %>
+                                                        <li><a href="<%= guide.socialLinks.instagram %>" target="_blank"><i class="fab fa-instagram" aria-hidden="true"></i></a></li>
+                                                    <% } %>
+                                                    <% if (guide.socialLinks.linkedin) { %>
+                                                        <li><a href="<%= guide.socialLinks.linkedin %>" target="_blank"><i class="fab fa-linkedin" aria-hidden="true"></i></a></li>
+                                                    <% } %>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-12 text-center">
+                                <p style="color: #555; font-size: 16px;">No tour guides available at the moment.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            <!-- guide html end -->
+            <!-- client section html start -->
+            <div class="client-section override-client" >
+                <div class="container">
+                    <div class="client-wrap client-slider secondary-bg">
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo1.png" alt=""></figure>
+                        </div>
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo2.png" alt=""></figure>
+                        </div>
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo3.png" alt=""></figure>
+                        </div>
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo4.png" alt=""></figure>
+                        </div>
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo5.png" alt=""></figure>
+                        </div>
+                        <div class="client-item">
+                            <figure><img src="/assets/images/logo2.png" alt=""></figure>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- client html end -->
+            <!-- callback section html start -->
+            <div class="override-callback secondary-overlay" style="background-image: url(/assets/images/slider-banner-2.jpg);">
+                <div class="container">
+                    <div class="section-heading section-heading-white">
+                        <div class="row">
+                            <div class="col-lg-7">
+                                <h5 class="dash-style">INVOLVE NOW</h5>
+                                <h2>BE A PART OF OUR TEAM. JOIN US NOW!</h2>
+                                <p >Explore exciting career opportunities with us. Become a tour guide or join our team in other roles to create unforgettable travel experiences!</p>
+                                <a href="/careers" class="button-primary">View Open Positions</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- callback html end -->
+        </main>
+        <%- include('../partials/Footer.ejs') %>
+    </div>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/Script.ejs') %>
+</body>
+</html>

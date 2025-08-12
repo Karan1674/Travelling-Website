@@ -31,6 +31,7 @@
                                     <th>Trip Duration</th>
                                     <th>Package Type</th>
                                     <th>Destination</th>
+                                    <th>Created By</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -48,6 +49,8 @@
                                                 <%= package.packageType ? package.packageType : 'Not specified' %>
                                             </td>
                                             <td><%= package.destinationCountry ? package.destinationCountry : 'Not specified' %></td>
+                                            <td><%= package.createdBy ? `${package.createdBy.firstName} ${package.createdBy.lastName}` : 'Unknown' %></td>
+                                            
                                             <td>
                                                 <span class="badge badge-<%= package.status === 'Active' ? 'success' : package.status === 'Pending' ? 'primary' : 'danger' %>">
                                                     <%= package.status %>
