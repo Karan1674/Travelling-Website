@@ -33,6 +33,7 @@
                                     <th>Destination</th>
                                     <th>Created By</th>
                                     <th>Status</th>
+                                    <th>Updated By</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -56,6 +57,7 @@
                                                     <%= package.status %>
                                                 </span>
                                             </td>
+                                            <td><%= package.updatedBy ? `${package.updatedBy.firstName} ${package.updatedBy.lastName}` : '' %></td>
                                             <td>
                                                 <a href="/package-preview/<%= package._id %>" class="badge badge-info text-white" title="Preview Package"><i class="far fa-eye"></i></a>
                                                 <span class="badge badge-success "  style="cursor: pointer;" onclick="window.location.href='/edit-package/<%= package._id %>'"><i class="far fa-edit"></i></span>

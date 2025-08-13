@@ -27,6 +27,7 @@
                                         <p><strong>Coupon Code:</strong> <%= coupon.code %></p>
                                         <p><strong>Discount Type:</strong> <%= coupon.discountType.charAt(0).toUpperCase() + coupon.discountType.slice(1) %></p>
                                         <p><strong>Discount Value:</strong> <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '$' + coupon.discountValue.toFixed(2) %></p>
+                                        <p><strong>Restricted to User:</strong> <%= coupon.restrictToUser ? `${coupon.restrictToUser.firstName} ${coupon.restrictToUser.lastName} (${coupon.restrictToUser.email})` : 'None' %></p>
                                         <p><strong>Minimum Purchase:</strong> $<%= coupon.minPurchase.toFixed(2) %></p>
                                         <p><strong>Maximum Discount:</strong> <%= coupon.maxDiscount > 0 ? '$' + coupon.maxDiscount.toFixed(2) : 'No limit' %></p>
                                         <p><strong>Expiry Date:</strong> <%= new Date(coupon.expiryDate).toLocaleDateString() %></p>
@@ -34,11 +35,13 @@
                                     <div class="col-sm-6">
                                         <p><strong>Usage Limit:</strong> <%= coupon.usageLimit %></p>
                                         <p><strong>Used Count:</strong> <%= coupon.usedCount %></p>
-                                        <p><strong>Restricted to User:</strong> <%= coupon.restrictToUser ? `${coupon.restrictToUser.firstName} ${coupon.restrictToUser.lastName} (${coupon.restrictToUser.email})` : 'None' %></p>
                                         <p><strong>Status:</strong> <span class="badge badge-<%= coupon.isActive ? 'success' : 'danger' %>"><%= coupon.isActive ? 'Active' : 'Inactive' %></span></p>
                                         <p><strong>Created At:</strong> <%= new Date(coupon.createdAt).toLocaleString() %></p>
-                                        <p ><strong>Created By:</strong> <%= coupon.createdByModel === 'Admin' ? 'Admin' : 'Agent' %> (ID: <%= coupon.createdBy %>)
-                                        </p>
+                                        <p ><strong>Created By:</strong> <%= coupon.createdByModel === 'Admin' ? 'Admin' : 'Agent' %> ( <%= `${coupon.createdBy.firstName} ${coupon.createdBy.lastName} (${coupon.createdBy.email})` %>)</p>
+                                  
+                                        <% if(coupon.updatedAt) {%>    <p><strong>Updated At:</strong> <%= new Date(coupon.updatedAt).toLocaleString() %></p><% } %>
+                                            <% if(coupon.updatedBy) {%>   <p ><strong>Updated By:</strong> <%= coupon.updatedByModel === 'Admin' ? 'Admin' : 'Agent' %> ( <%= `${coupon.updatedBy.firstName} ${coupon.updatedBy.lastName} (${coupon.updatedBy.email})` %>)</p><% } %>
+                                    
                                     </div>
                 
                                 </div>

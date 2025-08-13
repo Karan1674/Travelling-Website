@@ -31,6 +31,7 @@
                                     <th>Discount Value</th>
                                     <th>Created By</th>
                                     <th>Expiry Date</th>
+                                    <th>Updated By</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -45,8 +46,9 @@
                                                 <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '$' + coupon.discountValue.toFixed(2) %>
                                             </td>
                                             <td><%= coupon.createdBy ? `${coupon.createdBy.firstName} ${coupon.createdBy.lastName}` : 'Unknown' %></td>
-
+                                            
                                             <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
+                                            <td><%= coupon.updatedBy ? `${coupon.updatedBy.firstName} ${coupon.updatedBy.lastName}` : '' %></td>
                                             <td>
                                                 <span class="badge badge-<%= coupon.isActive ? 'success' : 'danger' %>">
                                                     <%= coupon.isActive ? 'Active' : 'Inactive' %>

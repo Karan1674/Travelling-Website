@@ -34,6 +34,7 @@
                                     <th>Booking ID</th>
                                     <th>Status</th>
                                     <th>People</th>
+                                    <th>Updated By</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -77,6 +78,8 @@
                                                     <%= booking.items ? booking.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0 %>
                                                 </span>
                                             </td>
+                                            <td><%= booking.updatedBy ? `${booking.updatedBy.firstName} ${booking.updatedBy.lastName}` : '' %></td>
+
                                             <td>
                                                 <a href="/admin/bookings/edit/<%= booking._id %>" class="badge badge-success text-white"><i class="far fa-edit"></i></a>
                                                 <!-- <% if( booking && booking.status === 'rejected') { %>

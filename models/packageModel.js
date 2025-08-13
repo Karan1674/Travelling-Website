@@ -60,6 +60,17 @@ const packageSchema = new mongoose.Schema({
   },
   status: { type: String, enum: ['Pending', 'Active', 'Expired'], required: true },
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
+  updatedBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    refPath: 'updatedByModel', 
+    default: null 
+},
+updatedByModel: { 
+    type: String, 
+    enum: ['Admin', 'Agent'], 
+    default: null 
+},
+updatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Package', packageSchema);

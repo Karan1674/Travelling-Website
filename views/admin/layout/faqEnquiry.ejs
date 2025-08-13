@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h4 style="margin: 0; color: #333;">FAQ Enquiry List</h4>
+                                <a href="/enquiryDashboard" class="btn btn-primary" style="transition: background 0.3s;">Back to Enquiry Dashboard</a>
+                            </div>
+
+                            <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <form id="search-form" action="/faqEnquiry" method="get" style="flex: 1; margin-right: 20px;">
+                                    <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                                        <input type="text" name="search" id="search-name" placeholder="Search by Asked By" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                        <select name="answerStatus" id="answer-status" style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="all" <%= answerStatus === 'all' ? 'selected' : '' %>>All</option>
+                                            <option value="answered" <%= answerStatus === 'answered' ? 'selected' : '' %>>Answered</option>
+                                            <option value="notAnswered" <%= answerStatus === 'notAnswered' ? 'selected' : '' %>>Not Answered</option>
+                                        </select>
+                                        <button type="submit" aria-label="Search questions" style="position: absolute; right: 40px; background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-search" style="color: #007bff;"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Asked By</th>
+                                            <th>Email</th>
+                                            <th>Number</th>
+                                            <!-- <th>Answer</th> -->
+                                            <th>Answered By</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% questions.forEach(question => { %>
+                                            <tr>
+                                                <td><%= question.name %></td>
+                                                <td><%= question.email %></td>
+                                                <td><%= question.number || '-' %></td>
+                                                <!-- <td><%= question.answer || 'Not answered' %></td> -->
+                                                <td><%= question.answeredBy ? `${question.answeredBy.firstName} ${question.answeredBy.lastName} ` : '-' %></td>
+                                                <td>
+                                                    <span class="badge badge-info text-white view-btn" style="cursor: pointer;" 
+                                                        data-toggle="modal" 
+                                                        data-target="#viewModal_<%= question._id %>">
+                                                        <i class="far fa-eye"></i>
+                                                    </span>
+                                                    <span class="badge badge-success text-white edit-btn" style="cursor: pointer;" 
+                                                        data-toggle="modal" 
+                                                        data-target="#editModal_<%= question._id %>">
+                                                        <i class="far fa-edit"></i>
+                                                    </span>
+                                                    <span class="badge badge-danger delete-btn" style="cursor: pointer;" data-itemId="<%= question._id %>">
+                                                        <i class="far fa-trash-alt"></i>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <!-- View Modal -->
+                                            <div class="modal fade" id="viewModal_<%= question._id %>" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel_<%= question._id %>" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="viewModalLabel_<%= question._id %>">FAQ Enquiry Details</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p><strong>Name:</strong> <%= question.name %></p>
+                                                            <p><strong>Email:</strong> <%= question.email %></p>
+                                                            <p><strong>Number:</strong> <%= question.number || '-' %></p>
+                                                            <p><strong>Question:</strong> <%= question.message %></p>
+                                                            <p><strong>Answer:</strong> <%= question.answer || 'Not answered' %></p>
+                                                            <p><strong>Created At:</strong> <%= new Date(question.createdAt).toLocaleString() %></p>
+                                                            <p><strong>Answered By:</strong> <%= question.answeredBy ? `${question.answeredBy.firstName} ${question.answeredBy.lastName} (${question.answeredBy.email})` : '-' %></p>
+                                                            <p><strong>Answered At:</strong> <%= question.answeredAt ? new Date(question.answeredAt).toLocaleString() : '-' %></p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Edit Modal -->
+                                            <div class="modal fade" id="editModal_<%= question._id %>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel_<%= question._id %>" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg" role="document">
+                                                    <div class="modal-content" style="overflow-y: hidden;">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editModalLabel_<%= question._id %>">Answer FAQ Enquiry</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="/faqEnquiry/edit/<%= question._id %>" method="POST">
+                                                            <div class="modal-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6 form-group">
+                                                                        <label for="name_<%= question._id %>">Name</label>
+                                                                        <input type="text" name="name" id="name_<%= question._id %>" class="form-control" value="<%= question.name %>" disabled>
+                                                                    </div>
+                                                                    <div class="col-md-6 form-group">
+                                                                        <label for="email_<%= question._id %>">Email</label>
+                                                                        <input type="email" name="email" id="email_<%= question._id %>" class="form-control" value="<%= question.email %>" disabled>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <div class="col-md-6 form-group">
+                                                                        <label for="number_<%= question._id %>">Number</label>
+                                                                        <input type="text" name="number" id="number_<%= question._id %>" class="form-control" value="<%= question.number || '' %>" disabled>
+                                                                    </div>
+                                                                    <div class="col-md-6 form-group">
+                                                                        <label for="createdAt_<%= question._id %>">Question Asked At</label>
+                                                                        <input type="text" name="createdAt" id="createdAt_<%= question._id %>" class="form-control" value="<%= new Date(question.createdAt).toLocaleString() %>" disabled>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <div class="col-12 form-group">
+                                                                        <label for="message_<%= question._id %>">Question</label>
+                                                                        <textarea name="message" id="message_<%= question._id %>" class="form-control" rows="3" disabled><%= question.message %></textarea>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <div class="col-12 form-group">
+                                                                        <label for="answer_<%= question._id %>">Answer</label>
+                                                                        <textarea name="answer" id="answer_<%= question._id %>" class="form-control" rows="3"><%= question.answer || '' %></textarea>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary">Save</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <%- include('../partials/pagination') %>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/deletePopup', { entityName: 'FAQ Enquiry', deleteEndpoint: '/faqEnquiry/delete', buttonClass: 'delete-btn' }) %>
+    <%- include('../partials/script.ejs') %>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Handle search form submission
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-name');
+        const answerStatusSelect = document.getElementById('answer-status');
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameQuery = searchInput.value.trim();
+            const answerStatus = answerStatusSelect.value;
+            let url = `?page=1`;
+            if (nameQuery) url += `&search=${encodeURIComponent(nameQuery)}`;
+            if (answerStatus !== 'all') url += `&answerStatus=${encodeURIComponent(answerStatus)}`;
+            window.location.href = url;
+        });
+    });
+</script>
+
+<style>
+      /* Modal Animation Styles */
+      .modal .modal-dialog {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Ensure modals appear above navbar */
+        .modal {
+            z-index: 99999 !important;
+            top: 30px !important;
+            padding: 20px !important;
+    
+        }
+
+        .modal-backdrop {
+            z-index: 99998 !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Ensure navbar stays above backdrop */
+        .sticky-header {
+            z-index: 1000 !important;
+        }
+</style>
+</html>

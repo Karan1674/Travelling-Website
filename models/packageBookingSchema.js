@@ -34,7 +34,18 @@ const bookingSchema = new mongoose.Schema({
     total: { type: Number, required: true },
     discount: { type: Number, default: 0 }, // Added discount field
     couponCode: { type: String, default: null }, // Added coupon code field
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    updatedBy: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        refPath: 'updatedByModel', 
+        default: null 
+    },
+    updatedByModel: { 
+        type: String, 
+        enum: ['Admin', 'Agent'], 
+        default: null 
+    },
+    updatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

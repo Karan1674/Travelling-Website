@@ -27,6 +27,11 @@
                                         <p style="margin-bottom: 12px;"><strong style="color: #333;">Salary:</strong> <%= career.salary %></p>
                                         <p style="margin-bottom: 12px;"><strong style="color: #333;">Active:</strong> <%= career.isActive ? 'Yes' : 'No' %></p>
                                         <p style="margin-bottom: 12px;"><strong style="color: #333;">Created By:</strong> <%= career.createdBy? `${career.createdBy.firstName} ${career.createdBy.lastName}` : 'Unknown' %> (<%= career.createdBy?.email || 'N/A' %>)</p>
+                                    
+                                    
+                                            <% if(career.updatedBy) {%>        <p style="margin-bottom: 12px;"><strong style="color: #333;">Updated By:</strong> <%= career.updatedBy? `${career.updatedBy.firstName} ${career.updatedBy.lastName}` : 'Unknown' %> (<%= career.updatedBy?.email || 'N/A' %>)</p>  <% } %>
+                                            <% if(career.updatedAt) {%>                  <p style="margin-bottom: 12px;"><strong style="color: #333;">Updated At:</strong> <%= career.updatedAt? `${career.updatedAt.toISOString().split('T')[0]}` : '-' %></p>   <% } %>
+
                                     </div>
                                     <div class="col-md-6 text-center">
                                         <img src="/uploads/career/<%= career.image %>" alt="<%= career.title %>" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">

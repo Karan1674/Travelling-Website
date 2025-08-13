@@ -24,7 +24,18 @@ const applicationSchema = new mongoose.Schema({
     appliedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    updatedBy: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        refPath: 'updatedByModel', 
+        default: null 
+    },
+    updatedByModel: { 
+        type: String, 
+        enum: ['Admin', 'Agent'], 
+        default: null 
+    },
+    updatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Application', applicationSchema);

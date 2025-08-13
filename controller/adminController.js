@@ -16,6 +16,7 @@ import CareerSchema from '../models/CareerSchema.js';
 import ApplicationSchema from '../models/ApplicationSchema.js';
 import GuideSchema from '../models/GuideSchema.js';
 import GallerySchema from '../models/GallerySchema.js';
+import faqSchema from '../models/faqSchema.js';
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -941,6 +942,8 @@ export const editPackage = async (req, res) => {
     try {
         const { id } = req.params;
         req.session = req.session || {};
+        const userId = req.id;
+        const isAdmin = req.isAdmin
 
         if (!id) {
             req.session.message = 'Invalid package ID';
@@ -1144,6 +1147,9 @@ export const editPackage = async (req, res) => {
         }
 
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+        data.updatedBy = userId;
+        data.updatedByModel  = isAdmin ? 'Admin' : 'Agent';
+        data.updatedAt = new Date();
 
         const updatedPackage = await packageModel.findByIdAndUpdate(id, data, { new: true });
         if (!updatedPackage) {
@@ -1220,6 +1226,7 @@ export const getAllPackages = async (req, res) => {
         const allPackages = await packageModel
             .find(query)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -1627,6 +1634,7 @@ export const getBookings = async (req, res) => {
         req.session = req.session || {};
 
         if (!userId) {
+
             console.log("No userId Available");
             req.session.message = 'Unauthorized: Please log in';
             req.session.type = 'error';
@@ -1706,6 +1714,7 @@ export const getBookings = async (req, res) => {
 
         const bookings = await packageBookingSchema.find(searchQuery)
             .populate('userId', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .populate('items.packageId', 'title')
             .skip((page - 1) * limit)
             .limit(limit)
@@ -1797,7 +1806,7 @@ export const editBooking = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
-
+const isAdmin = req.isAdmin
         if (!userId) {
             console.log("No userId Available");
             req.session.message = 'Unauthorized: Please log in';
@@ -1822,6 +1831,9 @@ export const editBooking = async (req, res) => {
         }
 
         booking.status = status;
+        booking.updatedBy = userId;
+        booking.updatedByModel  = isAdmin ? 'Admin' : 'Agent';
+        booking.updatedAt = new Date();
 
         if (status === 'rejected' && booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentType !== 'refund') {
             try {
@@ -2006,6 +2018,7 @@ export const renderCouponList = async (req, res) => {
         // Fetch coupons
         const coupons = await couponSchema.find(query)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .lean()
             .skip(skip)
             .limit(limit)
@@ -2384,8 +2397,9 @@ export const updateCoupon = async (req, res) => {
                 usageLimit: parseInt(usageLimit),
                 restrictToUser: userIdRestrict,
                 isActive: isActive === 'true',
-                // createdBy,
-                // createdByModel
+                updatedBy : userId,
+                updatedByModel : isAdmin ? 'Admin' : 'Agent',
+                updatedAt : new Date(),
             },
             { new: true, runValidators: true }
         );
@@ -2518,8 +2532,12 @@ export const renderCouponDetails = async (req, res) => {
 
         const coupon = await couponSchema.findOne(query)
             .populate('usedBy.userId', 'firstName lastName email')
+            .populate('createdBy', 'firstName lastName email')
             .populate('restrictToUser', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .lean();
+
+
         if (!coupon) {
             req.session.message = 'Coupon not found or you do not have access';
             req.session.type = 'error';
@@ -2582,6 +2600,7 @@ export const getCareerList = async (req, res) => {
 
         const careers = await CareerSchema.find(query)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -2776,6 +2795,7 @@ export const editCareer = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
+        const isAdmin = req.isAdmin
 
         if (!userId) {
             req.session.message = 'Unauthorized: Admin or Agent access required';
@@ -2811,6 +2831,9 @@ export const editCareer = async (req, res) => {
         career.vacancies = parseInt(vacancies);
         career.salary = salary;
         career.isActive = isActive
+        career.updatedBy = userId;
+        career.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        career.updatedAt = new Date();
 
 
         if (req.file) {
@@ -2870,7 +2893,9 @@ export const getCareerDetail = async (req, res) => {
         const career = await CareerSchema.findById(req.params.id).populate({
             path: 'createdBy',
             select: 'firstName lastName email',
-            model: req.createdByModel // Dynamically resolved
+        }).populate({
+            path: 'updatedBy',
+            select: 'firstName lastName email',
         });
 
         if (!career) {
@@ -2883,7 +2908,6 @@ export const getCareerDetail = async (req, res) => {
         const applications = await ApplicationSchema.find({ careerId: req.params.id }).populate({
             path: 'userId',
             select: 'firstName lastName email',
-            model: 'User'
         }).sort({ createdAt: -1 });
 
         res.render('admin/layout/careerDetail', {
@@ -2950,113 +2974,6 @@ export const deleteCareer = async (req, res) => {
     }
 };
 
-// Get application detail for admin/agent
-export const getApplicationDetail = async (req, res) => {
-    try {
-        const userId = req.id;
-        req.session = req.session || {};
-        const isAdmin = req.isAdmin
-        if (!userId) {
-            req.session.message = 'Unauthorized: Admin or Agent access required';
-            req.session.type = 'error';
-            return res.redirect('/login');
-        }
-
-        let userData = await adminModel.findById(userId);
-        if (!userData) {
-            userData = await agentModel.findById(userId);
-        }
-
-        if (!userData) {
-            req.session.message = 'User not found';
-            req.session.type = 'error';
-            return res.redirect('/loginPage');
-        }
-
-        const application = await ApplicationSchema.findById(req.params.id)
-            .populate({
-                path: 'userId',
-                select: 'firstName lastName email'
-            })
-            .populate({
-                path: 'careerId',
-                select: 'title'
-            });
-
-        if (!application) {
-            req.session.message = 'Application not found';
-            req.session.type = 'error';
-            return res.redirect('/career-list');
-        }
-
-
-        res.render('admin/layout/application-detail', {
-            application,
-            isAdmin,
-            user: userData,
-            message: req.session?.message || null,
-            type: req.session?.type || null
-        });
-
-    } catch (error) {
-        console.error('Error fetching application detail:', error);
-        req.session.message = 'Server error fetching application detail';
-        req.session.type = 'error';
-        res.status(500).redirect('/error');
-    }
-};
-
-// Update application status
-export const updateApplicationStatus = async (req, res) => {
-    try {
-        const userId = req.id;
-        req.session = req.session || {};
-
-        if (!userId) {
-            req.session.message = 'Unauthorized: Admin or Agent access required';
-            req.session.type = 'error';
-            return res.redirect('/application-detail/' + req.params.id);
-        }
-
-
-        let userData = await adminModel.findById(userId);
-        if (!userData) {
-            userData = await agentModel.findById(userId);
-        }
-
-        if (!userData) {
-            req.session.message = 'User not found';
-            req.session.type = 'error';
-            return res.redirect('/loginPage');
-        }
-
-        const { status } = req.body;
-        if (!['pending', 'accepted', 'rejected'].includes(status)) {
-            req.session.message = 'Invalid status';
-            req.session.type = 'error';
-            return res.redirect('/application-detail/' + req.params.id);
-        }
-
-        const application = await ApplicationSchema.findById(req.params.id);
-        if (!application) {
-            req.session.message = 'Application not found';
-            req.session.type = 'error';
-            return res.redirect('/career-list');
-        }
-
-        application.status = status;
-        await application.save();
-
-        req.session.message = 'Application status updated successfully';
-        req.session.type = 'success';
-        res.redirect('/application-detail/' + req.params.id);
-    } catch (error) {
-        console.error('Error updating application status:', error);
-        req.session.message = 'Server error updating application status';
-        req.session.type = 'error';
-        res.status(500).redirect('/error');
-    }
-};
 
 // Get application list for admin/agent
 export const getApplicationList = async (req, res) => {
@@ -3129,6 +3046,10 @@ export const getApplicationList = async (req, res) => {
                 select: 'firstName lastName email'
             })
             .populate({
+                path: 'updatedBy',
+                select: 'firstName lastName email'
+            })
+            .populate({
                 path: 'careerId',
                 select: 'title'
             })
@@ -3157,6 +3078,123 @@ export const getApplicationList = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
+
+// Get application detail for admin/agent
+export const getApplicationDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+        const isAdmin = req.isAdmin
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/login');
+        }
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const application = await ApplicationSchema.findById(req.params.id)
+            .populate({
+                path: 'userId',
+                select: 'firstName lastName email'
+            })
+            .populate({
+                path: 'updatedBy',
+                select: 'firstName lastName email'
+            })
+            .populate({
+                path: 'careerId',
+                select: 'title'
+            });
+
+        if (!application) {
+            req.session.message = 'Application not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+
+        res.render('admin/layout/application-detail', {
+            application,
+            isAdmin,
+            user: userData,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+
+    } catch (error) {
+        console.error('Error fetching application detail:', error);
+        req.session.message = 'Server error fetching application detail';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update application status
+export const updateApplicationStatus = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+const isAdmin = req.isAdmin
+        if (!userId) {
+            req.session.message = 'Unauthorized: Admin or Agent access required';
+            req.session.type = 'error';
+            return res.redirect('/application-detail/' + req.params.id);
+        }
+
+
+        let userData = await adminModel.findById(userId);
+        if (!userData) {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { status } = req.body;
+        if (!['pending', 'accepted', 'rejected'].includes(status)) {
+            req.session.message = 'Invalid status';
+            req.session.type = 'error';
+            return res.redirect('/application-detail/' + req.params.id);
+        }
+
+        const application = await ApplicationSchema.findById(req.params.id);
+        if (!application) {
+            req.session.message = 'Application not found';
+            req.session.type = 'error';
+            return res.redirect('/career-list');
+        }
+
+        application.status = status;
+        application.updatedBy = userId;
+        application.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        application.updatedAt = new Date();
+        await application.save();
+
+        req.session.message = 'Application status updated successfully';
+        req.session.type = 'success';
+        res.redirect('/application-detail/' + req.params.id);
+    } catch (error) {
+        console.error('Error updating application status:', error);
+        req.session.message = 'Server error updating application status';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
 
 // Get tour guides for admin/agent dashboard
 export const getTourGuides = async (req, res) => {
@@ -3211,6 +3249,7 @@ export const getTourGuides = async (req, res) => {
 
         const tourGuides = await GuideSchema.find(query)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -3389,6 +3428,7 @@ export const updateTourGuide = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
+        const isAdmin = req.isAdmin
 
         if (!userId) {
             req.session.message = 'Unauthorized: Admin or Agent access required';
@@ -3418,6 +3458,10 @@ export const updateTourGuide = async (req, res) => {
             socialLinks: { facebook, twitter, youtube, instagram, linkedin },
             isActive: isActive === 'true'
         };
+
+        updateData.updatedBy = userId;
+        updateData.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        updateData.updatedAt = new Date();
 
         if (req.file) {
             // Delete old image if exists
@@ -3522,6 +3566,7 @@ export const getTourGuideDetail = async (req, res) => {
 
         const tourGuide = await GuideSchema.findById(req.params.id)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .lean();
 
         if (!tourGuide) {
@@ -3594,6 +3639,7 @@ export const getGalleryDashboard = async (req, res) => {
 
         const galleryItems = await GallerySchema.find(query)
             .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -3719,6 +3765,11 @@ export const editGalleryItem = async (req, res) => {
         }
 
         galleryItem.title = title;
+     
+            galleryItem.updatedBy = userId;
+            galleryItem.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+            galleryItem.updatedAt = new Date();
+
         if (image) galleryItem.image = image;
         galleryItem.isActive = isActive === 'true';
 
@@ -3787,5 +3838,225 @@ export const deleteGalleryItem = async (req, res) => {
         req.session.message = 'Server error deleting gallery item';
         req.session.type = 'error';
         res.status(500).redirect('/error');
+    }
+};
+
+
+
+
+// GET: Render Enquiry Dashboard (Admin/Agent)
+export const getEnquiryDashboard = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin
+        
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('admin/layout/enquiryDashboard', {
+            user,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching enquiry dashboard:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error fetching enquiry dashboard';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// GET: Render FAQ Enquiry Page (Admin/Agent)
+export const getFaqEnquiry = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin
+        
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const search = req.query.search || '';
+        const answerStatus = req.query.answerStatus || 'all';
+
+        let query = {};
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+        if (answerStatus === 'answered') {
+            query.answer = { $ne: null };
+        } else if (answerStatus === 'notAnswered') {
+            query.answer = null;
+        }
+
+        const questions = await faqSchema.find(query)
+            .populate('answeredBy', 'firstName lastName email')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        const totalQuestions = await faqSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalQuestions / limit);
+
+        res.render('admin/layout/faqEnquiry', {
+            user,
+            questions,
+            search ,
+            isAdmin,
+            answerStatus,
+            currentPage: page,
+            totalPages,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching FAQ enquiry page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error fetching FAQ enquiry page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+// POST: Edit/Answer FAQ Enquiry (Admin/Agent)
+export const editFaqEnquiry = async (req, res) => {
+    try {
+        const { answer } = req.body;
+        const questionId = req.params.id;
+        const userId = req.id;
+        const isAdmin = req.isAdmin
+        
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+        if (!answer) {
+            req.session = req.session || {};
+            req.session.message = 'Answer to given question equired to update the faq';
+            req.session.type = 'error';
+            return res.redirect('/faqEnquiry');
+        }
+
+    
+
+        const question = await faqSchema.findById(questionId);
+        if (!question) {
+            req.session = req.session || {};
+            req.session.message = 'Question not found';
+            req.session.type = 'error';
+            return res.redirect('/faqEnquiry');
+        }
+
+const updateQuestion={}
+        if (answer) {
+            updateQuestion.answer = answer;
+            updateQuestion.answeredBy = userId;
+            updateQuestion.answeredByModel = isAdmin ? 'Admin' : 'Agent';
+            updateQuestion.answeredAt = new Date();
+        } else if (question.answer && !answer) {
+            updateQuestion.answer = null;
+            updateQuestion.answeredBy = null;
+            updateQuestion.answeredByModel = null;
+            updateQuestion.answeredAt = null;
+        }
+
+        await faqSchema.findByIdAndUpdate(questionId, { $set: updateQuestion }, { new: true, runValidators: true });
+
+
+        req.session = req.session || {};
+        req.session.message = 'FAQ enquiry updated successfully';
+        req.session.type = 'success';
+        res.redirect('/faqEnquiry');
+    } catch (error) {
+        console.error('Error updating FAQ enquiry:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error updating FAQ enquiry';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+// Delete FAQ Enquiry (Admin/Agent)
+export const deleteFaqEnquiry = async (req, res) => {
+    try {
+        const questionId = req.params.id;
+        const isAdmin = req.isAdmin
+        const userId = req.id
+        
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const question = await faqSchema.findById(questionId);
+        if (!question) {
+            req.session = req.session || {};
+            req.session.message = 'FAQ enquiry not found';
+            req.session.type = 'error';
+            return res.redirect('/faqEnquiry');
+        }
+
+        await question.deleteOne();
+
+        req.session = req.session || {};
+        req.session.message = 'FAQ enquiry deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/faqEnquiry');
+    } catch (error) {
+        console.error('Error deleting FAQ enquiry:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error deleting FAQ enquiry';
+        req.session.type = 'error';
+        res.redirect('/error');
     }
 };

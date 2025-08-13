@@ -70,6 +70,17 @@ const careerSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    updatedBy: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        refPath: 'updatedByModel', 
+        default: null 
+    },
+    updatedByModel: { 
+        type: String, 
+        enum: ['Admin', 'Agent'], 
+        default: null 
+    },
+    updatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Career', careerSchema);

@@ -33,6 +33,7 @@
                                             <th>Name</th>
                                             <th>Role</th>
                                             <th>Created By</th>
+                                            <th>updated By</th>
                                             <th>Active</th>
                                             <th>Actions</th>
                                         </tr>
@@ -43,6 +44,8 @@
                                                 <td><%= guide.name %></td>
                                                 <td><%= guide.role %></td>
                                                 <td><%= guide.createdBy ? `${guide.createdBy.firstName} ${guide.createdBy.lastName}` : 'Unknown' %></td>
+                                                <td><%= guide.updatedBy ? `${guide.updatedBy.firstName} ${guide.updatedBy.lastName}` : '' %></td>
+                                                
                                                 <td>
                                                     <span class="badge badge-<%= guide.isActive ? 'success' : 'danger' %>">
                                                         <%= guide.isActive ? 'Active' : 'Disabled' %>

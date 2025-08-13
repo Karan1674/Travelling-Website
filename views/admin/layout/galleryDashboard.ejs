@@ -1,446 +1,546 @@
 <!doctype html>
 <html lang="en">
 <%- include('../partials/Header') %>
-<body>
-    <div id="container-wrapper">
-        <div id="dashboard" class="dashboard-container">
-            <%- include('../partials/Navbar') %>
-            <%- include('../partials/Sidebar') %>
-            <div class="db-info-wrap">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="dashboard-box" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h4 style="margin: 0; color: #333;">Gallery Management</h4>
-                                <button class="btn btn-primary add-gallery-btn" style="transition: background 0.3s;">Add Gallery Item</button>
-                            </div>
 
-                            <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <form id="search-form" action="/galleryDashboard" method="get" style="flex: 1; margin-right: 20px;">
-                                    <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                        <input type="text" name="search" id="search-input" placeholder="Search by Title" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <button type="submit" aria-label="Search gallery items" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
-                                            <i class="fas fa-search" style="color: #007bff;"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+    <body>
+        <div id="container-wrapper">
+            <div id="dashboard" class="dashboard-container">
+                <%- include('../partials/Navbar') %>
+                    <%- include('../partials/Sidebar') %>
+                        <div class="db-info-wrap">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="dashboard-box"
+                                        style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <div class="header-controls"
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                            <h4 style="margin: 0; color: #333;">Gallery Management</h4>
+                                            <button class="btn btn-primary add-gallery-btn"
+                                                style="transition: background 0.3s;">Add Gallery Item</button>
+                                        </div>
 
-                            <div class="gallery-section">
-                                <div class="container">
-                                    <div class="gallery-outer-wrap">
-                                        <div class="gallery-inner-wrap gallery-container" style="columns: 4;">
-                                            <% galleryItems.forEach(item => { %>
-                                                <div class="single-gallery grid-item mb-2">
-                                                    <figure class="gallery-img">
-                                                        <img src="/Uploads/mediaGallery/<%= item.image %>" alt="<%= item.title %>" style="width: 100%; height: auto; object-fit: cover;">
-                                                        <div class="gallery-overlay">
-                                                            <div class="gallery-title">
-                                                                <h3>
-                                                                    <a href="#" class="preview-btn" data-id="<%= item._id %>" data-title="<%= item.title %>" data-image="/Uploads/mediaGallery/<%= item.image %>" data-active="<%= item.isActive %>" data-createdby="<%= item.createdBy ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : 'Unknown' %>" data-createdat="<%= item.createdAt.toISOString().split('T')[0] %>">
-                                                                        <%= item.title %>
-                                                                    </a>
-                                                                </h3>
-                                                            </div>
-                                                            <div class="gallery-actions" style="position: absolute; top: 10px; right: 10px; z-index: 2;">
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                        <i class="fas fa-ellipsis-v" style="color: #fff;"></i>
-                                                                    </button>
-                                                                    <div class="dropdown-menu dropdown-menu-right">
-                                                                        <a class="dropdown-item preview-btn" href="#" data-id="<%= item._id %>" data-title="<%= item.title %>" data-image="/Uploads/mediaGallery/<%= item.image %>" data-active="<%= item.isActive %>" data-createdby="<%= item.createdBy ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : 'Unknown' %>" data-createdat="<%= item.createdAt.toISOString().split('T')[0] %>">Preview</a>
-                                                                        <a class="dropdown-item edit-btn" href="#" data-id="<%= item._id %>" data-title="<%= item.title %>" data-image="/Uploads/mediaGallery/<%= item.image %>" data-active="<%= item.isActive %>">Edit</a>
-                                                                        <a class="dropdown-item delete-btn" href="#" data-itemId="<%= item._id %>">Delete</a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </figure>
+                                        <div class="package-controls"
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                            <form id="search-form" action="/galleryDashboard" method="get"
+                                                style="flex: 1; margin-right: 20px;">
+                                                <div class="form-group"
+                                                    style="display: flex; align-items: center; position: relative;">
+                                                    <input type="text" name="search" id="search-input"
+                                                        placeholder="Search by Title" value="<%= search || '' %>"
+                                                        style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                                    <button type="submit" aria-label="Search gallery items"
+                                                        style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                                        <i class="fas fa-search" style="color: #007bff;"></i>
+                                                    </button>
                                                 </div>
-                                            <% }) %>
+                                            </form>
+                                        </div>
+
+                                        <div class="gallery-section">
+                                            <div class="container">
+                                                <div class="gallery-outer-wrap">
+                                                    <div class="gallery-inner-wrap gallery-container"
+                                                        style="columns: 4;">
+                                                        <% galleryItems.forEach(item=> { %>
+                                                            <div class="single-gallery grid-item mb-2">
+                                                                <figure class="gallery-img">
+                                                                    <img src="/Uploads/mediaGallery/<%= item.image %>"
+                                                                        alt="<%= item.title %>"
+                                                                        style="width: 100%; height: auto; object-fit: cover;">
+                                                                    <div class="gallery-overlay">
+                                                                        <div class="gallery-title">
+                                                                            <h3>
+                                                                                <a href="#" class="preview-btn"
+                                                                                    data-id="<%= item._id %>"
+                                                                                    data-title="<%= item.title %>"
+                                                                                    data-image="/Uploads/mediaGallery/<%= item.image %>"
+                                                                                    data-active="<%= item.isActive %>"
+                                                                                    data-createdby="<%= item.createdBy ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : 'Unknown' %>"
+                                                                                    data-createdat="<%= item.createdAt.toISOString().split('T')[0] %>">
+                                                                                    <%= item.title %>
+                                                                                </a>
+                                                                            </h3>
+                                                                        </div>
+                                                                        <div class="gallery-actions"
+                                                                            style="position: absolute; top: 10px; right: 10px; z-index: 2;">
+                                                                            <div class="dropdown">
+                                                                                <button class="btn btn-sm" type="button"
+                                                                                    data-toggle="dropdown"
+                                                                                    aria-haspopup="true"
+                                                                                    aria-expanded="false">
+                                                                                    <i class="fas fa-ellipsis-v"
+                                                                                        style="color: #fff;"></i>
+                                                                                </button>
+                                                                                <div
+                                                                                    class="dropdown-menu dropdown-menu-right">
+                                                                                    <a class="dropdown-item preview-btn"
+                                                                                        href="#"
+                                                                                        data-id="<%= item._id %>"
+                                                                                        data-title="<%= item.title %>"
+                                                                                        data-image="/Uploads/mediaGallery/<%= item.image %>"
+                                                                                        data-active="<%= item.isActive %>"
+                                                                                        data-createdby="<%= item.createdBy ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : 'Unknown' %>"
+                                                                                        data-createdat="<%= item.createdAt.toISOString().split('T')[0] %>">Preview</a>
+                                                                                    <a class="dropdown-item edit-btn"
+                                                                                        href="#"
+                                                                                        data-id="<%= item._id %>"
+                                                                                        data-title="<%= item.title %>"
+                                                                                        data-image="/Uploads/mediaGallery/<%= item.image %>"
+                                                                                        data-active="<%= item.isActive %>">Edit</a>
+                                                                                    <a class="dropdown-item delete-btn"
+                                                                                        href="#"
+                                                                                        data-itemId="<%= item._id %>">Delete</a>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </figure>
+                                                            </div>
+                                                            <% }) %>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <%- include('../partials/pagination') %>
                         </div>
-                    </div>
-                </div>
-                <%- include('../partials/pagination') %>
+                        <%- include('../partials/Footer') %>
             </div>
-            <%- include('../partials/Footer') %>
         </div>
-    </div>
 
-    <!-- Preview Modal with Carousel -->
-    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true" style="z-index: 99999;">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document" style="position: relative;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="previewModalLabel">Gallery Item Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div id="galleryCarousel" class="carousel slide" data-ride="false" data-interval="false">
-                        <div class="carousel-inner">
-                            <% galleryItems.forEach((item, index) => { %>
-                                <div class="carousel-item <%= index === 0 ? 'active' : '' %>" data-id="<%= item._id %>">
-                                    <img class="d-block w-100" src="/Uploads/mediaGallery/<%= item.image %>" alt="<%= item.title %>" style="border-radius: 8px; max-height: 400px; object-fit: contain;">
-                                    <div class="gallery-details" style="margin-top: 20px;">
-                                        <h4 id="previewTitle_<%= item._id %>"><%= item.title %></h4>
-                                        <p><strong>Status:</strong> <span id="previewStatus_<%= item._id %>" class="badge badge-<%= item.isActive ? 'success' : 'danger' %>"><%= item.isActive ? 'Active' : 'Disabled' %></span></p>
-                                        <p><strong>Created By:</strong> <span id="previewCreatedBy_<%= item._id %>"><%= item.createdBy ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : 'Unknown' %></span></p>
-                                        <p><strong>Created At:</strong> <span id="previewCreatedAt_<%= item._id %>"><%= item.createdAt.toISOString().split('T')[0] %></span></p>
+        <!-- Preview Modal with Carousel -->
+        <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel"
+            aria-hidden="true" style="z-index: 99999;">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document" style="position: relative;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="previewModalLabel">Gallery Item Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="galleryCarousel" class="carousel slide" data-ride="false" data-interval="false">
+                            <div class="carousel-inner">
+                                <% galleryItems.forEach((item, index)=> { %>
+                                    <div class="carousel-item <%= index === 0 ? 'active' : '' %>"
+                                        data-id="<%= item._id %>">
+                                        <img class="d-block w-100" src="/Uploads/mediaGallery/<%= item.image %>"
+                                            alt="<%= item.title %>"
+                                            style="border-radius: 8px; max-height: 400px; object-fit: contain;">
+                                        <div class="gallery-details" style="margin-top: 20px;">
+                                            <h4 id="previewTitle_<%= item._id %>">
+                                                <%= item.title %>
+                                            </h4>
+                                            <p><strong>Status:</strong> <span id="previewStatus_<%= item._id %>"
+                                                    class="badge badge-<%= item.isActive ? 'success' : 'danger' %>">
+                                                    <%= item.isActive ? 'Active' : 'Disabled' %>
+                                                </span></p>
+                                            <div class="d-flex gap-5 justify-content-between ">
+                                                <p><strong>Created By:</strong> <span
+                                                        id="previewCreatedBy_<%= item._id %>">
+                                                        <%= item.createdBy ? `${item.createdBy.firstName}
+                                                            ${item.createdBy.lastName} (${item.createdBy.email})`
+                                                            : 'Unknown' %>
+                                                    </span></p>
+                                                <p><strong>Created At:</strong> <span
+                                                        id="previewCreatedAt_<%= item._id %>">
+                                                        <%= item.createdAt.toISOString().split('T')[0] %>
+                                                    </span></p>
+
+                                            </div>
+                                            <div class="d-flex gap-5 justify-content-between ">
+                                                <% if(item.updatedBy) {%>
+                                                    <p><strong>updated By:</strong> <span
+                                                            id="previewUpdatedBy_<%= item._id %>">
+                                                            <%= item.updatedBy ? `${item.updatedBy.firstName}
+                                                                ${item.updatedBy.lastName} (${item.updatedBy.email})`
+                                                                : 'Unknown' %>
+                                                        </span></p>
+                                                    <% } %>
+                                                        <% if(item.updatedAt) {%>
+                                                            <p><strong>updated At:</strong> <span
+                                                                    id="previewUpdatedAt_<%= item._id %>">
+                                                                    <%= item.updatedAt.toISOString().split('T')[0] %>
+                                                                </span></p>
+                                                            <% } %>
+
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            <% }) %>
+                                    <% }) %>
+                            </div>
+                            <a class="carousel-control-prev" href="#galleryCarousel" role="button" data-slide="prev"
+                                style="position: absolute; top: 50%; transform: translateY(-50%); left: -60px; width: 40px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 50%;">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#galleryCarousel" role="button" data-slide="next"
+                                style="position: absolute; top: 50%; transform: translateY(-50%); right: -60px; width: 40px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 50%;">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
                         </div>
-                        <a class="carousel-control-prev" href="#galleryCarousel" role="button" data-slide="prev" style="position: absolute; top: 50%; transform: translateY(-50%); left: -60px; width: 40px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 50%;">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#galleryCarousel" role="button" data-slide="next" style="position: absolute; top: 50%; transform: translateY(-50%); right: -60px; width: 40px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 50%;">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                        </a>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+        <!-- Add Modal -->
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel"
+            aria-hidden="true" style="z-index: 99999;">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" style="padding: 30px !important;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addModalLabel">Add Gallery Item</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addForm" action="/add-gallery-item" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="addTitle">Title</label>
+                                <input type="text" class="form-control" id="addTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="addImage">Image</label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input form-control" id="addImage" name="image"
+                                        accept="image/*" required>
+                                    <label class="custom-file-label" for="addImage">Choose file...</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="addActive">Active</label>
+                                <select class="form-control" id="addActive" name="isActive">
+                                    <option value="true">Active</option>
+                                    <option value="false">Disabled</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" form="addForm" class="btn btn-primary">Add</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Add Modal -->
-    <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true" style="z-index: 99999;">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content" style="padding: 30px !important;">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addModalLabel">Add Gallery Item</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="addForm" action="/add-gallery-item" method="post" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="addTitle">Title</label>
-                            <input type="text" class="form-control" id="addTitle" name="title" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addImage">Image</label>
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input form-control" id="addImage" name="image" accept="image/*" required>
-                                <label class="custom-file-label" for="addImage">Choose file...</label>
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+            aria-hidden="true" style="z-index: 99999;">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" style="padding: 30px !important;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Gallery Item</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm" action="/edit-gallery-item" method="post" enctype="multipart/form-data">
+                            <input type="hidden" id="editId" name="id">
+                            <div class="form-group">
+                                <label for="editTitle">Title</label>
+                                <input type="text" class="form-control" id="editTitle" name="title" required>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="addActive">Active</label>
-                            <select class="form-control" id="addActive" name="isActive">
-                                <option value="true">Active</option>
-                                <option value="false">Disabled</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" form="addForm" class="btn btn-primary">Add</button>
+                            <div class="form-group">
+                                <label for="editImage">Image (leave blank to keep existing)</label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input form-control" id="editImage"
+                                        name="image" accept="image/*">
+                                    <label class="custom-file-label" for="editImage">Choose file...</label>
+                                </div>
+                                <div id="currentImageContainer" style="margin-top: 10px;">
+                                    <label>Current Image:</label>
+                                    <img id="currentImage" src="" alt="Current Image"
+                                        style="max-width: 200px; border-radius: 4px; margin-top: 5px;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="editActive">Active</label>
+                                <select class="form-control" id="editActive" name="isActive">
+                                    <option value="true">Active</option>
+                                    <option value="false">Disabled</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" form="editForm" class="btn btn-primary">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true" style="z-index: 99999;">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content" style="padding: 30px !important;">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Gallery Item</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm" action="/edit-gallery-item" method="post" enctype="multipart/form-data">
-                        <input type="hidden" id="editId" name="id">
-                        <div class="form-group">
-                            <label for="editTitle">Title</label>
-                            <input type="text" class="form-control" id="editTitle" name="title" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editImage">Image (leave blank to keep existing)</label>
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input form-control" id="editImage" name="image" accept="image/*">
-                                <label class="custom-file-label" for="editImage">Choose file...</label>
-                            </div>
-                            <div id="currentImageContainer" style="margin-top: 10px;">
-                                <label>Current Image:</label>
-                                <img id="currentImage" src="" alt="Current Image" style="max-width: 200px; border-radius: 4px; margin-top: 5px;">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="editActive">Active</label>
-                            <select class="form-control" id="editActive" name="isActive">
-                                <option value="true">Active</option>
-                                <option value="false">Disabled</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" form="editForm" class="btn btn-primary">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
+        <%- include('../partials/deletePopup', { entityName: 'Gallery Item' , deleteEndpoint: '/delete-gallery-item' ,
+            buttonClass: 'delete-btn' }) %>
+            <%- include('../../shared/partials/toaster') %>
+                <%- include('../partials/script.ejs') %>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const searchForm = document.getElementById('search-form');
+                            const searchInput = document.getElementById('search-input');
+                            const addBtn = document.querySelector('.add-gallery-btn');
+                            const previewButtons = document.querySelectorAll('.preview-btn');
+                            const editButtons = document.querySelectorAll('.edit-btn');
+                            const carouselControls = document.querySelectorAll('.carousel-control-prev, .carousel-control-next');
 
-    <%- include('../partials/deletePopup', { entityName: 'Gallery Item', deleteEndpoint: '/delete-gallery-item', buttonClass: 'delete-btn' }) %>
-    <%- include('../../shared/partials/toaster') %>
-    <%- include('../partials/script.ejs') %>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchForm = document.getElementById('search-form');
-            const searchInput = document.getElementById('search-input');
-            const addBtn = document.querySelector('.add-gallery-btn');
-            const previewButtons = document.querySelectorAll('.preview-btn');
-            const editButtons = document.querySelectorAll('.edit-btn');
-            const carouselControls = document.querySelectorAll('.carousel-control-prev, .carousel-control-next');
+                            // Handle search form submission
+                            searchForm.addEventListener('submit', (e) => {
+                                e.preventDefault();
+                                const query = searchInput.value.trim();
+                                window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+                            });
 
-            // Handle search form submission
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const query = searchInput.value.trim();
-                window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
-            });
+                            // Open add modal
+                            addBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                $('#addModal').modal('show');
+                            });
 
-            // Open add modal
-            addBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                $('#addModal').modal('show');
-            });
+                            // Open preview modal and set carousel to specific item
+                            previewButtons.forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    const id = btn.dataset.id;
+                                    const index = [...document.querySelectorAll('.carousel-item')].findIndex(item => item.dataset.id === id);
+                                    $('#galleryCarousel').carousel(index);
+                                    $('#previewModal').modal('show');
+                                });
+                            });
 
-            // Open preview modal and set carousel to specific item
-            previewButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const id = btn.dataset.id;
-                    const index = [...document.querySelectorAll('.carousel-item')].findIndex(item => item.dataset.id === id);
-                    $('#galleryCarousel').carousel(index);
-                    $('#previewModal').modal('show');
-                });
-            });
+                            // Prevent modal close on carousel control click
+                            carouselControls.forEach(control => {
+                                control.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const action = control.getAttribute('data-slide');
+                                    $('#galleryCarousel').carousel(action);
+                                });
+                            });
 
-            // Prevent modal close on carousel control click
-            carouselControls.forEach(control => {
-                control.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const action = control.getAttribute('data-slide');
-                    $('#galleryCarousel').carousel(action);
-                });
-            });
+                            // Prevent modal backdrop click from closing modal when clicking carousel controls
+                            $('#previewModal').on('click', '.modal-dialog', (e) => {
+                                if (e.target.closest('.carousel-control-prev') || e.target.closest('.carousel-control-next')) {
+                                    e.stopPropagation();
+                                }
+                            });
 
-            // Prevent modal backdrop click from closing modal when clicking carousel controls
-            $('#previewModal').on('click', '.modal-dialog', (e) => {
-                if (e.target.closest('.carousel-control-prev') || e.target.closest('.carousel-control-next')) {
-                    e.stopPropagation();
-                }
-            });
-
-         // Update file input label with selected file name
-         document.querySelectorAll('.custom-file-input').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const fileName = e.target.files[0]?.name || 'Choose file...';
-                    e.target.nextElementSibling.textContent = fileName;
-                });
-            });
+                            // Update file input label with selected file name
+                            document.querySelectorAll('.custom-file-input').forEach(input => {
+                                input.addEventListener('change', (e) => {
+                                    const fileName = e.target.files[0]?.name || 'Choose file...';
+                                    e.target.nextElementSibling.textContent = fileName;
+                                });
+                            });
 
 
-            // Open edit modal and set current image
-            editButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const id = btn.dataset.id;
-                    const title = btn.dataset.title;
-                    const image = btn.dataset.image;
-                    const isActive = btn.dataset.active;
+                            // Open edit modal and set current image
+                            editButtons.forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    const id = btn.dataset.id;
+                                    const title = btn.dataset.title;
+                                    const image = btn.dataset.image;
+                                    const isActive = btn.dataset.active;
 
-                    document.getElementById('editId').value = id;
-                    document.getElementById('editTitle').value = title;
-                    document.getElementById('editActive').value = isActive;
-                    document.getElementById('currentImage').src = image;
-                    $('#editModal').modal('show');
-                });
-            });
+                                    document.getElementById('editId').value = id;
+                                    document.getElementById('editTitle').value = title;
+                                    document.getElementById('editActive').value = isActive;
+                                    document.getElementById('currentImage').src = image;
+                                    $('#editModal').modal('show');
+                                });
+                            });
 
-            // Modal animations
-            $('.modal').on('show.bs.modal', function () {
-                $(this).find('.modal-dialog').css({
-                    transform: 'translateY(-50px)',
-                    opacity: 0
-                }).animate({
-                    transform: 'translateY(0)',
-                    opacity: 1
-                }, 300);
-            });
+                            // Modal animations
+                            $('.modal').on('show.bs.modal', function () {
+                                $(this).find('.modal-dialog').css({
+                                    transform: 'translateY(-50px)',
+                                    opacity: 0
+                                }).animate({
+                                    transform: 'translateY(0)',
+                                    opacity: 1
+                                }, 300);
+                            });
 
-            $('.modal').on('hide.bs.modal', function () {
-                $(this).find('.modal-dialog').css({
-                    transform: 'translateY(0)',
-                    opacity: 1
-                }).animate({
-                    transform: 'translateY(-50px)',
-                    opacity: 0
-                }, 300);
-            });
-        });
-    </script>
-    <style>
-        /* Modal Animation Styles */
-        .modal .modal-dialog {
-            transition: all 0.3s ease-in-out;
-        }
+                            $('.modal').on('hide.bs.modal', function () {
+                                $(this).find('.modal-dialog').css({
+                                    transform: 'translateY(0)',
+                                    opacity: 1
+                                }).animate({
+                                    transform: 'translateY(-50px)',
+                                    opacity: 0
+                                }, 300);
+                            });
+                        });
+                    </script>
+                    <style>
+                        /* Modal Animation Styles */
+                        .modal .modal-dialog {
+                            transition: all 0.3s ease-in-out;
+                        }
 
-        /* Ensure modals appear above navbar */
-        .modal {
-            z-index: 99999 !important;
-            top: 40px !important;
-            padding: 20px !important;
+                        /* Ensure modals appear above navbar */
+                        .modal {
+                            z-index: 99999 !important;
+                            top: 40px !important;
+                            padding: 20px !important;
 
-        }
+                        }
 
-        .modal-backdrop {
-            z-index: 99998 !important;
-            background-color: rgba(0, 0, 0, 0.5) !important;
-        }
+                        .modal-backdrop {
+                            z-index: 99998 !important;
+                            background-color: rgba(0, 0, 0, 0.5) !important;
+                        }
 
-        /* Ensure navbar stays above backdrop */
-        .sticky-header {
-            z-index: 1000 !important;
-        }
+                        /* Ensure navbar stays above backdrop */
+                        .sticky-header {
+                            z-index: 1000 !important;
+                        }
 
-        /* Gallery Action Dropdown */
-        .gallery-actions .dropdown-menu {
-            min-width: 100px;
-        }
-        .gallery-actions .dropdown-item {
-            padding: 5px 10px;
-            font-size: 14px;
-        }
-        .gallery-actions .dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
+                        /* Gallery Action Dropdown */
+                        .gallery-actions .dropdown-menu {
+                            min-width: 100px;
+                        }
 
-        /* Gallery Styles */
-        .gallery-img {
-            position: relative;
-            overflow: hidden;
-        }
-        .gallery-img img {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-            transition: transform 0.3s ease;
-            object-fit: cover;
-        }
-        .gallery-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .gallery-img:hover .gallery-overlay {
-            opacity: 1;
-        }
-        .gallery-img:hover img {
-            transform: scale(1.05);
-        }
-        .gallery-title {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 100%;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .gallery-img:hover .gallery-title {
-            opacity: 1;
-        }
-        .gallery-title h3 {
-            color: #fff;
-            font-size: 18px;
-            margin: 0;
-        }
-        .gallery-actions {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .gallery-img:hover .gallery-actions {
-            opacity: 1;
-        }
+                        .gallery-actions .dropdown-item {
+                            padding: 5px 10px;
+                            font-size: 14px;
+                        }
 
-        /* Carousel Styles */
-        .gallery-details {
-            text-align: left;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .carousel-control-prev, .carousel-control-next {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            z-index: 100000;
-        }
-        .carousel-control-prev-icon, .carousel-control-next-icon {
-            background-size: 100%, 100%;
-            width: 20px;
-            height: 20px;
-        }
+                        .gallery-actions .dropdown-item:hover {
+                            background-color: #f8f9fa;
+                        }
 
-        
-         /* Custom File Input Styles */
-         .custom-file {
-            position: relative;
-            overflow: hidden;
-        }
-        .custom-file-input {
-            opacity: 0;
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-        .custom-file-label {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #495057;
-            background-color: #fff;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+                        /* Gallery Styles */
+                        .gallery-img {
+                            position: relative;
+                            overflow: hidden;
+                        }
+
+                        .gallery-img img {
+                            width: 100%;
+                            height: auto;
+                            border-radius: 4px;
+                            transition: transform 0.3s ease;
+                            object-fit: cover;
+                        }
+
+                        .gallery-overlay {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0, 0, 0, 0.6);
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+
+                        .gallery-img:hover .gallery-overlay {
+                            opacity: 1;
+                        }
+
+                        .gallery-img:hover img {
+                            transform: scale(1.05);
+                        }
+
+                        .gallery-title {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            text-align: center;
+                            width: 100%;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+
+                        .gallery-img:hover .gallery-title {
+                            opacity: 1;
+                        }
+
+                        .gallery-title h3 {
+                            color: #fff;
+                            font-size: 18px;
+                            margin: 0;
+                        }
+
+                        .gallery-actions {
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+
+                        .gallery-img:hover .gallery-actions {
+                            opacity: 1;
+                        }
+
+                        /* Carousel Styles */
+                        .gallery-details {
+                            text-align: left;
+                            padding: 15px;
+                            background: #f8f9fa;
+                            border-radius: 8px;
+                        }
+
+                        .carousel-control-prev,
+                        .carousel-control-next {
+                            width: 40px;
+                            height: 40px;
+                            background: rgba(0, 0, 0, 0.5);
+                            border-radius: 50%;
+                            z-index: 100000;
+                        }
+
+                        .carousel-control-prev-icon,
+                        .carousel-control-next-icon {
+                            background-size: 100%, 100%;
+                            width: 20px;
+                            height: 20px;
+                        }
 
 
-    </style>
-</body>
+                        /* Custom File Input Styles */
+                        .custom-file {
+                            position: relative;
+                            overflow: hidden;
+                        }
+
+                        .custom-file-input {
+                            opacity: 0;
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            width: 100%;
+                            height: 100%;
+                            cursor: pointer;
+                        }
+
+                        .custom-file-label {
+                            display: block;
+                            width: 100%;
+                            padding: 0.375rem 0.75rem;
+                            font-size: 1rem;
+                            line-height: 1.5;
+                            color: #495057;
+                            background-color: #fff;
+                            border: 1px solid #ced4da;
+                            border-radius: 0.25rem;
+                            cursor: pointer;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    </style>
+    </body>
+
 </html>

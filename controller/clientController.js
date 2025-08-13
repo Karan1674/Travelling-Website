@@ -17,6 +17,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import CareerSchema from '../models/CareerSchema.js';
 import ApplicationSchema from '../models/ApplicationSchema.js';
+import faqSchema from '../models/faqSchema.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -2446,3 +2447,93 @@ export const getContinueReadingPage = async (req, res) => {
         res.status(500).redirect('/error?status=500&message=Error fetching continueReading page');
     }
 };
+
+
+
+// GET: Render FAQ page
+export const getFaqPage = async (req, res) => {
+    try {
+        const userId = req.id;
+
+        let user = null;
+        if (userId) {
+            user = await userModel.findById(userId);
+            if (!user) {
+                req.session = req.session || {};
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/');
+            }
+        }
+
+        // Fetch answered questions with populated answeredBy
+        const answeredQuestions = await faqSchema.find({ answer: { $ne: null } })
+            .sort({ answeredAt: -1 })
+            .lean();
+
+        res.render('client/layout/faq', {
+            user,
+            answeredQuestions,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching FAQ page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error fetching FAQ page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error?status=500&message=Error fetching FAQ page');
+
+    }
+};
+
+
+
+// POST: Handle form submission
+export const submitQuestion = async (req, res) => {
+    try {
+        const { name, email, number, message } = req.body;
+        const userId = req.id;
+
+        // Basic validation
+        if (!name || !email || !message || !number) {
+            req.session = req.session || {};
+            req.session.message = 'Please fill in all required fields';
+            req.session.type = 'error';
+            return res.redirect('/faq');
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            req.session = req.session || {};
+            req.session.message = 'Please provide a valid email address';
+            req.session.type = 'error';
+            return res.redirect('/faq');
+        }
+
+        // Create new question
+        const question = new faqSchema({
+            name,
+            email,
+            number: number || null,
+            message,
+            questionBy: userId,
+            questionAt: Date.now()
+        });
+
+        await question.save();
+
+        req.session = req.session || {};
+        req.session.message = 'Your question has been submitted successfully';
+        req.session.type = 'success';
+        res.redirect('/faq');
+    } catch (error) {
+        console.error('Error submitting question:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error submitting question';
+        req.session.type = 'error';
+        res.redirect('/faq');
+    }
+};
+
