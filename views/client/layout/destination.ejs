@@ -1,6 +1,12 @@
 <!doctype html>
 <html lang="en">
 <%- include('../partials/Header.ejs')%>
+<style>
+    .overlay-desti-item .desti-content {
+    bottom: 30px !important;
+    }
+
+</style>
 <body>
     <%- include('../partials/Loader') %>
     <div id="page" class="full-page">
@@ -126,27 +132,32 @@
                 </div>
             </section>
             <!-- destination section html end -->
-            <!-- subscribe section html start -->
-            <section class="subscribe-section" style="background-image: url(/assets/images/img16.jpg);">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-7">
-                            <div class="section-heading section-heading-white">
-                                <h5 class="dash-style">HOLIDAY PACKAGE OFFER</h5>
-                                <h2>HOLIDAY SPECIAL 25% OFF !</h2>
-                                <h4>Sign up now to receive hot special offers and information about the best tour packages, updates and discounts !!</h4>
-                                <div class="newsletter-form">
-                                    <form>
-                                        <input type="email" name="s" placeholder="Your Email Address">
-                                        <input type="submit" name="signup" value="SIGN UP NOW!">
-                                    </form>
-                                </div>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo. Eaque adipiscing, luctus eleifend temporibus occaecat luctus eleifend tempo ribus.</p>
-                            </div>
-                        </div>
+        
+
+            <% if(!user){ %>
+  <!-- subscribe section html start -->
+  <section class="subscribe-section" style="background-image: url(/assets/images/img16.jpg);">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="section-heading section-heading-white">
+                    <h5 class="dash-style">HOLIDAY PACKAGE OFFER</h5>
+                    <h2>HOLIDAY SPECIAL 25% OFF !</h2>
+                    <h4>Sign up now to receive hot special offers and information about the best tour packages, updates and discounts !!</h4>
+                    <div class="newsletter-form">
+                        <form>
+                            <input type="email" name="s" placeholder="Your Email Address">
+                            <input type="submit" name="signup" value="SIGN UP NOW!">
+                        </form>
                     </div>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo. Eaque adipiscing, luctus eleifend temporibus occaecat luctus eleifend tempo ribus.</p>
                 </div>
-            </section>
+            </div>
+        </div>
+    </div>
+</section>
+
+           <% } %>
             <!-- subscribe html end -->
         </main>
         <%- include('../partials/Footer.ejs')%>

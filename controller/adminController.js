@@ -17,11 +17,12 @@ import ApplicationSchema from '../models/ApplicationSchema.js';
 import GuideSchema from '../models/GuideSchema.js';
 import GallerySchema from '../models/GallerySchema.js';
 import faqSchema from '../models/faqSchema.js';
+import contactSchema from '../models/contactSchema.js';
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 
-
+// Adminand agent Dashboard Page
 export const AdminDashboard = async (req, res) => {
     try {
         const userId = req.id;
@@ -64,9 +65,11 @@ export const AdminDashboard = async (req, res) => {
     }
 };
 
+// Get Agg Agent And render on agent list page
 export const getAllAgents = async (req, res) => {
     try {
         const { page = 1, search = '' } = req.query;
+        const statusFilter = req.query.statusFilter || 'all';
         const limit = 10;
         const pageNum = Math.max(1, Number(page));
         const skip = (pageNum - 1) * limit;
@@ -95,6 +98,12 @@ export const getAllAgents = async (req, res) => {
             ];
         }
 
+        if (statusFilter === 'Active') {
+            query.isActive = true;
+        } else if (statusFilter === 'notActive') {
+            query.isActive = false;
+        }
+
         const totalAgents = await agentModel.countDocuments(query);
         const totalPages = Math.ceil(totalAgents / limit) || 1;
 
@@ -111,6 +120,7 @@ export const getAllAgents = async (req, res) => {
             currentPage: pageNum,
             totalPages,
             isAdmin,
+            statusFilter,
             user: userData,
             message: req.session?.message || null,
             type: req.session?.type || null
@@ -124,6 +134,7 @@ export const getAllAgents = async (req, res) => {
     }
 };
 
+// Render New Agent Page 
 export const getNewAgentPage = async (req, res) => {
     try {
         const userId = req.id;
@@ -158,6 +169,7 @@ export const getNewAgentPage = async (req, res) => {
     }
 };
 
+// Add new Agent
 export const newAgent = async (req, res) => {
     try {
         const adminId = req.id;
@@ -233,6 +245,7 @@ export const newAgent = async (req, res) => {
     }
 };
 
+// Render Edit Agent page 
 export const editAgentPage = async (req, res) => {
     try {
         const editAgentId = req.query.editAgentId;
@@ -282,24 +295,25 @@ export const editAgentPage = async (req, res) => {
     }
 };
 
+// Edit agent
 export const editAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
         const { editAgentId } = req.params;
-        const { firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year } = req.body;
+        const { firstName, lastName, email, phone, countryCode, city, country, state, address, description, day, month, year, isActive } = req.body;
         req.session = req.session || {};
 
         if (!isAdmin) {
             console.log("User is not authorized to edit");
             req.session.message = 'Unauthorized: Admin access required';
             req.session.type = 'error';
-            return res.status(403).json({ error: "Unauthorized: Admin access required" });
+            return res.redirect('db-admin-created-agents');
         }
 
-        if (!firstName || !lastName || !email || !phone || !countryCode) {
+        if (!firstName || !lastName || !email || !phone) {
             req.session.message = 'Missing required fields';
             req.session.type = 'error';
-            return res.status(400).json({ error: "Missing required fields", message: req.session.message, type: req.session.type });
+            return res.redirect('db-admin-created-agents');
         }
 
         let dateOfBirth;
@@ -308,7 +322,7 @@ export const editAgent = async (req, res) => {
             if (isNaN(dateOfBirth)) {
                 req.session.message = 'Invalid date of birth';
                 req.session.type = 'error';
-                return res.status(400).json({ error: "Invalid date of birth", message: req.session.message, type: req.session.type });
+                return res.redirect('db-admin-created-agents');
             }
         }
 
@@ -323,6 +337,7 @@ export const editAgent = async (req, res) => {
             state,
             address,
             description,
+            isActive,
             ...(dateOfBirth && { dateOfBirth }),
         };
 
@@ -332,7 +347,7 @@ export const editAgent = async (req, res) => {
             if (!agent) {
                 req.session.message = 'Agent not found';
                 req.session.type = 'error';
-                return res.status(404).json({ error: "Agent not found", message: req.session.message, type: req.session.type });
+                return res.redirect('db-admin-created-agents');
             }
 
             if (agent.profilePic) {
@@ -355,7 +370,7 @@ export const editAgent = async (req, res) => {
         if (!updatedAgent) {
             req.session.message = 'Agent not found';
             req.session.type = 'error';
-            return res.status(404).json({ error: "Agent not found", message: req.session.message, type: req.session.type });
+            return res.redirect('db-admin-created-agents');
         }
 
         console.log("Agent updated successfully");
@@ -371,6 +386,7 @@ export const editAgent = async (req, res) => {
     }
 };
 
+// Render the agent detail page
 export const getAgentDetails = async (req, res) => {
     try {
         const agentId = req.query.agentId;
@@ -424,6 +440,7 @@ export const getAgentDetails = async (req, res) => {
     }
 };
 
+// Delete Agent
 export const deleteAgent = async (req, res) => {
     try {
         const isAdmin = req.isAdmin;
@@ -469,6 +486,7 @@ export const deleteAgent = async (req, res) => {
     }
 };
 
+// Get sign up users from database and render sign up user page
 export const getSignedInUsers = async (req, res) => {
     try {
         const adminId = req.id;
@@ -524,6 +542,7 @@ export const getSignedInUsers = async (req, res) => {
             currentPage: parseInt(page),
             totalPages: totalPages || 1,
             isAdmin,
+            statusFilter: null,
             user: adminData,
             message: req.session?.message || null,
             type: req.session?.type || null
@@ -537,6 +556,7 @@ export const getSignedInUsers = async (req, res) => {
     }
 };
 
+// Render the user detail page
 export const getUserDetails = async (req, res) => {
     try {
         const { userId } = req.query;
@@ -596,6 +616,7 @@ export const getUserDetails = async (req, res) => {
     }
 };
 
+// Render the Add package Page
 export const addPackagePage = async (req, res) => {
     try {
         const userId = req.id;
@@ -635,6 +656,7 @@ export const addPackagePage = async (req, res) => {
     }
 };
 
+// Render the edit package Page
 export const editPackagePage = async (req, res) => {
     try {
         const userId = req.id;
@@ -688,6 +710,7 @@ export const editPackagePage = async (req, res) => {
     }
 };
 
+// Validation functionality to ensure the packages creation
 export const validatePackage = (data, isActive) => {
     const errors = [];
 
@@ -775,6 +798,7 @@ export const validatePackage = (data, isActive) => {
     return errors;
 };
 
+// Add new package
 export const addPackage = async (req, res) => {
     try {
         const data = req.body;
@@ -938,6 +962,7 @@ export const addPackage = async (req, res) => {
     }
 };
 
+// Edit package
 export const editPackage = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1148,7 +1173,7 @@ export const editPackage = async (req, res) => {
 
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
         data.updatedBy = userId;
-        data.updatedByModel  = isAdmin ? 'Admin' : 'Agent';
+        data.updatedByModel = isAdmin ? 'Admin' : 'Agent';
         data.updatedAt = new Date();
 
         const updatedPackage = await packageModel.findByIdAndUpdate(id, data, { new: true });
@@ -1170,9 +1195,11 @@ export const editPackage = async (req, res) => {
     }
 };
 
+// Render all packages
 export const getAllPackages = async (req, res) => {
     try {
         const { page = 1, search = '' } = req.query;
+        const statusFilter = req.query.statusFilter || 'all';
         const limit = 5;
         const pageNum = Math.max(1, Number(page));
         const skip = (pageNum - 1) * limit;
@@ -1219,6 +1246,9 @@ export const getAllPackages = async (req, res) => {
         if (search) {
             query.title = { $regex: search, $options: 'i' };
         }
+        if (statusFilter !== 'all') {
+            query.status = statusFilter;
+        }
 
         const totalPackages = await packageModel.countDocuments(query);
         const totalPages = Math.ceil(totalPackages / limit) || 1;
@@ -1238,6 +1268,7 @@ export const getAllPackages = async (req, res) => {
             currentPage: pageNum,
             totalPages,
             isAdmin,
+            statusFilter,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
             message: req.session?.message || null,
@@ -1252,6 +1283,7 @@ export const getAllPackages = async (req, res) => {
     }
 };
 
+// Delete package
 export const deletePackage = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1311,6 +1343,7 @@ export const deletePackage = async (req, res) => {
     }
 };
 
+// Render the different pages according to status of packages(Pending, Accepted and rejected Packages)
 export const getPackagesByStatus = async (req, res) => {
     try {
         const { page = 1, search = '', status } = req.query;
@@ -1388,6 +1421,7 @@ export const getPackagesByStatus = async (req, res) => {
             currentPage: pageNum,
             totalPages,
             isAdmin,
+            statusFilter: null,
             user: userData,
             opencageApiKey: process.env.OPENCAGE_API_KEY,
             pageTitle: `${status} Packages`,
@@ -1403,6 +1437,7 @@ export const getPackagesByStatus = async (req, res) => {
     }
 };
 
+// Render the agents and signed up users Dashboard Page 
 export const getUserDashboard = async (req, res) => {
     try {
         const userId = req.id;
@@ -1437,6 +1472,7 @@ export const getUserDashboard = async (req, res) => {
     }
 };
 
+// Render the packages according to status Dashboard Page 
 export const getPackageDashboard = async (req, res) => {
     try {
         const userId = req.id;
@@ -1471,6 +1507,7 @@ export const getPackageDashboard = async (req, res) => {
     }
 };
 
+// Get Admin And Agent profile Details
 export const getAdminAgentProfile = async (req, res) => {
     try {
         const userId = req.id;
@@ -1519,6 +1556,7 @@ export const getAdminAgentProfile = async (req, res) => {
     }
 };
 
+// Update Agent And Admin Profile
 export const updateAdminAgentProfile = async (req, res) => {
     try {
         const userId = req.id;
@@ -1627,6 +1665,7 @@ export const updateAdminAgentProfile = async (req, res) => {
     }
 };
 
+// Render Booking list page
 export const getBookings = async (req, res) => {
     try {
         const userId = req.id;
@@ -1634,7 +1673,6 @@ export const getBookings = async (req, res) => {
         req.session = req.session || {};
 
         if (!userId) {
-
             console.log("No userId Available");
             req.session.message = 'Unauthorized: Please log in';
             req.session.type = 'error';
@@ -1658,6 +1696,7 @@ export const getBookings = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 3;
         const search = req.query.search || '';
+        const statusFilter = req.query.statusFilter || 'all';
 
         const searchQuery = {};
         if (search) {
@@ -1671,6 +1710,10 @@ export const getBookings = async (req, res) => {
             ].filter(condition => condition !== null);
         }
 
+
+        if (statusFilter !== 'all') {
+            searchQuery.status = statusFilter;
+        }
         // Determine package IDs based on user role
         let packageIds = [];
         if (isAdmin) {
@@ -1728,6 +1771,7 @@ export const getBookings = async (req, res) => {
             currentPage: page,
             totalPages,
             user: userData,
+            statusFilter,
             isAdmin,
             search,
             message: req.session?.message || null,
@@ -1742,6 +1786,7 @@ export const getBookings = async (req, res) => {
     }
 };
 
+// Get Bookig Details And Update Booking status Functionality
 export const getEditBooking = async (req, res) => {
     try {
         const { bookingId } = req.params;
@@ -1802,11 +1847,12 @@ export const getEditBooking = async (req, res) => {
     }
 };
 
+// Update Booking  Status
 export const editBooking = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
-const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin
         if (!userId) {
             console.log("No userId Available");
             req.session.message = 'Unauthorized: Please log in';
@@ -1832,7 +1878,7 @@ const isAdmin = req.isAdmin
 
         booking.status = status;
         booking.updatedBy = userId;
-        booking.updatedByModel  = isAdmin ? 'Admin' : 'Agent';
+        booking.updatedByModel = isAdmin ? 'Admin' : 'Agent';
         booking.updatedAt = new Date();
 
         if (status === 'rejected' && booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentType !== 'refund') {
@@ -1865,6 +1911,7 @@ const isAdmin = req.isAdmin
     }
 };
 
+// Delete Booking
 export const deleteBooking = async (req, res) => {
     try {
         const userId = req.id;
@@ -1897,6 +1944,7 @@ export const deleteBooking = async (req, res) => {
     }
 };
 
+// Render Package Preview Page
 export const packagePreview = async (req, res) => {
     try {
         const userId = req.id;
@@ -1962,6 +2010,7 @@ export const packagePreview = async (req, res) => {
     }
 };
 
+// Render coupon list page
 export const renderCouponList = async (req, res) => {
     try {
         const userId = req.id;
@@ -1985,6 +2034,7 @@ export const renderCouponList = async (req, res) => {
         const { search = '', page = 1 } = req.query;
         const limit = 10; // Number of coupons per page
         const skip = (page - 1) * limit;
+        const statusFilter = req.query.statusFilter || 'all';
 
         // Build query
         let query = {};
@@ -2015,6 +2065,11 @@ export const renderCouponList = async (req, res) => {
             query.code = { $regex: search, $options: 'i' }; // Case-insensitive search by code
         }
 
+        if (statusFilter === 'Active') {
+            query.isActive = true;
+        } else if (statusFilter === 'notActive') {
+            query.isActive = false;
+        }
         // Fetch coupons
         const coupons = await couponSchema.find(query)
             .populate('createdBy', 'firstName lastName email')
@@ -2033,6 +2088,7 @@ export const renderCouponList = async (req, res) => {
             user: userData,
             isAdmin,
             search,
+            statusFilter,
             currentPage: parseInt(page),
             totalPages,
             message: req.session?.message || null,
@@ -2045,7 +2101,6 @@ export const renderCouponList = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
-
 
 // Render Add Coupon Page
 export const renderAddCoupon = async (req, res) => {
@@ -2244,7 +2299,6 @@ export const createCoupon = async (req, res) => {
     }
 };
 
-
 // Render Edit Coupon Page
 export const renderEditCoupon = async (req, res) => {
     try {
@@ -2397,9 +2451,9 @@ export const updateCoupon = async (req, res) => {
                 usageLimit: parseInt(usageLimit),
                 restrictToUser: userIdRestrict,
                 isActive: isActive === 'true',
-                updatedBy : userId,
-                updatedByModel : isAdmin ? 'Admin' : 'Agent',
-                updatedAt : new Date(),
+                updatedBy: userId,
+                updatedByModel: isAdmin ? 'Admin' : 'Agent',
+                updatedAt: new Date(),
             },
             { new: true, runValidators: true }
         );
@@ -2592,10 +2646,16 @@ export const getCareerList = async (req, res) => {
         const { page = 1, search = '' } = req.query;
         const limit = 10;
         const skip = (page - 1) * limit;
+        const statusFilter = req.query.statusFilter || 'all';
 
         let query = {};
         if (search) {
             query.title = { $regex: search, $options: 'i' };
+        }
+        if (statusFilter === 'Active') {
+            query.isActive = true;
+        } else if (statusFilter === 'notActive') {
+            query.isActive = false;
         }
 
         const careers = await CareerSchema.find(query)
@@ -2616,6 +2676,7 @@ export const getCareerList = async (req, res) => {
             search,
             currentPage: parseInt(page),
             totalPages,
+            statusFilter,
             isAdmin,
             user: userData,
             message: req.session?.message || null,
@@ -2668,7 +2729,7 @@ export const getAddCareerPage = async (req, res) => {
     }
 };
 
-
+// Add new career
 export const addCareer = async (req, res) => {
     try {
         const userId = req.id;
@@ -2865,7 +2926,6 @@ export const editCareer = async (req, res) => {
     }
 }
 
-
 // Get career detail for admin/agent
 export const getCareerDetail = async (req, res) => {
     try {
@@ -2926,7 +2986,7 @@ export const getCareerDetail = async (req, res) => {
     }
 };
 
-
+// Delete Career
 export const deleteCareer = async (req, res) => {
     try {
         const userId = req.id;
@@ -2974,7 +3034,6 @@ export const deleteCareer = async (req, res) => {
     }
 };
 
-
 // Get application list for admin/agent
 export const getApplicationList = async (req, res) => {
     try {
@@ -3002,6 +3061,7 @@ export const getApplicationList = async (req, res) => {
         const { page = 1, search = '' } = req.query;
         const limit = 10;
         const skip = (page - 1) * limit;
+        const statusFilter = req.query.statusFilter || 'all';
 
         // Determine which careers the user can access
         let careerQuery = {};
@@ -3039,6 +3099,10 @@ export const getApplicationList = async (req, res) => {
             ];
         }
 
+        if (statusFilter !== 'all') {
+            applicationQuery.status = statusFilter;
+        }
+
         // Fetch applications
         const applications = await ApplicationSchema.find(applicationQuery)
             .populate({
@@ -3066,6 +3130,7 @@ export const getApplicationList = async (req, res) => {
             search,
             currentPage: parseInt(page),
             totalPages,
+            statusFilter,
             isAdmin,
             user: userData,
             message: req.session?.message || null,
@@ -3144,7 +3209,7 @@ export const updateApplicationStatus = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
-const isAdmin = req.isAdmin
+        const isAdmin = req.isAdmin
         if (!userId) {
             req.session.message = 'Unauthorized: Admin or Agent access required';
             req.session.type = 'error';
@@ -3194,8 +3259,6 @@ const isAdmin = req.isAdmin
     }
 };
 
-
-
 // Get tour guides for admin/agent dashboard
 export const getTourGuides = async (req, res) => {
     try {
@@ -3219,6 +3282,7 @@ export const getTourGuides = async (req, res) => {
         const { page = 1, search = '' } = req.query;
         const limit = 10;
         const skip = (page - 1) * limit;
+        const statusFilter = req.query.statusFilter || 'all';
 
         // Build query based on user role
         let query = {};
@@ -3247,6 +3311,12 @@ export const getTourGuides = async (req, res) => {
             ];
         }
 
+        if (statusFilter === 'Active') {
+            query.isActive = true;
+        } else if (statusFilter === 'notActive') {
+            query.isActive = false;
+        }
+
         const tourGuides = await GuideSchema.find(query)
             .populate('createdBy', 'firstName lastName email')
             .populate('updatedBy', 'firstName lastName email')
@@ -3263,6 +3333,7 @@ export const getTourGuides = async (req, res) => {
             search,
             currentPage: parseInt(page),
             totalPages,
+            statusFilter,
             user: userData,
             isAdmin,
             message: req.session?.message || null,
@@ -3276,7 +3347,6 @@ export const getTourGuides = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
-
 
 // Get add tour guide page
 export const getAddTourGuide = async (req, res) => {
@@ -3542,8 +3612,6 @@ export const deleteTourGuide = async (req, res) => {
     }
 };
 
-
-
 // Get tour guide detail page for admin/agent
 export const getTourGuideDetail = async (req, res) => {
     try {
@@ -3590,7 +3658,6 @@ export const getTourGuideDetail = async (req, res) => {
     }
 };
 
-
 // Get gallery items for admin/agent dashboard with search and pagination
 export const getGalleryDashboard = async (req, res) => {
     try {
@@ -3614,6 +3681,7 @@ export const getGalleryDashboard = async (req, res) => {
         const { page = 1, search = '' } = req.query;
         const limit = 12;
         const skip = (page - 1) * limit;
+        const statusFilter = req.query.statusFilter || 'all';
 
         let query = {};
         if (isAdmin) {
@@ -3637,6 +3705,12 @@ export const getGalleryDashboard = async (req, res) => {
             query.title = { $regex: search, $options: 'i' };
         }
 
+        if (statusFilter === 'Active') {
+            query.isActive = true;
+        } else if (statusFilter === 'notActive') {
+            query.isActive = false;
+        }
+
         const galleryItems = await GallerySchema.find(query)
             .populate('createdBy', 'firstName lastName email')
             .populate('updatedBy', 'firstName lastName email')
@@ -3653,6 +3727,7 @@ export const getGalleryDashboard = async (req, res) => {
             search,
             currentPage: parseInt(page),
             totalPages,
+            statusFilter,
             user: userData,
             isAdmin,
             message: req.session?.message || null,
@@ -3667,7 +3742,7 @@ export const getGalleryDashboard = async (req, res) => {
     }
 };
 
-
+// Add Gallery Item (Image)
 export const addGalleryItem = async (req, res) => {
     try {
         const userId = req.id;
@@ -3716,10 +3791,6 @@ export const addGalleryItem = async (req, res) => {
     }
 };
 
-
-
-
-
 // Edit an existing gallery item
 export const editGalleryItem = async (req, res) => {
     try {
@@ -3765,10 +3836,10 @@ export const editGalleryItem = async (req, res) => {
         }
 
         galleryItem.title = title;
-     
-            galleryItem.updatedBy = userId;
-            galleryItem.updatedByModel = isAdmin ? 'Admin' : 'Agent';
-            galleryItem.updatedAt = new Date();
+
+        galleryItem.updatedBy = userId;
+        galleryItem.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        galleryItem.updatedAt = new Date();
 
         if (image) galleryItem.image = image;
         galleryItem.isActive = isActive === 'true';
@@ -3841,15 +3912,12 @@ export const deleteGalleryItem = async (req, res) => {
     }
 };
 
-
-
-
-// GET: Render Enquiry Dashboard (Admin/Agent)
+// GET: Render Enquiry Dashboard 
 export const getEnquiryDashboard = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin
-        
+
         if (!userId) {
             req.session = req.session || {};
             req.session.message = 'Unauthorized access';
@@ -3879,13 +3947,12 @@ export const getEnquiryDashboard = async (req, res) => {
     }
 };
 
-
-// GET: Render FAQ Enquiry Page (Admin/Agent)
+// Render FAQ Enquiry Page 
 export const getFaqEnquiry = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin
-        
+
         if (!userId) {
             req.session = req.session || {};
             req.session.message = 'Unauthorized access';
@@ -3904,15 +3971,15 @@ export const getFaqEnquiry = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const search = req.query.search || '';
-        const answerStatus = req.query.answerStatus || 'all';
+        const statusFilter = req.query.statusFilter || 'all';
 
         let query = {};
         if (search) {
             query.name = { $regex: search, $options: 'i' };
         }
-        if (answerStatus === 'answered') {
+        if (statusFilter === 'answered') {
             query.answer = { $ne: null };
-        } else if (answerStatus === 'notAnswered') {
+        } else if (statusFilter === 'notAnswered') {
             query.answer = null;
         }
 
@@ -3929,9 +3996,9 @@ export const getFaqEnquiry = async (req, res) => {
         res.render('admin/layout/faqEnquiry', {
             user,
             questions,
-            search ,
+            search,
             isAdmin,
-            answerStatus,
+            statusFilter,
             currentPage: page,
             totalPages,
             message: req.session?.message || null,
@@ -3946,16 +4013,14 @@ export const getFaqEnquiry = async (req, res) => {
     }
 };
 
-
-
-// POST: Edit/Answer FAQ Enquiry (Admin/Agent)
+// Edit/Answer FAQ Enquiry
 export const editFaqEnquiry = async (req, res) => {
     try {
         const { answer } = req.body;
         const questionId = req.params.id;
         const userId = req.id;
         const isAdmin = req.isAdmin
-        
+
         if (!userId) {
             req.session = req.session || {};
             req.session.message = 'Unauthorized access';
@@ -3976,7 +4041,7 @@ export const editFaqEnquiry = async (req, res) => {
             return res.redirect('/faqEnquiry');
         }
 
-    
+
 
         const question = await faqSchema.findById(questionId);
         if (!question) {
@@ -3986,7 +4051,7 @@ export const editFaqEnquiry = async (req, res) => {
             return res.redirect('/faqEnquiry');
         }
 
-const updateQuestion={}
+        const updateQuestion = {}
         if (answer) {
             updateQuestion.answer = answer;
             updateQuestion.answeredBy = userId;
@@ -4015,15 +4080,13 @@ const updateQuestion={}
     }
 };
 
-
-
-// Delete FAQ Enquiry (Admin/Agent)
+// Delete FAQ Enquiry 
 export const deleteFaqEnquiry = async (req, res) => {
     try {
         const questionId = req.params.id;
         const isAdmin = req.isAdmin
         const userId = req.id
-        
+
         if (!userId) {
             req.session = req.session || {};
             req.session.message = 'Unauthorized access';
@@ -4056,6 +4119,166 @@ export const deleteFaqEnquiry = async (req, res) => {
         console.error('Error deleting FAQ enquiry:', error);
         req.session = req.session || {};
         req.session.message = 'Error deleting FAQ enquiry';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+// Render Contact Enquiry Page 
+export const getContactEnquiries = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 1;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const statusFilter = req.query.statusFilter || 'all';
+
+        let query = {};
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+        if (statusFilter !== 'all') {
+            query.enquiryStatus = statusFilter;
+        }
+
+        const total = await contactSchema.countDocuments(query);
+        const contacts = await contactSchema.find(query)
+            .populate('updatedBy', 'firstName lastName email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        res.render('admin/layout/contactEnquiry', {
+            user,
+            isAdmin,
+            contacts,
+            search,
+            statusFilter,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error loading contact enquiries:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading contact enquiries';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update/Answer Contact Enquiry 
+export const updateContactEnquiryStatus = async (req, res) => {
+    try {
+        const { enquiryStatus } = req.body;
+        const contactId = req.params.id;
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+
+        const user = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!user) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        if (!['pending', 'active', 'cancel'].includes(enquiryStatus)) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid status provided';
+            req.session.type = 'error';
+            return res.redirect('/contactEnquiry');
+        }
+
+        const contact = await contactSchema.findById(contactId);
+        if (!contact) {
+            req.session = req.session || {};
+            req.session.message = 'Contact enquiry not found';
+            req.session.type = 'error';
+            return res.redirect('/contactEnquiry');
+        }
+
+
+        const updatedBy = userId;
+        const updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        const updatedAt = new Date();
+
+        await contactSchema.findByIdAndUpdate(contactId, { $set: { enquiryStatus, updatedBy, updatedByModel, updatedAt } }, { new: true, runValidators: true });
+
+        req.session = req.session || {};
+        req.session.message = 'Contact enquiry status updated successfully';
+        req.session.type = 'success';
+        res.redirect('/contactEnquiry');
+    } catch (error) {
+        console.error('Error updating contact enquiry status:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error updating contact enquiry status';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+// Delete FAQ Contact Enquiry 
+export const deleteContactEnquiry = async (req, res) => {
+    try {
+        const contactId = req.params.id;
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Unauthorized access';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+
+        const contact = await contactSchema.findById(contactId);
+        if (!contact) {
+            req.session = req.session || {};
+            req.session.message = 'Contact enquiry not found';
+            req.session.type = 'error';
+            return res.redirect('/contactEnquiry');
+        }
+
+        await contact.deleteOne();
+
+        req.session = req.session || {};
+        req.session.message = 'Contact enquiry deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/contactEnquiry');
+    } catch (error) {
+        console.error('Error deleting contact enquiry:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error deleting contact enquiry';
         req.session.type = 'error';
         res.redirect('/error');
     }

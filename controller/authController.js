@@ -5,6 +5,7 @@ import agentModel from '../models/agentModel.js';
 import userModel from '../models/userModel.js';
 import crypto from 'crypto';
 
+// Render Home Page
 export const homePage = async (req, res) => {
     try {
         const token = req.cookies?.authToken;
@@ -42,6 +43,7 @@ export const homePage = async (req, res) => {
     }
 };
 
+// Admin Registration 
 export const adminRegister = async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone } = req.body;
@@ -78,6 +80,7 @@ export const adminRegister = async (req, res) => {
     }
 };
 
+// Render Signup page
 export const getSignupPage = async (req, res) => {
     try {
         return res.render('shared/layout/sign-up', { message: req.session?.message, type: req.session?.type });
@@ -90,6 +93,7 @@ export const getSignupPage = async (req, res) => {
     }
 };
 
+// User Registration
 export const signupUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone } = req.body;
@@ -133,6 +137,7 @@ export const signupUser = async (req, res) => {
     }
 };
 
+// Render Login Page
 export const loginPage = async (req, res) => {
     try {
         const token = req.cookies?.authToken;
@@ -178,6 +183,7 @@ export const loginPage = async (req, res) => {
     }
 };
 
+// User, Admin, Agent Login
 export const loginUserOrAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -249,6 +255,7 @@ export const loginUserOrAdmin = async (req, res) => {
     }
 };
 
+// Logout user, agent, admin
 export const logoutUser = async (req, res) => {
     try {
         res.clearCookie("authToken");
@@ -265,6 +272,7 @@ export const logoutUser = async (req, res) => {
     }
 };
 
+// Render forget password Page
 export const forgetPasswordPage = async (req, res) => {
     try {
         res.render('shared/layout/forget', { message: req.session?.message || null, type: req.session?.type || null });
@@ -277,6 +285,7 @@ export const forgetPasswordPage = async (req, res) => {
     }
 };
 
+// Forget Password logic
 export const forgetPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -329,6 +338,7 @@ export const forgetPassword = async (req, res) => {
     }
 };
 
+// Render Reset Password Page
 export const resetPasswordPage = async (req, res) => {
     try {
         const { token, type } = req.query;
@@ -376,6 +386,7 @@ export const resetPasswordPage = async (req, res) => {
     }
 };
 
+// Reset password Logic
 export const resetPassword = async (req, res) => {
     try {
         const { token, type } = req.query;
@@ -445,6 +456,7 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+// Toast Messages in session Clear Logic
 export const clearSessionMessage = async (req, res) => {
     try {
         req.session = req.session || {};
@@ -457,6 +469,7 @@ export const clearSessionMessage = async (req, res) => {
     }
 };
 
+// Render Error Page 
 export const getErrorPage = async (req, res) => {
     try {
         const status = parseInt(req.query.status) || 500;

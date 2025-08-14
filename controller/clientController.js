@@ -18,10 +18,15 @@ import { fileURLToPath } from 'url';
 import CareerSchema from '../models/CareerSchema.js';
 import ApplicationSchema from '../models/ApplicationSchema.js';
 import faqSchema from '../models/faqSchema.js';
+import testimonials from '../data/testimonials.js';
+import contactSchema from '../models/contactSchema.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+
+// Render Simple User Page 
 export const signInUserDashboard = async (req, res) => {
     try {
         const userId = req.id;
@@ -163,6 +168,7 @@ export const tourPackagesPage = async (req, res) => {
     }
 };
 
+// Package Detail page for user
 export const packageDetailPage = async (req, res) => {
     try {
         const userId = req.id;
@@ -259,6 +265,7 @@ export const submitReview = async (req, res) => {
     }
 };
 
+// Add to wishlist
 export const addToWishlist = async (req, res) => {
     try {
         const userId = req.id;
@@ -312,6 +319,7 @@ export const addToWishlist = async (req, res) => {
     }
 };
 
+// Remove from wishlist
 export const removeFromWishlist = async (req, res) => {
     try {
         const userId = req.id;
@@ -358,6 +366,7 @@ export const removeFromWishlist = async (req, res) => {
     }
 };
 
+// Get wishlist Page
 export const getWishlist = async (req, res) => {
     try {
         const userId = req.id;
@@ -414,6 +423,7 @@ export const getWishlist = async (req, res) => {
     }
 };
 
+// Get package offer Page
 export const packageOfferPage = async (req, res) => {
     try {
         const userId = req.id;
@@ -477,6 +487,7 @@ export const packageOfferPage = async (req, res) => {
     }
 };
 
+// Add to cart Functionality(Packages)
 export const addToPackageCart = async (req, res) => {
     try {
         const { packageId, quantity } = req.body;
@@ -522,6 +533,7 @@ export const addToPackageCart = async (req, res) => {
     }
 };
 
+// Get Package Cart 
 export const getpackageCart = async (req, res) => {
     try {
         const userId = req.id;
@@ -568,6 +580,7 @@ export const getpackageCart = async (req, res) => {
     }
 };
 
+// Update Package cart
 export const updatePackageCart = async (req, res) => {
     try {
         const userId = req.id;
@@ -624,6 +637,7 @@ export const updatePackageCart = async (req, res) => {
     }
 };
 
+// Remove item from Package Cart
 export const removeFromPackageCart = async (req, res) => {
     try {
         const { packageId } = req.body;
@@ -659,6 +673,7 @@ export const removeFromPackageCart = async (req, res) => {
     }
 };
 
+// Country code for payment Process
 const countryToIsoCode = {
     'United States': 'US',
     'Canada': 'CA',
@@ -666,6 +681,7 @@ const countryToIsoCode = {
     // Add more mappings as needed
 };
 
+// Checkout Package Cart
 export const checkoutPackageCart = async (req, res) => {
     try {
         const userId = req.id;
@@ -725,7 +741,7 @@ export const checkoutPackageCart = async (req, res) => {
     }
 };
 
-
+// Book Single Package
 export const bookSinglePackage = async (req, res) => {
     try {
         const userId = req.id;
@@ -792,7 +808,7 @@ export const bookSinglePackage = async (req, res) => {
     }
 };
 
-
+// Package Payment intent for Stripe Payment Gateway for Multiple Packages Booking
 export const createPackagePaymentIntent = async (req, res) => {
     try {
         console.log('Starting createPaymentIntent for user:', req.id);
@@ -930,7 +946,7 @@ export const createPackagePaymentIntent = async (req, res) => {
     }
 };
 
-
+// Package Payment intent for Stripe Payment Gateway for Single Packages Booking
 export const createSinglePackagePaymentIntent = async (req, res) => {
     try {
         console.log('Starting createPaymentIntent for user:', req.id);
@@ -1050,7 +1066,6 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
         res.status(500).redirect('/error')
     }
 };
-
 
 // Updated confirmPackageBooking to handle coupon
 export const confirmPackageBooking = async (req, res) => {
@@ -1725,6 +1740,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
     }
 };
 
+// Get all Available Coupons
 export const getAvailableCoupons = async (req, res) => {
     try {
         const userId = req.id;
@@ -1748,7 +1764,7 @@ export const getAvailableCoupons = async (req, res) => {
     }
 };
 
-
+// Apply Coupan on the Package Booking
 export const applyCoupon = async (req, res) => {
     try {
         const { couponCode } = req.body;
@@ -1798,7 +1814,7 @@ export const applyCoupon = async (req, res) => {
     }
 };
 
-
+// Get All Current User Package Bookings
 export const getUserBookings = async (req, res) => {
     try {
         const userId = req.id;
@@ -1881,6 +1897,7 @@ export const getUserBookings = async (req, res) => {
     }
 };
 
+// get Package Booking detail
 export const getBookingDetails = async (req, res) => {
     try {
         const userId = req.id;
@@ -1937,6 +1954,7 @@ export const getBookingDetails = async (req, res) => {
     }
 };
 
+// Get user Profile
 export const getUserProfile = async (req, res) => {
     try {
         const userId = req.id;
@@ -1972,6 +1990,7 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+// Update User Profile
 export const updateUserProfile = async (req, res) => {
     try {
         const userId = req.id;
@@ -2048,6 +2067,7 @@ export const updateUserProfile = async (req, res) => {
     }
 };
 
+// Get About Page
 export const getAboutPage = async (req, res) => {
     try {
         const userId = req.id;
@@ -2088,6 +2108,7 @@ export const getAboutPage = async (req, res) => {
     }
 };
 
+// Get Service Page
 export const getServicePage = async (req, res) => {
     try {
         const userId = req.id;
@@ -2127,7 +2148,6 @@ export const getServicePage = async (req, res) => {
         res.status(500).redirect('/error')
     }
 };
-
 
 // Get all active careers for Career page
 export const getCareers = async (req, res) => {
@@ -2172,7 +2192,7 @@ export const getCareers = async (req, res) => {
     }
 };
 
-
+// Get Single Career Detail
 export const getCareerById = async (req, res) => {
     try {
         const userId = req.id;
@@ -2229,8 +2249,6 @@ export const getCareerById = async (req, res) => {
         res.status(500).redirect('/error')
     }
 };
-
-
 
 // Submit application for a career
 export const applyForCareer = async (req, res) => {
@@ -2292,7 +2310,7 @@ export const applyForCareer = async (req, res) => {
     }
 }
 
-
+// Get All applied Jobs(Careers)
 export const getAppliedCareers = async (req, res) => {
     try {
         const userId = req.id;
@@ -2360,7 +2378,6 @@ export const getAppliedCareers = async (req, res) => {
     }
 };
 
-
 // Get all tour guides 
 export const getTourGuides = async (req, res) => {
     try {
@@ -2389,8 +2406,7 @@ export const getTourGuides = async (req, res) => {
     }
 };
 
-
-
+// Get Gallery Page
 export const getGallery = async (req, res) => {
     try {
         const userId = req.id;
@@ -2422,6 +2438,7 @@ export const getGallery = async (req, res) => {
     }
 };
 
+// Get Continue Reading Page
 export const getContinueReadingPage = async (req, res) => {
     try {
         const userId = req.id;
@@ -2447,8 +2464,6 @@ export const getContinueReadingPage = async (req, res) => {
         res.status(500).redirect('/error?status=500&message=Error fetching continueReading page');
     }
 };
-
-
 
 // GET: Render FAQ page
 export const getFaqPage = async (req, res) => {
@@ -2487,8 +2502,6 @@ export const getFaqPage = async (req, res) => {
     }
 };
 
-
-
 // POST: Handle form submission
 export const submitQuestion = async (req, res) => {
     try {
@@ -2518,8 +2531,8 @@ export const submitQuestion = async (req, res) => {
             email,
             number: number || null,
             message,
-            questionBy: userId,
-            questionAt: Date.now()
+            questionBy: userId || null,
+            questionAt: Date.now(),
         });
 
         await question.save();
@@ -2537,3 +2550,99 @@ export const submitQuestion = async (req, res) => {
     }
 };
 
+// Get Testimonail page
+export const testimonialPage = async (req, res) => {
+    try {
+        const userId = req.id;
+        let userData = null;
+
+        if (!userId) {
+            console.log('No User ID Available');
+            req.session = req.session || {};
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exist in The DataBase');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('client/layout/testimonial', {
+            user: userData,
+            testimonials,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error(error);
+        req.session = req.session || {};
+        req.session.message = 'Server error';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Render Contact page
+export const renderContactPage = async (req, res) => {
+    try {
+        const userId = req.id;
+        let user = null;
+
+        if (userId) {
+            user = await userModel.findById(userId);
+            if (!user) {
+                req.session = req.session || {};
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+        }
+
+        res.render('client/layout/contact', {
+            user,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+
+    } catch (error) {
+        console.error('Error rendering contact page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading contact page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Submit Contact Enquiry
+export const createContactEnquiry = async (req, res) => {
+    try {
+        const { name, email, number, message } = req.body;
+
+        if (!name || !email || !message) {
+            req.session = req.session || {};
+            req.session.message = 'Name, email, and message are required';
+            req.session.type = 'error';
+            return res.redirect('/contact');
+        }
+
+        const contact = new contactSchema({ name, email, number, message, enquiryStatus: 'pending' });
+        await contact.save();
+
+        req.session = req.session || {};
+        req.session.message = 'Contact enquiry submitted successfully';
+        req.session.type = 'success';
+        res.redirect('/contact');
+    } catch (error) {
+        console.error('Error submitting contact enquiry:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error submitting contact enquiry';
+        req.session.type = 'error';
+        res.redirect('/contact');
+    }
+};

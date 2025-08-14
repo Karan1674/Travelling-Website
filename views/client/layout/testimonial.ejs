@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+    <%- include('../partials/Header')%>
+    <style>
+ 
+/* Star Rating Styles */
+
+.rating-start:before {
+    content: "\f005 \f005 \f005 \f005 \f005"; /* 5 empty stars */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #ccd6df; /* Gray for empty stars */
+    display: block;
+}
+
+.rating-start span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.rating-start span:before {
+    content: "\f005 \f005 \f005 \f005 \f005"; /* 5 filled stars */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #f56960; /* Red for filled stars */
+    display: block;
+}
+    </style>
+    <body>
+     <%- include('../partials/Loader')%>
+ 
+       <div id="page" class="full-page">
+         <%- include('../partials/Navbar')%>
+
+         <main id="content" class="site-main">
+            <!-- Inner Banner html start-->
+            <section class="inner-banner-wrap">
+               <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                  <div class="container">
+                     <div class="inner-banner-content">
+                        <h1 class="inner-title">Testimonial</h1>
+                     </div>
+                  </div>
+               </div>
+               <div class="inner-shape"></div>
+            </section>
+            <!-- Inner Banner html end-->
+            <div class="testimonial-page-section">
+               <div class="container">
+                  <% if (testimonials && testimonials.length > 0) { %>
+                     <div class="row">
+                        <% testimonials.forEach(testimonial => { %>
+                           <div class="col-lg-4 col-md-6">
+                              <div class="testimonial-item text-center">
+                                 <figure class="testimonial-img">
+                                    <img src="<%= testimonial.image %>" alt="<%= testimonial.name %>">
+                                 </figure>
+                                 <div class="testimonial-content">
+                                    <p><%= testimonial.content %></p>
+                                    <div class="start-wrap">
+                                       <div class="rating-start" title="Rated <%= (testimonial.rating / 20).toFixed(1) %> out of 5">
+                                          <span style="width: <%= testimonial.rating %>%"></span>
+                                       </div>
+                                    </div>
+                                    <h3><%= testimonial.name %></h3>
+                                    <span><%= testimonial.role %></span>
+                                 </div>
+                              </div>
+                           </div>
+                        <% }) %>
+                     </div>
+                  <% } else { %>
+                     <p class="text-center">No testimonials available.</p>
+                  <% } %>
+               </div>
+            </div>
+         </main>
+         <%- include('../partials/Footer')%>
+
+         <!-- custom search field html -->
+
+         <!-- header html end -->
+      </div>
+      <%- include('../../shared/partials/toaster') %>
+
+      <!-- JavaScript -->
+      <%- include('../partials/Script')%>
+   </body>
+</html>

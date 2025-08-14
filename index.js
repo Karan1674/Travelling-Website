@@ -15,6 +15,7 @@ const clientRoutes = require('./routes/clientRoutes');
 
 
 const session = require('express-session');
+const { notFoundPage } = require('./controller/authController');
 
 app.use(session({
     secret: process.env.SESSION_SECRET ,
@@ -39,7 +40,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(cors()); 
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true })); 
-// app.use(express.static(path.join(__dirname, 'public')));
 app.use("/uploads", express.static("uploads"));
 
 app.use(express.static('public'))
@@ -51,6 +51,22 @@ connectDB()
 app.use('',authRoutes)
 app.use('',adminRoutes)
 app.use('',clientRoutes)
+
+// Render 404 Page 
+app.use(async (req, res, next) => {
+    try {
+        res.render('shared/layout/404', {
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error rendering 404 page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error rendering error page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

@@ -4,47 +4,23 @@
     <div id="navigation" class="navigation-container">
         <ul>
             <li><a href="/AdminDashboard"><i class="far fa-chart-bar"></i> Dashboard</a></li>
-           <% if(isAdmin) {%>
-            <li><a href='/db-user-dashboard'><i class="fas fa-user"></i>Users</a>
-                <!-- <ul>
-                    <li>
-                        <a href="/db-admin-created-users">Admin User</a>
-                    </li>
-                    <li>
-                        <a href="/user-edit">SignedUp User</a>
-                    </li>
-                    <li>
-                        <a href="/new-user">Create New user</a>
-                    </li>
-                </ul> -->
-            </li>
+            <% if(isAdmin) {%>
+                <li><a href='/db-user-dashboard'><i class="fas fa-user"></i>Users</a></li>
+                <%}%>
 
-            <%}%>
-            <!-- <li><a href="/db-add-package"><i class="fas fa-umbrella-beach"></i>Add Package</a></li> -->
-            <li>
-                <a href='/db-package-dashboard'><i class="fas fa-hotel"></i></i>packages</a>
-                <!-- <ul>
-                    <li><a href="/db-all-packages">All Packages</a></li>
-                    <li><a href="/db-active-packages">Active</a></li>
-                    <li><a href="/db-pending-packages">Pending</a></li>
-                    <li><a href="/db-expired-packages">Expired</a></li>
-                </ul>    -->
-            </li>
-            <li><a href="/admin/bookings"><i class="fas fa-shopping-cart fa-3x"></i> Booking</a></li>
-            <li><a href="/coupon-list"><i class="fas fa-ticket-alt fa-3x"></i> Coupon</a></li>
-            <li><a href="/career-list"><i class="fas fa-briefcase fa-3x"></i> Career</a></li>
-            <li><a href="/application-list"><i class="fas fa-file-signature fa-3x"></i> Applicant</a></li>
-            <li><a href="/tour-guide-list"><i class="fas fa-route"></i> Tour Guide</a></li>
-            <li><a href="/galleryDashboard"><i class="fas fa-images fa-3x"></i> Gallery</a></li>
+                    <li><a href='/db-package-dashboard'><i class="fas fa-hotel"></i></i>packages</a></li>
+                    <li><a href="/admin/bookings"><i class="fas fa-shopping-cart fa-3x"></i> Booking</a></li>
+                    <li><a href="/coupon-list"><i class="fas fa-ticket-alt fa-3x"></i> Coupon</a></li>
+                    <li><a href="/career-list"><i class="fas fa-briefcase fa-3x"></i> Career</a></li>
+                    <li><a href="/application-list"><i class="fas fa-file-signature fa-3x"></i> Applicant</a></li>
+                    <li><a href="/tour-guide-list"><i class="fas fa-route"></i> Tour Guide</a></li>
+                    <li><a href="/galleryDashboard"><i class="fas fa-images fa-3x"></i> Gallery</a></li>
+                    <li><a href="/enquiryDashboard"><i class="fas fa-question-circle fa-3x"></i> Enquiry</a></li>
+                    <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
 
+                    <!-- <li><a href="db-wishlist.html"><i class="far fa-heart"></i>Wishlist</a></li>
+                         <li><a href="db-comment.html"><i class="fas fa-comments"></i>Comments</a></li> -->
 
-            <li><a href="/enquiryDashboard"><i class="fas fa-question-circle fa-3x"></i> Enquiry</a></li>
-
-            <li><a href="db-wishlist.html"><i class="far fa-heart"></i>Wishlist</a></li>
-            <li><a href="db-comment.html"><i class="fas fa-comments"></i>Comments</a></li>
-
-
-            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
 </div>

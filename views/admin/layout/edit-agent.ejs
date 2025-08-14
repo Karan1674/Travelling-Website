@@ -159,6 +159,19 @@
                                             <textarea class="form-control" id="message" name="description" placeholder=""><%= editAgent.description || '' %></textarea>
                                         </div>
                                     </div>
+
+                                    <div class="col-12">
+                                        <h4>Status Of Agent</h4>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Status</label>
+                                            <select name="isActive" class="form-control">
+                                                <option value="true" <%= editAgent.isActive ? 'selected' : '' %>>Yes</option>
+                                                <option value="false" <%= !editAgent.isActive ? 'selected' : '' %>>No</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                                 <button type="submit" class="button-primary">Save</button>
                             </form>

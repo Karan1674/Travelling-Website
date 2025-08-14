@@ -17,8 +17,15 @@
                             <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <form id="search-form" action="/application-list" method="get" style="flex: 1; margin-right: 20px;">
                                     <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                        <input type="text" name="search" id="search-input" placeholder="Search by Applicant Name or Job Title" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <button type="submit" aria-label="Search applications" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                        <input type="text" name="search" id="search-input" placeholder="Search by Applicant Name or Job Title" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                       
+                                        <select name="statusFilter" id="status-filter" style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All</option>
+                                            <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pending</option>
+                                            <option value="accepted" <%= statusFilter === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                                            <option value="rejected" <%= statusFilter === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                                        </select>
+                                        <button type="submit" aria-label="Search applications" style="position: absolute; right: 40px; background: none; border: none; cursor: pointer;">
                                             <i class="fas fa-search" style="color: #007bff;"></i>
                                         </button>
                                     </div>
@@ -52,7 +59,9 @@
                                                 <td><%= new Date(application.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
                                                 <td><%= application.updatedBy ? `${application.updatedBy.firstName} ${application.updatedBy.lastName}` : '' %></td>
                                                 <td>
-                                                    <span class="badge badge-success" style="cursor: pointer;" onclick="window.location.href='/application-detail/<%= application._id %>'"><i class="far fa-edit"></i></span>
+                                                    <span class="badge badge-info" style="cursor: pointer;" onclick="window.location.href='/application-detail/<%= application._id %>'"><i class="far fa-eye"></i></span>
+
+                                                    <span class="badge badge-success" style="cursor: pointer;" onclick="window.location.href='/application-detail/<%= application._id %>#updateApplicant'"><i class="far fa-edit"></i></span>
                                                 </td>
 
                                             </tr>
@@ -72,15 +81,20 @@
     <%- include('../partials/script.ejs') %>
 </body>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+     document.addEventListener('DOMContentLoaded', () => {
+        // Handle search form submission
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
+        const statusFilterSelect = document.getElementById('status-filter');
 
-        // Handle form submission
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const query = searchInput.value.trim();
-            window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+            const nameQuery = searchInput.value.trim();
+            const statusFilter = statusFilterSelect.value;
+            let url = `?page=1`;
+            if (nameQuery) url += `&search=${encodeURIComponent(nameQuery)}`;
+            if (statusFilter !== 'all') url += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+            window.location.href = url;
         });
     });
 </script>

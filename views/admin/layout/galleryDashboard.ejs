@@ -27,9 +27,19 @@
                                                     style="display: flex; align-items: center; position: relative;">
                                                     <input type="text" name="search" id="search-input"
                                                         placeholder="Search by Title" value="<%= search || '' %>"
-                                                        style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                                    <button type="submit" aria-label="Search gallery items"
-                                                        style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                                        style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                                    <select name="statusFilter" id="status-filter"
+                                                        style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                                        <option value="all" <%=statusFilter==='all' ? 'selected' : '' %>
+                                                            >All</option>
+                                                        <option value="Active" <%=statusFilter==='Active' ? 'selected'
+                                                            : '' %>>Active</option>
+                                                        <option value="notActive" <%=statusFilter==='notActive'
+                                                            ? 'selected' : '' %>>Not Active</option>
+                                                    </select>
+
+                                                    <button type="submit" aria-label="Search packages"
+                                                        style="position: absolute; right: 40px; background: none; border: none; cursor: pointer;">
                                                         <i class="fas fa-search" style="color: #007bff;"></i>
                                                     </button>
                                                 </div>
@@ -294,13 +304,23 @@
                             const editButtons = document.querySelectorAll('.edit-btn');
                             const carouselControls = document.querySelectorAll('.carousel-control-prev, .carousel-control-next');
 
-                            // Handle search form submission
-                            searchForm.addEventListener('submit', (e) => {
-                                e.preventDefault();
-                                const query = searchInput.value.trim();
-                                window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
-                            });
 
+                            document.addEventListener('DOMContentLoaded', () => {
+                                // Handle search form submission
+                                const searchForm = document.getElementById('search-form');
+                                const searchInput = document.getElementById('search-input');
+                                const statusFilterSelect = document.getElementById('status-filter');
+
+                                searchForm.addEventListener('submit', (e) => {
+                                    e.preventDefault();
+                                    const nameQuery = searchInput.value.trim();
+                                    const statusFilter = statusFilterSelect.value;
+                                    let url = `?page=1`;
+                                    if (nameQuery) url += `&search=${encodeURIComponent(nameQuery)}`;
+                                    if (statusFilter !== 'all') url += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+                                    window.location.href = url;
+                                });
+                            });
                             // Open add modal
                             addBtn.addEventListener('click', (e) => {
                                 e.preventDefault();

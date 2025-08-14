@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+
+<%- include('../partials/Header')%>
+<link rel="stylesheet" type="text/css" href="/styles/clientStyles.css">
+
+   <body >
+
+      <div id="page" class="full-page" >
+
+         <main id="content" class="site-main">
+            <div class="no-content-section 404-page" style="background-image: url(/assets/images/404-img.jpg); min-height: 100vh;">
+               <div class="container">
+                  <div class="no-content-wrap">
+                     <span>404</span>
+                     <h1>Oops! That page can't be found</h1>
+                     <h4>It looks like nothing was found at this location.</h4>
+                     <div class="form-group">
+                        <a href="/" class="button-primary">Back to Home</a>
+                    </div>
+                  </div>
+               </div>
+               <div class="overlay"></div>
+            </div>
+         </main>
+ 
+         <!-- header html end -->
+      </div>
+
+      <!-- JavaScript -->
+      <%- include('../partials/toaster') %>
+      <%- include('../partials/script') %>
+   </body>
+</html>

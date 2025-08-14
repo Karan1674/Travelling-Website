@@ -142,7 +142,7 @@ const mediaGalleryStorage = multer.diskStorage({
     },
 });
 
-export const uploadmediaGalleryImage = multer({
+export const uploadMediaGalleryImage = multer({
     storage: mediaGalleryStorage,
     fileFilter: (req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {

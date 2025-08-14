@@ -1,8 +1,8 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry, getContactEnquiries, updateContactEnquiryStatus, deleteContactEnquiry } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
-const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadmediaGalleryImage } = require('../middleware/multer');
+const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadMediaGalleryImage } = require('../middleware/multer');
 const router = express.Router();
 
 
@@ -86,8 +86,8 @@ router.get('/tour-guide-detail/:id', isAuthenticated, isAdminCheck, getTourGuide
 
 
 router.get('/galleryDashboard', isAuthenticated, isAdminCheck, getGalleryDashboard);
-router.post('/add-gallery-item', isAuthenticated, isAdminCheck, uploadmediaGalleryImage.single('image'), addGalleryItem);
-router.post('/edit-gallery-item',  isAuthenticated, isAdminCheck, uploadmediaGalleryImage.single('image'), editGalleryItem);
+router.post('/add-gallery-item', isAuthenticated, isAdminCheck, uploadMediaGalleryImage.single('image'), addGalleryItem);
+router.post('/edit-gallery-item',  isAuthenticated, isAdminCheck, uploadMediaGalleryImage.single('image'), editGalleryItem);
 router.get('/delete-gallery-item/:id', isAuthenticated, isAdminCheck, deleteGalleryItem);
 
 
@@ -95,5 +95,11 @@ router.get('/enquiryDashboard',  isAuthenticated, isAdminCheck, getEnquiryDashbo
 router.get('/faqEnquiry', isAuthenticated, isAdminCheck, getFaqEnquiry);
 router.post('/faqEnquiry/edit/:id', isAuthenticated, isAdminCheck, editFaqEnquiry);
 router.get('/faqEnquiry/delete/:id', isAuthenticated, isAdminCheck, deleteFaqEnquiry);
+
+
+router.get('/contactEnquiry', isAuthenticated, isAdminCheck, getContactEnquiries);
+router.post('/contactEnquiry/update/:id', isAuthenticated, isAdminCheck, updateContactEnquiryStatus);
+router.get('/contactEnquiry/delete/:id', isAuthenticated, isAdminCheck, deleteContactEnquiry);
+
 
 module.exports = router;

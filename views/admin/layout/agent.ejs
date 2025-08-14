@@ -87,8 +87,13 @@
                             <div class="user-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <form id="search-form" action="/db-admin-created-agents" method="get" style="flex: 1; margin-right: 20px;">
                                     <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                        <input type="text" name="search" id="search-input" placeholder="Search by agent name" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <button type="submit" aria-label="Search agents" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                                        <input type="text" name="search" id="search-input" placeholder="Search by agent name" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                        <select name="statusFilter" id="status-filter" style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All</option>                                       
+                                            <option value="Active" <%= statusFilter === 'Active' ? 'selected' : '' %>>Active</option>
+                                            <option value="notActive" <%= statusFilter === 'notActive' ? 'selected' : '' %>>Not Active</option>
+                                        </select>
+                                        <button type="submit" aria-label="Search tour guides" style="position: absolute; right: 40px; background: none; border: none; cursor: pointer;">
                                             <i class="fas fa-search" style="color: #007bff;"></i>
                                         </button>
                                     </div>
@@ -138,13 +143,13 @@
                                                         </span>
                                                     </td> -->
                                                     <td>
-                                                        <span class="badge badge-success" onclick="window.location.href='/viewAgent?agentId=<%= agent._id %>'" aria-label="View Agent"><i class="far fa-eye"></i></span>
+                                                        <span style="cursor: pointer;" class="badge badge-success" onclick="window.location.href='/viewAgent?agentId=<%= agent._id %>'" aria-label="View Agent"><i class="far fa-eye"></i></span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-success" onclick="window.location.href='/edit-agent?editAgentId=<%= agent._id %>'" aria-label="Edit Agent"><i class="far fa-edit"></i></span>
+                                                        <span style="cursor: pointer;" class="badge badge-success" onclick="window.location.href='/edit-agent?editAgentId=<%= agent._id %>'" aria-label="Edit Agent"><i class="far fa-edit"></i></span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-danger delete-btn" data-agentId="<%= agent._id %>" aria-label="Delete agent"><i class="far fa-trash-alt"></i></span>
+                                                        <span  style="cursor: pointer;" class="badge badge-danger delete-btn " data-itemId="<%= agent._id %>" aria-label="Delete agent"><i class="far fa-trash-alt"></i></span>
                                                     </td>
                                                 </tr>
                                             <% }) %>
@@ -161,90 +166,33 @@
                 </div>
                 <%- include('../partials/pagination') %>
             </div>
-            <div class="popup-overlay" id="deletePopupOverlay"></div>
-            <div class="popup" id="deletePopup">
-                <div class="popup-header">
-                    <h5>Confirm Delete</h5>
-                    <button class="popup-close" id="popupCloseBtn" aria-label="Close popup">&times;</button>
-                </div>
-                <div class="popup-body">
-                    Are you sure you want to delete this Agent?
-                </div>
-                <div class="popup-footer">
-                    <button type="button" class="btn btn-secondary" id="popupCancelBtn" aria-label="Cancel delete">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="popupConfirmDeleteBtn" aria-label="Confirm delete">Delete</button>
-                </div>
-            </div>
+          
             <%- include('../partials/Footer') %>
         </div>
     </div>
+
+    <%- include('../partials/deletePopup', { entityName: 'Agent', deleteEndpoint: '/delete-agent', buttonClass: 'delete-btn' }) %>
+
     <%- include('../../shared/partials/toaster') %>
 
     <%- include('../partials/script.ejs') %>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const searchForm = document.getElementById('search-form');
-            const searchInput = document.getElementById('search-input');
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            const popupOverlay = document.getElementById('deletePopupOverlay');
-            const popup = document.getElementById('deletePopup');
-            const cancelBtn = document.getElementById('popupCancelBtn');
-            const closeBtn = document.getElementById('popupCloseBtn');
-            const confirmDeleteBtn = document.getElementById('popupConfirmDeleteBtn');
+    // Handle search form submission
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    const statusFilterSelect = document.getElementById('status-filter');
 
-            // Handle form submission
-            if (searchForm && searchInput) {
-                searchForm.addEventListener('submit', (e) => {
-                    const query = searchInput.value.trim();
-                    window.location.href = `/agents?search=${encodeURIComponent(query)}&page=1`;
-                });
-            } else {
-                console.error('Search form or input not found');
-            }
-
-            // Handle delete popup
-            if (!popupOverlay || !popup || !cancelBtn || !closeBtn || !confirmDeleteBtn) {
-                console.error('Popup elements not found');
-                return;
-            }
-
-            const showPopup = () => {
-                popupOverlay.classList.add('show');
-                popup.classList.add('show');
-            };
-
-            const hidePopup = () => {
-                popupOverlay.classList.remove('show');
-                popup.classList.remove('show');
-                confirmDeleteBtn.removeAttribute('data-agentId');
-            };
-
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const agentId = button.getAttribute('data-agentId');
-                    if (agentId) {
-                        confirmDeleteBtn.setAttribute('data-agentId', agentId);
-                        showPopup();
-                    } else {
-                        console.error('Agent ID not found on button');
-                    }
-                });
-            });
-
-            confirmDeleteBtn.addEventListener('click', () => {
-                const agentId = confirmDeleteBtn.getAttribute('data-agentId');
-                if (agentId) {
-                    window.location.href = `/delete-agent/${agentId}`;
-                    hidePopup();
-                } else {
-                    console.error('Agent ID not found on confirm button');
-                }
-            });
-
-            cancelBtn.addEventListener('click', hidePopup);
-            closeBtn.addEventListener('click', hidePopup);
-            popupOverlay.addEventListener('click', hidePopup);
-        });
-    </script>
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameQuery = searchInput.value.trim();
+        const statusFilter = statusFilterSelect.value;
+        let url = `?page=1`;
+        if (nameQuery) url += `&search=${encodeURIComponent(nameQuery)}`;
+        if (statusFilter !== 'all') url += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+        window.location.href = url;
+    });
+});
+</script>
 </body>
 </html>
