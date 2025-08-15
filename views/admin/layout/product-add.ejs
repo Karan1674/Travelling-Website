@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 30px;">
+                            <h4 style="margin: 0 0 25px; color: #2c3e50; font-size: 1.8rem; font-weight: 600;">Add New Product</h4>
+                            <form action="/product-add" method="POST" enctype="multipart/form-data">
+                                <!-- Container 1: Title and Important Fields -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Basic Information</div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="name">Name <span class="required-star">*</span></label>
+                                                    <input type="text" class="form-control" id="name" name="name" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="price">Price <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="number" class="form-control" id="price" name="price" step="0.01">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="discountPrice">Discount Price <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="number" class="form-control" id="discountPrice" name="discountPrice" step="0.01">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="isOnSale">Sale Status <span class="required-star" style="display: none;">*</span></label>
+                                                    <select class="form-control" id="isOnSale" name="isOnSale">
+                                                        <option value="off">Not on Sale</option>
+                                                        <option value="on">On Sale</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Container 2: Categories, Tags -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Additional Details</div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="categories">Categories (comma-separated) <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="text" class="form-control" id="categories" name="categories">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="tags">Tags (comma-separated) <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="text" class="form-control" id="tags" name="tags">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="weight">Weight <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="text" class="form-control" id="weight" name="weight">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="dimensions">Dimensions <span class="required-star" style="display: none;">*</span></label>
+                                                    <input type="text" class="form-control" id="dimensions" name="dimensions">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Container 3: Descriptions -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Descriptions</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="shortDescription">Short Description <span class="required-star" style="display: none;">*</span></label>
+                                            <textarea class="form-control" id="shortDescription" name="shortDescription"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="description">Description <span class="required-star" style="display: none;">*</span></label>
+                                            <textarea class="form-control" id="description" name="description"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Container 4: Images, Status -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Images & Status</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Images <span class="required-star" style="display: none;">*</span></label>
+                                            <div id="drop-area" class="drop-area">
+                                                <p>Drag & Drop images here or click to select</p>
+                                                <input type="file" class="form-control-file" id="images" name="images" multiple accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="image-preview" class="mt-3" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px;"></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="status">Status <span class="required-star" style="display: none;">*</span></label>
+                                                    <select class="form-control" id="status" name="status">
+                                                        <option value="active">Active</option>
+                                                        <option value="inactive">Inactive</option>
+                                                        <option value="discontinued">Discontinued</option>
+                                                        <option value="draft" selected>Draft</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group text-right">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="/product-list" class="btn btn-danger">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/deletePopup', { entityName: 'Product', deleteEndpoint: '/delete-product', buttonClass: 'delete-btn' }) %>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.js"></script>
+    <style>
+        .drop-area {
+            border: 2px dashed #d1d8e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drop-area.dragover {
+            border-color: #007bff;
+            background: #e7f1ff;
+        }
+        .drop-area p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        .image-container {
+            position: relative;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .image-preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        .image-preview-img:hover {
+            opacity: 0.9;
+        }
+        .delete-image {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease;
+        }
+        .delete-image:hover {
+            background: #c82333;
+        }
+        .feature-radio {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        .feature-radio input {
+            width: auto !important;
+            margin: 0;
+        }
+        .feature-radio label {
+            margin: 0;
+            font-weight: 500;
+        }
+        .card-header {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .required-star {
+            color: #dc3545;
+        }
+        .required-field {
+            border-color: #dc3545 !important;
+        }
+        .valid-field {
+            border-color: #28a745 !important;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clean up stray Ace Editor textareas
+            function cleanAceTextareas() {
+                document.querySelectorAll('textarea.ace_text-input').forEach(textarea => {
+                    textarea.removeAttribute('required');
+                    textarea.removeAttribute('wrap');
+                    textarea.removeAttribute('autocorrect');
+                    textarea.removeAttribute('autocapitalize');
+                    textarea.removeAttribute('spellcheck');
+                    textarea.style.opacity = '';
+                    textarea.classList.remove('ace_text-input');
+                    if (!textarea.name) {
+                        textarea.remove(); // Remove stray textareas with no name
+                    }
+                });
+            }
+            cleanAceTextareas();
+
+            // Initialize Jodit editors with retry mechanism
+            let shortDescEditor, descEditor;
+            function initializeJoditEditors() {
+                const shortDescTextarea = document.querySelector('#shortDescription');
+                const descTextarea = document.querySelector('#description');
+                
+                if (!shortDescTextarea || !descTextarea) {
+                    console.error('Textarea elements not found:', {
+                        shortDescription: !!shortDescTextarea,
+                        description: !!descTextarea
+                    });
+                    // Fallback to plain textareas
+                    [shortDescTextarea, descTextarea].forEach(textarea => {
+                        if (textarea) {
+                            textarea.style.display = 'block';
+                            textarea.removeAttribute('required');
+                        }
+                    });
+                    return false;
+                }
+
+                try {
+                    shortDescEditor = Jodit.make('#shortDescription', {
+                        toolbar: false,
+                        height: 150
+                    });
+                    descEditor = Jodit.make('#description', {
+                        toolbar: false,
+                        height: 300
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('Jodit initialization failed:', error);
+                    // Fallback to plain textareas
+                    [shortDescTextarea, descTextarea].forEach(textarea => {
+                        if (textarea) {
+                            textarea.style.display = 'block';
+                            textarea.removeAttribute('required');
+                        }
+                    });
+                    return false;
+                }
+            }
+
+            // Retry Jodit initialization with MutationObserver
+            let initAttempts = 0;
+            const maxAttempts = 5;
+            function tryInitializeJodit() {
+                cleanAceTextareas(); // Clean before each attempt
+                if (initializeJoditEditors()) {
+                    // Clean Jodit textareas
+                    [shortDescEditor, descEditor].forEach(editor => {
+                        if (editor && editor.textarea) {
+                            const textarea = editor.textarea;
+                            textarea.classList.remove('ace_text-input');
+                            textarea.removeAttribute('wrap');
+                            textarea.removeAttribute('autocorrect');
+                            textarea.removeAttribute('autocapitalize');
+                            textarea.removeAttribute('spellcheck');
+                            textarea.style.opacity = '';
+                        } else if (editor) {
+                            console.warn('Jodit editor textarea not found for:', editor.id || 'unknown');
+                        }
+                    });
+                    return;
+                }
+                if (initAttempts < maxAttempts) {
+                    initAttempts++;
+                    setTimeout(tryInitializeJodit, 100 * initAttempts);
+                } else {
+                    console.error('Jodit initialization failed after', maxAttempts, 'attempts');
+                }
+            }
+
+            // Observe DOM changes to detect Ace Editor interference
+            const observer = new MutationObserver((mutations) => {
+                if (document.querySelector('textarea.ace_text-input')) {
+                    cleanAceTextareas();
+                    tryInitializeJodit();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Initial Jodit initialization attempt
+            tryInitializeJodit();
+
+            const dropArea = document.getElementById('drop-area');
+            const imageInput = document.getElementById('images');
+            const imagePreview = document.getElementById('image-preview');
+            const statusSelect = document.getElementById('status');
+            const saleSelect = document.getElementById('isOnSale');
+            const discountInput = document.getElementById('discountPrice');
+
+            dropArea.addEventListener('click', () => imageInput.click());
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    const dt = new DataTransfer();
+                    Array.from(imageInput.files).forEach(file => dt.items.add(file));
+                    Array.from(files).forEach(file => dt.items.add(file));
+                    imageInput.files = dt.files;
+                    updateImagePreview();
+                }
+            });
+            imageInput.addEventListener('change', updateImagePreview);
+
+            function updateImagePreview() {
+                imagePreview.innerHTML = '';
+                Array.from(imageInput.files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const container = document.createElement('div');
+                        container.className = 'image-container';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview-img';
+                        const deleteBtn = document.createElement('span');
+                        deleteBtn.className = 'delete-image';
+                        deleteBtn.innerHTML = '&times;';
+                        deleteBtn.onclick = () => {
+                            container.remove();
+                            const dt = new DataTransfer();
+                            Array.from(imageInput.files).forEach((f, i) => {
+                                if (i !== index) dt.items.add(f);
+                            });
+                            imageInput.files = dt.files;
+                            updateImagePreview();
+                        };
+                        const featureRadio = document.createElement('div');
+                        featureRadio.className = 'feature-radio';
+                        featureRadio.innerHTML = `
+                            <input type="radio" name="featureImage" value="${index}" ${index === 0 ? 'checked' : ''}>
+                            <label>Feature Image</label>
+                        `;
+                        container.appendChild(img);
+                        container.appendChild(deleteBtn);
+                        container.appendChild(featureRadio);
+                        imagePreview.appendChild(container);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                updateFeatureImageRadios();
+            }
+
+            function updateFeatureImageRadios() {
+                const allRadios = document.querySelectorAll('input[name="featureImage"]');
+                const hasImages = imageInput.files.length > 0;
+                allRadios.forEach(radio => {
+                    radio.disabled = !hasImages;
+                });
+                if (!hasImages) {
+                    const noImageRadio = document.createElement('input');
+                    noImageRadio.type = 'radio';
+                    noImageRadio.name = 'featureImage';
+                    noImageRadio.value = '';
+                    noImageRadio.checked = true;
+                    noImageRadio.style.display = 'none';
+                    document.querySelector('form').appendChild(noImageRadio);
+                }
+            }
+
+            function toggleRequiredFields() {
+                cleanAceTextareas(); // Clean before validation
+                const isDraft = statusSelect.value === 'draft';
+                const isOnSale = saleSelect.value === 'on';
+                const hasImages = imageInput.files.length > 0;
+
+                document.querySelectorAll('input:not([name="name"]):not([name="discountPrice"]):not([name="featureImage"]):not([name="existingImages"]):not([name="images"]), textarea.form-control, select:not([name="status"]):not([name="isOnSale"]):not([name="search-anything"])').forEach(field => {
+                    const label = field.closest('.form-group')?.querySelector('label');
+                    const star = label?.querySelector('.required-star');
+                    if (isDraft) {
+                        field.removeAttribute('required');
+                        if (star) star.style.display = 'none';
+                        field.classList.remove('required-field');
+                    } else {
+                        field.setAttribute('required', 'required');
+                        if (star) star.style.display = 'inline';
+                        if (field.tagName === 'TEXTAREA') {
+                            const editor = field.id === 'shortDescription' ? shortDescEditor : descEditor;
+                            const content = editor && editor.value ? editor.value.trim() : field.value.trim();
+                            if (content !== '') {
+                                field.classList.remove('required-field');
+                            } else {
+                                field.classList.add('required-field');
+                            }
+                        } else if (field.tagName === 'INPUT' && field.value.trim() !== '') {
+                            field.classList.add('valid-field');
+                            field.classList.remove('required-field');
+                        } else {
+                            field.classList.add('required-field');
+                            field.classList.remove('valid-field');
+                        }
+                    }
+                });
+
+                const nameInput = document.getElementById('name');
+                const nameLabel = nameInput.closest('.form-group').querySelector('label');
+                const nameStar = nameLabel.querySelector('.required-star');
+                nameInput.setAttribute('required', 'required');
+                nameStar.style.display = 'inline';
+                if (nameInput.value.trim() !== '') {
+                    nameInput.classList.add('valid-field');
+                    nameInput.classList.remove('required-field');
+                } else {
+                    nameInput.classList.add('required-field');
+                    nameInput.classList.remove('valid-field');
+                }
+
+                const discountLabel = discountInput.closest('.form-group').querySelector('label');
+                const discountStar = discountLabel.querySelector('.required-star');
+                if (isOnSale) {
+                    discountInput.setAttribute('required', 'required');
+                    discountStar.style.display = 'inline';
+                    if (discountInput.value.trim() !== '') {
+                        discountInput.classList.add('valid-field');
+                        discountInput.classList.remove('required-field');
+                    } else {
+                        discountInput.classList.add('required-field');
+                        discountInput.classList.remove('valid-field');
+                    }
+                } else {
+                    discountInput.removeAttribute('required');
+                    discountStar.style.display = 'none';
+                    discountInput.classList.remove('required-field');
+                    discountInput.classList.remove('valid-field');
+                }
+
+                const imagesLabel = imageInput.closest('.form-group').querySelector('label');
+                const imagesStar = imagesLabel.querySelector('.required-star');
+                if (!isDraft && !hasImages) {
+                    imageInput.setAttribute('required', 'required');
+                    imagesStar.style.display = 'inline';
+                    imageInput.classList.add('required-field');
+                } else {
+                    imageInput.removeAttribute('required');
+                    imagesStar.style.display = 'none';
+                    imageInput.classList.remove('required-field');
+                }
+            }
+
+            statusSelect.addEventListener('change', toggleRequiredFields);
+            saleSelect.addEventListener('change', toggleRequiredFields);
+
+            document.querySelectorAll('input:not([name="featureImage"])').forEach(input => {
+                input.addEventListener('input', () => {
+                    const isOnSale = saleSelect.value === 'on';
+                    if (input.id === 'discountPrice') {
+                        if (isOnSale && input.value.trim() !== '') {
+                            input.classList.add('valid-field');
+                            input.classList.remove('required-field');
+                        } else if (isOnSale) {
+                            input.classList.add('required-field');
+                            input.classList.remove('valid-field');
+                        } else {
+                            input.classList.remove('required-field');
+                            input.classList.remove('valid-field');
+                        }
+                    } else if (input.id === 'images') {
+                        toggleRequiredFields();
+                    } else if (input.value.trim() !== '') {
+                        input.classList.add('valid-field');
+                        input.classList.remove('required-field');
+                    } else if (input.hasAttribute('required')) {
+                        input.classList.add('required-field');
+                        input.classList.remove('valid-field');
+                    }
+                });
+            });
+
+            [shortDescEditor, descEditor].forEach(editor => {
+                if (editor && editor.events) {
+                    editor.events.on('change', () => {
+                        if (editor.textarea) {
+                            editor.textarea.value = editor.value.trim();
+                        }
+                        toggleRequiredFields();
+                    });
+                }
+            });
+
+            toggleRequiredFields();
+
+            document.querySelector('form').addEventListener('submit', function(e) {
+                cleanAceTextareas(); // Clean before submission
+                const status = statusSelect.value;
+                const isOnSale = saleSelect.value === 'on';
+                const hasImages = imageInput.files.length > 0;
+
+                document.querySelectorAll('textarea.form-control').forEach(textarea => {
+                    const editor = textarea.id === 'shortDescription' ? shortDescEditor : descEditor;
+                    if (editor && editor.textarea) {
+                        textarea.value = editor.value.trim();
+                    }
+                });
+
+                if (status !== 'draft') {
+                    document.querySelectorAll('input:not([name="name"]):not([name="discountPrice"]):not([name="featureImage"]):not([name="existingImages"]):not([name="images"]), textarea.form-control, select:not([name="status"]):not([name="isOnSale"]):not([name="search-anything"])').forEach(field => {
+                    field.setAttribute('required', 'required');
+                });
+            } else {
+                document.querySelectorAll('input:not([name="name"]):not([name="discountPrice"]):not([name="featureImage"]):not([name="existingImages"]):not([name="images"]), textarea.form-control, select:not([name="status"]):not([name="isOnSale"]):not([name="search-anything"])').forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                }
+
+                if (isOnSale) {
+                    discountInput.setAttribute('required', 'required');
+                } else {
+                    discountInput.removeAttribute('required');
+                }
+
+                if (!isDraft && !hasImages) {
+                    imageInput.setAttribute('required', 'required');
+                } else {
+                    imageInput.removeAttribute('required');
+                }
+            });
+
+            // Cleanup observer on page unload
+            window.addEventListener('unload', () => {
+                observer.disconnect();
+            });
+        });
+    </script>
+</body>
+</html>

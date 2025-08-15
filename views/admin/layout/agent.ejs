@@ -108,7 +108,7 @@
                                             <th>Phone</th>
                                             <th>Email</th>
                                             <th>Country</th>
-                                            <!-- <th>Listings</th> -->
+                                            <th>Status</th>
                                             <th>View</th>
                                             <th>Edit</th>
                                             <th>Delete</th>
@@ -133,15 +133,11 @@
                                                     <td><%= agent.countryCode %> <%= agent.phone || 'N/A' %></td>
                                                     <td><%= agent.email || 'N/A' %></td>
                                                     <td><%= agent.country || 'N/A' %></td>
-                                                    <!-- <td>
-                                                        <span class="badge badge-primary">
-                                                            <% if(agent.listing >= 10) { %>
-                                                                <%= agent.listing %>
-                                                            <% } else { %>
-                                                                0<%= agent.listing %>
-                                                            <% } %>
+                                                    <td>
+                                                        <span class="badge badge-<%= agent.isActive === true ? 'success' : 'danger' %>">
+                                                            <%= agent.isActive ? 'Active' : 'Disabled' %>
                                                         </span>
-                                                    </td> -->
+                                                    </td>
                                                     <td>
                                                         <span style="cursor: pointer;" class="badge badge-success" onclick="window.location.href='/viewAgent?agentId=<%= agent._id %>'" aria-label="View Agent"><i class="far fa-eye"></i></span>
                                                     </td>

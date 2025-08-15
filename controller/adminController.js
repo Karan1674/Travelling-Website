@@ -18,6 +18,7 @@ import GuideSchema from '../models/GuideSchema.js';
 import GallerySchema from '../models/GallerySchema.js';
 import faqSchema from '../models/faqSchema.js';
 import contactSchema from '../models/contactSchema.js';
+import productSchema from '../models/productSchema.js';
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -813,7 +814,7 @@ export const addPackage = async (req, res) => {
             if (!userData) {
                 req.session.message = 'Agent not found';
                 req.session.type = 'error';
-                return res.status(400).json({ error: 'Agent not found', message: req.session.message, type: req.session.type });
+                return res.redirect('/error')
             }
             createdBy = req.id;
             createdByModel = 'Agent';
@@ -4279,6 +4280,509 @@ export const deleteContactEnquiry = async (req, res) => {
         console.error('Error deleting contact enquiry:', error);
         req.session = req.session || {};
         req.session.message = 'Error deleting contact enquiry';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+
+// Render the product list page
+export const getProductList = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { page = 1, search = '', statusFilter = 'all' } = req.query;
+        const limit = 12;
+        const skip = (page - 1) * limit;
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        if (statusFilter !== 'all') {
+            query.status = statusFilter;
+        }
+
+        const products = await productSchema.find(query)
+            .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const totalItems = await productSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit) || 1;
+
+        res.render('admin/layout/product-list', {
+            products,
+            search,
+            statusFilter,
+            currentPage: parseInt(page),
+            totalPages,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        req.session.message = 'Server error fetching products';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+export const getAddProduct = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('admin/layout/product-add', {
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading add product page:', error);
+        req.session.message = 'Server error loading add product page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+
+
+
+
+
+export const postAddProduct = async (req, res) => {  
+        try {
+            const userId = req.id;
+            const isAdmin = req.isAdmin;
+            req.session = req.session || {};
+
+            if (!userId) {
+                req.session.message = 'Unauthorized: Please log in';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+
+            let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+
+
+            const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage } = req.body;
+            const images = req.files ? req.files.map(file => file.filename) : [];
+            const selectedFeatureImage = featureImage && images[parseInt(featureImage)] ? images[parseInt(featureImage)] : images[0] || '';
+
+            const productData = {
+                name,
+                shortDescription,
+                price: price ? parseFloat(price) : undefined,
+                discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+                isOnSale: isOnSale === 'on',
+                status,
+                images,
+                featureImage: selectedFeatureImage,
+                categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
+                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+                description,
+                additionalInfo: { weight, dimensions },
+                createdBy: userId,
+                createdByModel: isAdmin ? 'Admin' : 'Agent'
+            };
+
+            const product = new productSchema(productData);
+            await product.validate();
+            await product.save();
+
+            req.session.message = 'Product created successfully';
+            req.session.type = 'success';
+            res.redirect('/product-list');
+        } catch (error) {
+            console.error('Error creating product:', error);
+            req.session.message ='Error creating product';
+            req.session.type = 'error';
+            res.redirect('/error');
+        }
+};
+
+export const getEditProduct = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const product = await productSchema.findOne(query)
+            .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email');
+
+        if (!product) {
+            req.session.message = 'Product not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/product-list');
+        }
+
+        res.render('admin/layout/product-edit', {
+            product,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading product:', error);
+        req.session.message = 'Error loading product';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+
+export const postEditProduct = async (req, res) => {
+    
+        try {
+            const userId = req.id;
+            const isAdmin = req.isAdmin;
+            req.session = req.session || {};
+
+            if (!userId) {
+                req.session.message = 'Unauthorized: Please log in';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+
+            let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+            if (!userData) {
+                req.session.message = 'User not found';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+
+  
+
+            let query = {};
+            if (isAdmin) {
+                const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+                query = {
+                    $or: [
+                        { createdBy: userId, createdByModel: 'Admin' },
+                        { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                    ]
+                };
+            } else {
+                query = {
+                    $or: [
+                        { createdBy: userId, createdByModel: 'Agent' },
+                        { createdBy: userData.admin, createdByModel: 'Admin' }
+                    ]
+                };
+            }
+
+            query._id = req.params.id;
+            const existingProduct = await productSchema.findOne(query);
+            if (!existingProduct) {
+                req.session.message = 'Product not found or you lack permission';
+                req.session.type = 'error';
+                return res.redirect('/product-list');
+            }
+
+            const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage, existingImages, newImageFeatureIndex } = req.body;
+            const newImages = req.files ? req.files.map(file => file.filename) : [];
+            const existingImagesArray = existingImages ? (Array.isArray(existingImages) ? existingImages : [existingImages]).filter(img => img && img.trim()) : [];
+
+            // Identify images to delete
+            const imagesToDelete = existingProduct.images.filter(img => !existingImagesArray.includes(img));
+            for (const image of imagesToDelete) {
+                console.log(image)
+                try {
+                    const oldImagePath = join(__dirname, '../Uploads/shopGallery');
+                    await fs.unlink(join(oldImagePath,image));
+                } catch (err) {
+                    console.error(`Error deleting file ${image}:`, err);
+                }
+            }
+
+            // Combine kept existing images and new images
+            const allImages = [...existingImagesArray, ...newImages];
+            let selectedFeatureImage = '';
+            if (featureImage) {
+                if (featureImage.startsWith('new-') && newImageFeatureIndex !== undefined) {
+                    const index = parseInt(newImageFeatureIndex);
+                    selectedFeatureImage = newImages[index] || '';
+                } else if (allImages.includes(featureImage)) {
+                    selectedFeatureImage = featureImage;
+                }
+            }
+            if (!selectedFeatureImage && allImages.length > 0) {
+                selectedFeatureImage = allImages[0];
+            }
+
+            if (price && discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
+                throw new Error('Discount price must be less than regular price');
+            }
+
+            const productData = {
+                name,
+                shortDescription,
+                price: price ? parseFloat(price) : undefined,
+                discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+                isOnSale: isOnSale === 'on',
+                status,
+                images: allImages,
+                featureImage: selectedFeatureImage,
+                categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
+                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+                description,
+                additionalInfo: { weight, dimensions },
+                updatedBy: userId,
+                updatedByModel: isAdmin ? 'Admin' : 'Agent'
+            };
+
+            const updatedProduct = await productSchema.findOneAndUpdate(query, productData, { runValidators: true, new: true });
+            if (!updatedProduct) {
+                req.session.message = 'Product not found or you lack permission';
+                req.session.type = 'error';
+                return res.redirect('/product-list');
+            }
+
+            req.session.message = 'Product updated successfully';
+            req.session.type = 'success';
+            res.redirect('/product-list');
+        } catch (error) {
+            console.error('Error updating product:', error);
+            req.session.message = error.message || 'Error updating product';
+            req.session.type = 'error';
+            res.redirect(`/error`);
+        }
+};
+
+
+
+export const deleteProduct = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const product = await productSchema.findOneAndDelete(query);
+        if (!product) {
+            req.session.message = 'Product not found or you lack permission';
+            req.session.type = 'error';
+        } else {
+            for (const image of [...product.images]) {
+                if (image) {
+                
+                    try {
+                        const oldImagePath = join(__dirname, '../Uploads/shopGallery');
+                        await fs.unlink(join(oldImagePath, image));
+                    } catch (err) {
+                        console.error(`Error deleting file ${image}:`, err);
+                    }
+                }
+               
+            }
+            req.session.message = 'Product deleted successfully';
+            req.session.type = 'success';
+        }
+        res.redirect('/product-list');
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        req.session.message = 'Error deleting product';
+        req.session.type = 'error';
+        res.redirect('/admin/product-list');
+    }
+};
+
+
+
+
+
+export const getProductDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const product = await productSchema.findOne(query)
+            .populate('createdBy', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email');
+
+        if (!product) {
+            req.session.message = 'Product not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/product-list');
+        }
+
+        res.render('admin/layout/product-detail', {
+            product,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading product:', error);
+        req.session.message = 'Error loading product';
         req.session.type = 'error';
         res.redirect('/error');
     }

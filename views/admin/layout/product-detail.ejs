@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 30px;">
+                            <h4 style="margin: 0 0 25px; color: #2c3e50; font-size: 1.8rem; font-weight: 600;">Product Details</h4>
+                            <!-- Container 1: Basic Information -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Basic Information</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Name</label>
+                                                <p class="form-control-static"><%= product.name %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Price</label>
+                                                <p class="form-control-static">$<%= product.price ? product.price.toFixed(2) : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Discount Price</label>
+                                                <p class="form-control-static">$<%= product.discountPrice ? product.discountPrice.toFixed(2) : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Sale Status</label>
+                                                <p class="form-control-static"><%= product.isOnSale ? 'On Sale' : 'Not on Sale' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 2: Additional Details -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Additional Details</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Categories</label>
+                                                <p class="form-control-static"><%= product.categories.length > 0 ? product.categories.join(', ') : 'None' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Tags</label>
+                                                <p class="form-control-static"><%= product.tags.length > 0 ? product.tags.join(', ') : 'None' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Weight</label>
+                                                <p class="form-control-static"><%= product.additionalInfo.weight || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Dimensions</label>
+                                                <p class="form-control-static"><%= product.additionalInfo.dimensions || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 3: Descriptions -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Descriptions</div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Short Description</label>
+                                        <div class="form-control-static" style="border: 1px solid #e9ecef; padding: 0.6rem; border-radius: 6px;"><%- product.shortDescription || 'N/A' %></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <div class="form-control-static" style="border: 1px solid #e9ecef; padding: 0.6rem; border-radius: 6px;"><%- product.description || 'N/A' %></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 4: Images & Status -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Images & Status</div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Feature Image</label>
+                                        <% if (product.featureImage) { %>
+                                            <div class="image-container">
+                                                <img src="/uploads/shopGallery/<%= product.featureImage %>" class="image-preview-img" alt="Feature Image">
+                                            </div>
+                                        <% } else { %>
+                                            <p class="form-control-static">No feature image</p>
+                                        <% } %>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>All Images</label>
+                                        <div id="existing-images" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px;">
+                                            <% product.images.forEach((image, index) => { %>
+                                                <div class="image-container" data-image="<%= image %>">
+                                                    <img src="/uploads/shopGallery/<%= image %>" class="image-preview-img" alt="Product Image <%= index + 1 %>">
+                                                </div>
+                                            <% }) %>
+                                            <% if (product.images.length === 0) { %>
+                                                <p class="form-control-static">No images</p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <p class="form-control-static"><%= product.status.charAt(0).toUpperCase() + product.status.slice(1) %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 5: Audit Information -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Audit Information</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Created By</label>
+                                                <p class="form-control-static"><%= product.createdBy.firstName %> <%= product.createdBy.lastName %> (<%= product.createdBy.email %>, <%= product.createdByModel %>)</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Created At</label>
+                                                <p class="form-control-static"><%= new Date(product.createdAt).toLocaleString() %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Updated By</label>
+                                                <p class="form-control-static"><%= product.updatedBy ? `${product.updatedBy.firstName} ${product.updatedBy.lastName} (${product.updatedBy.email}, ${product.updatedByModel})` : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Updated At</label>
+                                                <p class="form-control-static"><%= product.updatedAt ? new Date(product.updatedAt).toLocaleString() : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group text-right">
+                                <a href="/product-edit/<%= product._id %>" class="btn btn-primary">Edit Product</a>
+                                <a href="/product-list" class="btn btn-danger">Back to List</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/deletePopup', { entityName: 'Product', deleteEndpoint: '/delete-product', buttonClass: 'delete-btn' }) %>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+    <style>
+        .form-group { margin-bottom: 1.75rem; }
+        .form-control-static {
+            padding: 0.6rem;
+            font-size: 1rem;
+            color: #2c3e50;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .image-container {
+            position: relative;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .image-preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        .image-preview-img:hover {
+            opacity: 0.9;
+        }
+        .card-header {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+    </style>
+</body>
+</html>

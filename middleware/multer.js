@@ -152,3 +152,25 @@ export const uploadMediaGalleryImage = multer({
     },
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
+
+
+
+
+const shopImagesStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/shopGallery'));
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+export const uploadShopImages = multer({ 
+    storage: shopImagesStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+    }
+});

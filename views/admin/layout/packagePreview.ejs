@@ -278,7 +278,7 @@
         }
         .day-count {
             font-size: 1rem;
-            fontlığın: 600;
+            font-weight: 600;
             color: #007bff;
             margin-bottom: 0.5rem;
         }
@@ -319,7 +319,7 @@
         }
         .accordion-header h3 {
             margin: 0;
-            font-size: 1.25rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #1a1a1a;
             display: flex;
@@ -327,7 +327,7 @@
             gap: 0.75rem;
         }
         .accordion-header i {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #007bff;
         }
         .accordion-header .toggle-icon {
@@ -342,7 +342,7 @@
         .accordion-body {
             padding: 1.5rem;
             background-color: #ffffff;
-            font-size: 1rem;
+            font-size: 0.5rem;
             color: #333333;
             line-height: 1.6;
         }
@@ -419,7 +419,7 @@
 
         /* Additional Info Tab */
         .additional-info-content h3 {
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #1a1a1a;
         }
@@ -943,8 +943,10 @@
                                 <div class="single-tour-inner">
                                     <h2><%= package.title || 'Untitled Package' %></h2>
                                     <figure class="feature-image">
+                                       <% if(package.featureImage) {%>
                                         <img src="<%= package.featuredImage ? '/Uploads/gallery/' + package.featuredImage : '/assets/images/default.jpg' %>"
                                              alt="<%= package.title || 'Package Image' %>">
+                                             <%}%>
                                         <div class="package-meta text-center">
                                             <ul>
                                                 <li><i class="far fa-clock"></i>
@@ -1007,36 +1009,23 @@
                                                     <p><%= package.itineraryDescription || 'No itinerary description available.' %></p>
                                                 </div>
                                                 <div class="itinerary-timeline-wrap">
-                                                    <ul>
+                                                    <% if (package.programDays && package.programDays.length > 0) { %>
+    
+                                                        <ul>
+                                                        <% package.programDays.forEach((day, index) => { %>
                                                         <li>
                                                             <div class="timeline-content">
-                                                                <div class="day-count">Day <span>1</span></div>
-                                                                <h4>Ancient Rome Visit</h4>
-                                                                <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
+                                                                <div class="day-count">Day <span><%= day.day%></span></div>
+                                                                <h4><%= day.title%></h4>
+                                                                <p><%= day.description%></p>
                                                             </div>
                                                         </li>
-                                                        <li>
-                                                            <div class="timeline-content">
-                                                                <div class="day-count">Day <span>2</span></div>
-                                                                <h4>Classic Rome Sightseeing</h4>
-                                                                <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                            </div>
-                                                        </li>
-                                                        <li>
-                                                            <div class="timeline-content">
-                                                                <div class="day-count">Day <span>3</span></div>
-                                                                <h4>Vatican City Visit</h4>
-                                                                <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                            </div>
-                                                        </li>
-                                                        <li>
-                                                            <div class="timeline-content">
-                                                                <div class="day-count">Day <span>4</span></div>
-                                                                <h4>Italian Food Tour</h4>
-                                                                <p>Nostra semper ultricies eu leo eros orci porta provident, fugit? Pariatur interdum assumenda, qui aliquip ipsa! Dictum natus potenti pretium.</p>
-                                                            </div>
-                                                        </li>
+                                                        <% }) %>
                                                     </ul>
+                                        
+                                                <% } else { %>
+                                                <p class="text-muted">No Programs scheduled for the day.</p>
+                                                <% } %>
                                                 </div>
                                             </div>
                                             <!-- Detailed Itinerary Tab -->
@@ -1061,7 +1050,7 @@
                                                                 </h3>
                                                             </div>
                                                             <div id="dayCollapse<%= index %>"
-                                                                 class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
+                                                                 class="accordion-collapse collapse "
                                                                  aria-labelledby="dayHeading<%= index %>"
                                                                  data-bs-parent="#itineraryAccordion">
                                                                 <div class="accordion-body">
@@ -1119,7 +1108,7 @@
                                                                         class="fas fa-chevron-down toggle-icon"></i></h3>
                                                             </div>
                                                             <div id="inclusionsCollapse"
-                                                                 class="accordion-collapse collapse show"
+                                                                 class="accordion-collapse collapse"
                                                                  aria-labelledby="inclusionsHeading"
                                                                  data-bs-parent="#additionalInfoAccordion">
                                                                 <div class="accordion-body">
