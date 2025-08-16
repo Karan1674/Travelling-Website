@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Archives: Products</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="product-outer-wrap product-wrap">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-8 right-sidebar">
+                            <div class="product-notices-wrapper">
+                                <p class="product-result-count">Showing <%= products.length %> of <%= totalProducts %> results</p>
+                                <form method="get" action="/products">
+                                    <select name="orderby" class="orderby" aria-label="Shop order" onchange="this.form.submit()">
+                                        <option value="menu_order" <%= orderby === 'menu_order' ? 'selected' : '' %>>Default sorting</option>
+                                        <option value="date" <%= orderby === 'date' ? 'selected' : '' %>>Sort by latest</option>
+                                        <option value="price" <%= orderby === 'price' ? 'selected' : '' %>>Sort by price: low to high</option>
+                                        <option value="price-desc" <%= orderby === 'price-desc' ? 'selected' : '' %>>Sort by price: high to low</option>
+                                    </select>
+                                    <input type="hidden" name="minPrice" value="<%= minPrice || '' %>">
+                                    <input type="hidden" name="maxPrice" value="<%= maxPrice || '' %>">
+                                    <input type="hidden" name="page" value="<%= page %>">
+                                    <input type="hidden" name="category" value="<%= category || '' %>">
+                                    <input type="hidden" name="search" value="<%= search || '' %>">
+                                </form>
+                            </div>
+                            <div class="product-item-wrapper">
+                                <div class="row">
+                                    <% if (products && products.length > 0) { %>
+                                        <% products.forEach(product => { %>
+                                            <div class="col-sm-6">
+                                                <div class="product-item text-center">
+                                                    <figure class="product-image">
+                                                        <a href="/products/<%= product._id %>">
+                                                            <img src="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '' %>" alt="<%= product.name %>">
+                                                        </a>
+                                                        <% if (product.isOnSale) { %>
+                                                            <span class="onsale">Sale</span>
+                                                        <% } %>
+                                                    </figure>
+                                                    <div class="product-content">
+                                                        <h3><%= product.name %></h3>
+                                                        <div class="product-price">
+                                                            <% if (product.isOnSale && product.discountPrice < product.price) { %>
+                                                                <del>$<%= product.price.toFixed(2) %></del>
+                                                                <ins>$<%= product.discountPrice.toFixed(2) %></ins>
+                                                            <% } else { %>
+                                                                <ins>$<%= product.price.toFixed(2) %></ins>
+                                                            <% } %>
+                                                        </div>
+                                                        <a href="#" class="button-primary add-to-cart" data-product-id="<%= product._id %>">Add to cart</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <div class="col-12">
+                                            <p>No active products found.</p>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <div class="post-navigation-wrap">
+                                    <nav>
+                                        <ul class="pagination">
+                                            <% if (page > 1) { %>
+                                                <li>
+                                                    <a href="/products?page=<%= page - 1 %>&orderby=<%= orderby %>&minPrice=<%= minPrice || '' %>&maxPrice=<%= maxPrice || '' %>&category=<%= category || '' %>&search=<%= search || '' %>">
+                                                        <i class="fas fa-arrow-left"></i>
+                                                    </a>
+                                                </li>
+                                            <% } %>
+                                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                                <li class="<%= page === i ? 'active' : '' %>">
+                                                    <a href="/products?page=<%= i %>&orderby=<%= orderby %>&minPrice=<%= minPrice || '' %>&maxPrice=<%= maxPrice || '' %>&category=<%= category || '' %>&search=<%= search || '' %>"><%= i %></a>
+                                                </li>
+                                            <% } %>
+                                            <% if (page < totalPages) { %>
+                                                <li>
+                                                    <a href="/products?page=<%= page + 1 %>&orderby=<%= orderby %>&minPrice=<%= minPrice || '' %>&maxPrice=<%= maxPrice || '' %>&category=<%= category || '' %>&search=<%= search || '' %>">
+                                                        <i class="fas fa-arrow-right"></i>
+                                                    </a>
+                                                </li>
+                                            <% } %>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="sidebar">
+                                <aside class="widget search_widget">
+                                    <form action="/products">
+                                        <input type="text" name="search" placeholder="Search.." value="<%= search || '' %>">
+                                        <button class="search-btn">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <input type="hidden" name="orderby" value="<%= orderby %>">
+                                        <input type="hidden" name="minPrice" value="<%= minPrice || '' %>">
+                                        <input type="hidden" name="maxPrice" value="<%= maxPrice || '' %>">
+                                        <input type="hidden" name="page" value="<%= page %>">
+                                        <input type="hidden" name="category" value="<%= category || '' %>">
+                                    </form>
+                                </aside>
+                                <aside class="widget price_handel_widget">
+                                    <h3 class="widget-title">Filter Price</h3>
+                                    <form class="price-handel" action="/products">
+                                        <div class="range-slider">
+                                            <label for="min-price">Min Price: $<span id="min-price-display"><%= minPrice || 0 %></span></label>
+                                            <input type="range" id="min-price" name="minPrice" min="0" max="1000" value="<%= minPrice || 0 %>">
+                                            <label for="max-price">Max Price: $<span id="max-price-display"><%= maxPrice || 1000 %></span></label>
+                                            <input type="range" id="max-price" name="maxPrice" min="0" max="1000" value="<%= maxPrice || 1000 %>">
+                                        </div>
+                                        <div class="price-amout">
+                                            <button type="submit" class="button-primary">Filter</button>
+                                        </div>
+                                        <input type="hidden" name="orderby" value="<%= orderby %>">
+                                        <input type="hidden" name="page" value="<%= page %>">
+                                        <input type="hidden" name="search" value="<%= search || '' %>">
+                                        <input type="hidden" name="category" value="<%= category || '' %>">
+                                    </form>
+                                </aside>
+                                <aside class="widget widget_category_product_thumb colum-3">
+                                    <ul>
+                                        <% categories.forEach(category => { %>
+                                            <li>
+                                                <figure class="product-thumb">
+                                                    <a href="/products?category=<%= category %>&orderby=<%= orderby %>&minPrice=<%= minPrice || '' %>&maxPrice=<%= maxPrice || '' %>&search=<%= search || '' %>">
+                                                        <img src="" alt="">
+                                                    </a>
+                                                </figure>
+                                                <div class="product-content">
+                                                    <h5><%= category %></h5>
+                                                    <span class="count">(<%= categoryCounts[category] || 0 %>)</span>
+                                                </div>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                </aside>
+                                <aside class="widget widget_product_post widget-product-thumb">
+                                    <h3 class="widget-title">Recent Product</h3>
+                                    <ul>
+                                        <% recentProducts.forEach(product => { %>
+                                            <li>
+                                                <figure class="product-thumb">
+                                                    <a href="/products/<%= product._id %>"><img src="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '' %>" alt=""></a>
+                                                </figure>
+                                                <div class="product-content">
+                                                    <h5><a href="/products/<%= product._id %>"><%= product.name %></a></h5>
+                                                    <div class="entry-meta">
+                                                        <span class="byline"><a href="#">Travele</a></span>
+                                                        <span class="posted-on"><a href="#"><%= product.createdAt.toDateString() %></a></span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                </aside>
+                                <aside class="widget widget_gallery">
+                                    <h3 class="widget-title">Product Gallery</h3>
+                                    <div class="gallery gallery-colum-3">
+                                        <% galleryImages.forEach(image => { %>
+                                            <figure class="gallery-item">
+                                                <a href="<%= image ? '/Uploads/shopGallery/' + image : ''%>"><img src="<%= image ? '/Uploads/shopGallery/' + image : '' %>" alt=""></a>
+                                            </figure>
+                                        <% }) %>
+                                    </div>
+                                </aside>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../../shared/partials/toaster') %>
+        <%- include('../partials/Footer') %>
+    </div>
+    <%- include('../partials/Script') %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Price Slider
+            const minPriceInput = document.getElementById('min-price');
+            const maxPriceInput = document.getElementById('max-price');
+            const minPriceDisplay = document.getElementById('min-price-display');
+            const maxPriceDisplay = document.getElementById('max-price-display');
+
+            minPriceInput.addEventListener('input', () => {
+                const minValue = parseInt(minPriceInput.value);
+                const maxValue = parseInt(maxPriceInput.value);
+                minPriceDisplay.textContent = minValue;
+                if (minValue > maxValue) {
+                    maxPriceInput.value = minValue;
+                    maxPriceDisplay.textContent = minValue;
+                }
+            });
+
+            maxPriceInput.addEventListener('input', () => {
+                const minValue = parseInt(minPriceInput.value);
+                const maxValue = parseInt(maxPriceInput.value);
+                maxPriceDisplay.textContent = maxValue;
+                if (maxValue < minValue) {
+                    minPriceInput.value = maxValue;
+                    minPriceDisplay.textContent = maxValue;
+                }
+            });
+
+            // Add to Cart
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const productId = button.dataset.productId;
+                    try {
+                        const response = await fetch('/product/cart/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productId, quantity: 1 })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            window.location.reload()
+                        } else {
+                            console.error(data.message || 'Error adding to cart');
+                        }
+                    } catch (error) {
+                        console.error('Error adding to cart');
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        .range-slider { margin: 20px 0; }
+        .range-slider label { display: block; margin-bottom: 5px; }
+        .range-slider input[type="range"] { width: 100%; }
+    </style>
+</body>
+</html>

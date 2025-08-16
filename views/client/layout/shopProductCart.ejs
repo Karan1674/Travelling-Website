@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Shopping Cart</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="cart-section">
+                <div class="container">
+                    <div class="cart-list-inner">
+                        <form action="#">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Product Name</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Sub Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (cart && cart.items && cart.items.length > 0) { %>
+                                            <% cart.items.forEach(item => { %>
+                                                <tr data-product-id="<%= item.productId._id %>">
+                                                    <td>
+                                                        <button class="close remove-item" data-product-id="<%= item.productId._id %>" aria-label="Close">
+                                                            <span aria-hidden="true">×</span>
+                                                        </button>
+                                                        <span class="cartImage">
+                                                            <img src="<%= item.productId.featureImage ? '/Uploads/shopGallery/' + item.productId.featureImage : '/assets/images/placeholder.jpg' %>" alt="<%= item.productId.name %>">
+                                                        </span>
+                                                    </td>
+                                                    <td data-column="Product Name">
+                                                        <a href="/products/<%= item.productId._id %>"><%= item.productId.name %></a>
+                                                    </td>
+                                                    <td data-column="Price">
+                                                        <% if (item.productId.isOnSale && item.productId.discountPrice < item.productId.price) { %>
+                                                            $<%= item.productId.discountPrice.toFixed(2) %>
+                                                        <% } else { %>
+                                                            $<%= item.productId.price.toFixed(2) %>
+                                                        <% } %>
+                                                    </td>
+                                                    <td data-column="Quantity" class="count-input">
+                                                        <div>
+                                                            <a class="minus-btn" href="#" data-product-id="<%= item.productId._id %>"><i class="fa fa-minus"></i></a>
+                                                            <input class="quantity quantity-input" type="text" value="<%= item.quantity %>" data-product-id="<%= item.productId._id %>" data-original-value="<%= item.quantity %>">
+                                                            <a class="plus-btn" href="#" data-product-id="<%= item.productId._id %>"><i class="fa fa-plus"></i></a>
+                                                        </div>
+                                                    </td>
+                                                    <td data-column="Sub Total" class="subtotal">
+                                                        <% let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price; %>
+                                                        $<%= (price * item.quantity).toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="5" class="text-center">Your cart is empty. <a href="/products">Continue shopping</a>.</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="updateArea">
+                                <!-- <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="I have a discount coupon">
+                                    <a href="#" class="button-primary">Apply Coupon</a>
+                                </div>
+                                <a href="#" class="outline-primary update-btn">Update Cart</a> -->
+                            </div>
+                            <div class="totalAmountArea">
+                                <ul class="list-unstyled">
+                                    <li><strong>Sub Total</strong> <span class="subtotal-amount">$<%= cart && cart.items ? cart.items.reduce((total, item) => {
+                                        let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                        return total + price * item.quantity;
+                                    }, 0).toFixed(2) : '0.00' %></span></li>
+                                    <li><strong>Vat</strong> <span class="vat-amount">$<%= cart && cart.items ? (cart.items.reduce((total, item) => {
+                                        let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                        return total + price * item.quantity;
+                                    }, 0) * 0.05).toFixed(2) : '0.00' %></span></li>
+                                    <li><strong>Grand Total</strong> <span class="grandTotal">$<%= cart && cart.items ? (cart.items.reduce((total, item) => {
+                                        let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                        return total + price * item.quantity;
+                                    }, 0) * 1.05).toFixed(2) : '0.00' %></span></li>
+                                </ul>
+                            </div>
+                            <div class="checkBtnArea text-right">
+                                <a href="/product/checkout" class="button-primary">Checkout</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../../shared/partials/toaster') %>
+        <%- include('../partials/Footer') %>
+    </div>
+    <%- include('../partials/Script') %>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Function to update quantity via AJAX
+            async function updateQuantity(productId, input, quantity) {
+                if (quantity < 1) {
+                    input.value = 1;
+            
+                    return;
+                }
+                try {
+                    input.disabled = true; // Disable input during AJAX
+                    const response = await fetch('/product/cart/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId, quantity })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                
+                        // Update subtotal dynamically
+                        const row = input.closest('tr');
+                        const price = parseFloat(row.querySelector('td[data-column="Price"]').textContent.replace('$', ''));
+                        row.querySelector('.subtotal').textContent = `$${(price * quantity).toFixed(2)}`;
+                        // Update totals
+                        updateCartTotals();
+                        input.dataset.originalValue = quantity; // Update original value
+                    } else {
+                        input.value = input.dataset.originalValue; // Revert on error
+                    
+                    }
+                } catch (error) {
+                    input.value = input.dataset.originalValue; // Revert on error
+                  
+                } finally {
+                    input.disabled = false; // Re-enable input
+                }
+            }
+
+            // Function to update cart totals dynamically
+            function updateCartTotals() {
+                const subtotals = Array.from(document.querySelectorAll('.subtotal'))
+                    .map(el => parseFloat(el.textContent.replace('$', '')));
+                const subtotal = subtotals.reduce((sum, val) => sum + val, 0).toFixed(2);
+                const vat = (subtotal * 0.05).toFixed(2);
+                const grandTotal = (parseFloat(subtotal) * 1.05).toFixed(2);
+                document.querySelector('.subtotal-amount').textContent = `$${subtotal}`;
+                document.querySelector('.vat-amount').textContent = `$${vat}`;
+                document.querySelector('.grandTotal').textContent = `$${grandTotal}`;
+            }
+
+            // Quantity input change handler
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('change', async (e) => {
+                    e.stopPropagation(); // Prevent bubbling
+                    const productId = input.dataset.productId;
+                    const quantity = parseInt(input.value);
+                    updateQuantity(productId, input, quantity);
+                });
+            });
+
+            // Plus/Minus buttons handler
+            document.querySelectorAll('.count-input').forEach(container => {
+                container.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent bubbling
+                    const target = e.target.closest('.minus-btn, .plus-btn');
+                    if (!target) return;
+                    const input = container.querySelector('.quantity-input');
+                    const productId = input.dataset.productId;
+                    let quantity = parseInt(input.value);
+                    if (target.classList.contains('minus-btn') && quantity > 1) {
+                        quantity -= 1;
+                    } else if (target.classList.contains('plus-btn')) {
+                        quantity += 1;
+                    } else {
+                        return;
+                    }
+                    input.value = quantity;
+                    updateQuantity(productId, input, quantity);
+                });
+            });
+
+            // Remove Item
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent bubbling
+                    const productId = button.dataset.productId;
+                    try {
+                        button.disabled = true; // Disable button during AJAX
+                        const response = await fetch('/product/cart/remove', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productId })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                   
+                            button.closest('tr').remove(); // Remove row from DOM
+                            // Update totals or reload if empty
+                            if (document.querySelectorAll('tbody tr').length === 0) {
+                                document.querySelector('tbody').innerHTML = '<tr><td colspan="5">Your cart is empty. <a href="/products">Continue shopping</a>.</td></tr>';
+                            } else {
+                                updateCartTotals();
+                            }
+                        } else {
+                          
+                        }
+                    } catch (error) {
+                       
+                    } finally {
+                        button.disabled = false; // Re-enable button
+                    }
+                });
+            });
+
+        });
+    </script>
+
+</body>
+</html>

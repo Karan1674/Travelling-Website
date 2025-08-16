@@ -1,5 +1,5 @@
 const express = require('express');
-const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers, getTourGuides, getGallery, getContinueReadingPage, getFaqPage, submitQuestion, testimonialPage, renderContactPage, createContactEnquiry } = require('../controller/clientController');
+const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers, getTourGuides, getGallery, getContinueReadingPage, getFaqPage, submitQuestion, testimonialPage, renderContactPage, createContactEnquiry, getProducts, getProductDetail, addReview, addReply, addToProductCart, updateProductCart, removeProductCartItem, getProductCart, getProductCheckout, applyProductCoupon, createProductPaymentIntent, placeProductOrder, renderProductConfirmation } = require('../controller/clientController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { uploadProfilePic, uploadCareerCv } = require('../middleware/multer');
 
@@ -46,7 +46,7 @@ router.get('/about',isAuthenticated, getAboutPage);
 router.get('/services',isAuthenticated, getServicePage);
 
 router.get('/available-coupons', isAuthenticated, getAvailableCoupons);
-router.post('/packageCart/applyCoupon', isAuthenticated, applyCoupon);
+router.post('/applyCoupon', isAuthenticated, applyCoupon);
 
 
 router.get('/careers', isAuthenticated, getCareers);
@@ -69,6 +69,21 @@ router.get('/testimonials',  isAuthenticated, testimonialPage);
 
 router.get('/contact', isAuthenticated, renderContactPage);
 router.post('/contact', isAuthenticated, createContactEnquiry);
+
+
+router.get('/products',  isAuthenticated, getProducts);
+router.get('/products/:id',isAuthenticated, getProductDetail);
+router.post('/products/:id/review', isAuthenticated, addReview);
+router.post('/products/review/:reviewId/reply', isAuthenticated, addReply);
+router.get('/product/cart', isAuthenticated, getProductCart);
+router.post('/product/cart/add',isAuthenticated,addToProductCart);
+router.post('/product/cart/update',isAuthenticated, updateProductCart);
+router.post('/product/cart/remove', isAuthenticated, removeProductCartItem);
+router.get('/product/checkout', isAuthenticated, getProductCheckout);
+router.post('/product/checkout/apply-coupon',isAuthenticated, applyProductCoupon);
+router.post('/product/checkout/create-payment-intent',isAuthenticated, createProductPaymentIntent);
+router.post('/product/checkout/place-order',isAuthenticated, placeProductOrder);
+router.get('/order-confirmation/:id', isAuthenticated, renderProductConfirmation);
 
 
 

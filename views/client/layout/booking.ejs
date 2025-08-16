@@ -670,7 +670,7 @@
             // Coupon functionality
             const applyCoupon = async (code) => {
                 try {
-                    const response = await fetch('/packageCart/applyCoupon', {
+                    const response = await fetch('/applyCoupon', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ couponCode: code })

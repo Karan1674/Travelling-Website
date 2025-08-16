@@ -20,6 +20,10 @@ import ApplicationSchema from '../models/ApplicationSchema.js';
 import faqSchema from '../models/faqSchema.js';
 import testimonials from '../data/testimonials.js';
 import contactSchema from '../models/contactSchema.js';
+import productSchema from '../models/productSchema.js';
+import productReviewSchema from '../models/productReviewSchema.js';
+import productCartSchema from '../models/productCartSchema.js';
+import productBookingSchema from '../models/productBookingSchema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -808,7 +812,7 @@ export const bookSinglePackage = async (req, res) => {
     }
 };
 
-// Package Payment intent for Stripe Payment Gateway for Multiple Packages Booking
+// Package Payment Intent for Stripe Payment Gateway for Multiple Packages Booking
 export const createPackagePaymentIntent = async (req, res) => {
     try {
         console.log('Starting createPaymentIntent for user:', req.id);
@@ -821,7 +825,7 @@ export const createPackagePaymentIntent = async (req, res) => {
             return res.status(401).json({ success: false, message: req.session.message, type: req.session.type });
         }
 
-        const { items, email, couponCode } = req.body; // Added couponCode
+        const { items, email, couponCode } = req.body;
         if (!items || !Array.isArray(items) || items.length === 0) {
             console.log('No items provided in request body');
             req.session = req.session || {};
@@ -880,7 +884,19 @@ export const createPackagePaymentIntent = async (req, res) => {
                 req.session.type = 'error';
                 return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
             }
-            if (coupon.usedBy.some(entry => entry.userId.equals(userId))) {
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    console.log('Coupon usage limit reached for restricted user:', couponCode);
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
                 console.log('Coupon already used by user:', couponCode);
                 req.session = req.session || {};
                 req.session.message = 'You have already used this coupon';
@@ -942,11 +958,11 @@ export const createPackagePaymentIntent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
-// Package Payment intent for Stripe Payment Gateway for Single Packages Booking
+// Package Payment Intent for Stripe Payment Gateway for Single Packages Booking
 export const createSinglePackagePaymentIntent = async (req, res) => {
     try {
         console.log('Starting createPaymentIntent for user:', req.id);
@@ -959,7 +975,7 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
             return res.status(401).json({ success: false, message: req.session.message, type: req.session.type });
         }
 
-        const { packageId, quantity = 1, email, couponCode } = req.body; // Added couponCode
+        const { packageId, quantity = 1, email, couponCode } = req.body;
         console.log('Package ID:', packageId);
         const packageData = await packageModel.findById(packageId);
         if (!packageData) {
@@ -1000,7 +1016,19 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
                 req.session.type = 'error';
                 return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
             }
-            if (coupon.usedBy.some(entry => entry.userId.equals(userId))) {
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    console.log('Coupon usage limit reached for restricted user:', couponCode);
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
                 console.log('Coupon already used by user:', couponCode);
                 req.session = req.session || {};
                 req.session.message = 'You have already used this coupon';
@@ -1044,7 +1072,7 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
             metadata: {
                 userId: userId.toString(),
                 packageId: packageId.toString(),
-                couponCode: couponCode || 'none' // Store coupon in metadata
+                couponCode: couponCode || 'none'
             },
             receipt_email: email || (await userModel.findById(userId)).email,
             automatic_payment_methods: {
@@ -1063,11 +1091,11 @@ export const createSinglePackagePaymentIntent = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Server error';
         req.session.type = 'error';
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
-// Updated confirmPackageBooking to handle coupon
+// Updated confirmPackageBooking
 export const confirmPackageBooking = async (req, res) => {
     try {
         const userId = req.id;
@@ -1228,7 +1256,27 @@ export const confirmPackageBooking = async (req, res) => {
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
                 });
             }
-            if (coupon.usedBy.some(entry => entry.userId.equals(userId))) {
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    console.log('Coupon usage limit reached for restricted user:', appliedCouponCode);
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).render('client/layout/booking', {
+                        error: 'You have reached the usage limit for this coupon',
+                        user: userData,
+                        message: req.session.message,
+                        stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                        type: req.session.type,
+                        isShow: true,
+                        cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
+                    });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
                 console.log('Coupon already used by user:', appliedCouponCode);
                 req.session = req.session || {};
                 req.session.message = 'You have already used this coupon';
@@ -1267,20 +1315,7 @@ export const confirmPackageBooking = async (req, res) => {
                 } else {
                     discount = coupon.discountValue;
                 }
-                // Update coupon usage
-                await couponSchema.updateOne({ _id: coupon._id }, {
-                    $inc: { usedCount: 1 },
-                    $push: { usedBy: { userId, usedAt: new Date() } }
-                });
-
-                const couponCheckLimit = await couponSchema.findById({ _id: coupon._id })
-
-                if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
-                    await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
-                        isActive: false
-                    });
-
-                }
+                // Update coupon usage only after payment is confirmed
             } else {
                 console.log('Minimum purchase requirement not met:', coupon.minPurchase);
                 req.session = req.session || {};
@@ -1337,6 +1372,20 @@ export const confirmPackageBooking = async (req, res) => {
             });
         }
 
+        // Update coupon usage if applied
+        if (appliedCouponCode && coupon) {
+            await couponSchema.updateOne({ _id: coupon._id }, {
+                $inc: { usedCount: 1 },
+                $push: { usedBy: { userId, usedAt: new Date() } }
+            });
+            const couponCheckLimit = await couponSchema.findById(coupon._id);
+            if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
+                await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
+                    isActive: false
+                });
+            }
+        }
+
         // Prepare booking details
         const bookingDetails = {
             userId,
@@ -1365,8 +1414,8 @@ export const confirmPackageBooking = async (req, res) => {
             },
             status: 'pending',
             total: paymentIntent.amount / 100,
-            discount, // Store discount
-            couponCode: appliedCouponCode || null // Store coupon code
+            discount,
+            couponCode: appliedCouponCode || null
         };
 
         // Save booking to database
@@ -1377,7 +1426,7 @@ export const confirmPackageBooking = async (req, res) => {
         const cart = await packageCartSchema.findOne({ userId });
         if (cart) {
             cart.items = [];
-            cart.coupon = null; // Clear coupon
+            cart.coupon = null;
             await cart.save();
             console.log('Cart cleared for user:', userId);
         }
@@ -1408,11 +1457,11 @@ export const confirmPackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Error confirming booking: ${error.message}`;
         req.session.type = 'error';
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
-// Updated confirmSinglePackageBooking to handle coupon
+// Updated confirmSinglePackageBooking
 export const confirmSinglePackageBooking = async (req, res) => {
     try {
         const userId = req.id;
@@ -1452,7 +1501,6 @@ export const confirmSinglePackageBooking = async (req, res) => {
                 type: req.session.type,
                 isShow: false,
                 cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-
             });
         }
 
@@ -1531,7 +1579,6 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-
                 });
             }
             if (coupon.expiryDate < new Date()) {
@@ -1547,7 +1594,6 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-
                 });
             }
             if (coupon.usedCount >= coupon.usageLimit) {
@@ -1559,13 +1605,33 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     error: 'Coupon usage limit reached',
                     user: userData,
                     message: req.session.message,
-                    type: req.session.type,
                     stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                    type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
                 });
             }
-            if (coupon.usedBy.some(entry => entry.userId.equals(userId))) {
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    console.log('Coupon usage limit reached for restricted user:', appliedCouponCode);
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).render('client/layout/booking', {
+                        error: 'You have reached the usage limit for this coupon',
+                        user: userData,
+                        message: req.session.message,
+                        stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+                        type: req.session.type,
+                        isShow: false,
+                        cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
+                    });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
                 console.log('Coupon already used by user:', appliedCouponCode);
                 req.session = req.session || {};
                 req.session.message = 'You have already used this coupon';
@@ -1574,10 +1640,10 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     error: 'You have already used this coupon',
                     user: userData,
                     message: req.session.message,
+                    stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-
                 });
             }
             if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
@@ -1593,7 +1659,6 @@ export const confirmSinglePackageBooking = async (req, res) => {
                     type: req.session.type,
                     isShow: false,
                     cart: await packageCartSchema.findOne({ userId }).populate('items.packageId')
-
                 });
             }
             if (subtotal >= coupon.minPurchase) {
@@ -1605,19 +1670,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
                 } else {
                     discount = coupon.discountValue;
                 }
-                // Update coupon usage
-                await couponSchema.updateOne({ _id: coupon._id }, {
-                    $inc: { usedCount: 1 },
-                    $push: { usedBy: { userId, usedAt: new Date() } }
-                });
-                const couponCheckLimit = await couponSchema.findById({ _id: coupon._id })
-
-                if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
-                    await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
-                        isActive: false
-                    });
-
-                }
+                // Update coupon usage only after payment is confirmed
             } else {
                 console.log('Minimum purchase requirement not met:', coupon.minPurchase);
                 req.session = req.session || {};
@@ -1674,6 +1727,20 @@ export const confirmSinglePackageBooking = async (req, res) => {
             });
         }
 
+        // Update coupon usage if applied
+        if (appliedCouponCode && coupon) {
+            await couponSchema.updateOne({ _id: coupon._id }, {
+                $inc: { usedCount: 1 },
+                $push: { usedBy: { userId, usedAt: new Date() } }
+            });
+            const couponCheckLimit = await couponSchema.findById(coupon._id);
+            if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
+                await couponSchema.updateOne({ _id: couponCheckLimit._id }, {
+                    isActive: false
+                });
+            }
+        }
+
         // Prepare booking details
         const bookingDetails = {
             userId,
@@ -1702,8 +1769,8 @@ export const confirmSinglePackageBooking = async (req, res) => {
             },
             status: 'pending',
             total: paymentIntent.amount / 100,
-            discount, // Store discount
-            couponCode: appliedCouponCode || null // Store coupon code
+            discount,
+            couponCode: appliedCouponCode || null
         };
 
         // Save booking to database
@@ -1736,7 +1803,7 @@ export const confirmSinglePackageBooking = async (req, res) => {
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Error confirming booking: ${error.message}`;
         req.session.type = 'error';
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
@@ -1745,8 +1812,9 @@ export const getAvailableCoupons = async (req, res) => {
     try {
         const userId = req.id;
         if (!userId) {
-            return res.redirect('/')
+            return res.redirect('/');
         }
+
         const coupons = await couponSchema.find({
             isActive: true,
             expiryDate: { $gte: new Date() },
@@ -1754,24 +1822,39 @@ export const getAvailableCoupons = async (req, res) => {
             $or: [
                 { restrictToUser: null },
                 { restrictToUser: userId }
-            ],
-            'usedBy.userId': { $ne: userId }
-        }).select('code discountType discountValue').lean();
-        res.json({ success: true, coupons });
+            ]
+        }).lean();
+
+        // Filter coupons based on user-specific usage limit
+        const availableCoupons = coupons.filter(coupon => {
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.toString() === userId.toString()).length : 0;
+            // For restricted coupons, allow if user hasn't reached usage limit
+            if (coupon.restrictToUser && coupon.restrictToUser.toString() === userId.toString()) {
+                return userUsageCount < coupon.usageLimit;
+            }
+            // For non-restricted coupons, exclude if user has used it
+            return !coupon.usedBy || !coupon.usedBy.some(entry => entry.userId.toString() === userId.toString());
+        }).map(coupon => ({
+            code: coupon.code,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue
+        }));
+
+        res.json({ success: true, coupons: availableCoupons });
     } catch (error) {
         console.error('Error fetching available coupons:', error);
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
-// Apply Coupan on the Package Booking
+// Apply Coupon on the Package Booking
 export const applyCoupon = async (req, res) => {
     try {
         const { couponCode } = req.body;
         const userId = req.id;
         if (!userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
-        };
+        }
 
         if (!couponCode) {
             return res.status(400).json({ success: false, message: 'Coupon code is required' });
@@ -1791,12 +1874,22 @@ export const applyCoupon = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Coupon usage limit reached' });
         }
 
-        if (coupon.usedBy.some(entry => entry.userId.toString() === userId.toString())) {
-            return res.status(400).json({ success: false, message: 'You have already used this coupon' });
-        }
-
+        // Check if the coupon is restricted to a specific user
         if (coupon.restrictToUser && coupon.restrictToUser.toString() !== userId.toString()) {
             return res.status(400).json({ success: false, message: 'This coupon is not assigned to you' });
+        }
+
+        // Count how many times the user has used this coupon
+        const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.toString() === userId.toString()).length : 0;
+
+        // If the coupon is restricted to this user, allow usage up to the usageLimit
+        if (coupon.restrictToUser && userUsageCount >= coupon.usageLimit) {
+            return res.status(400).json({ success: false, message: 'You have reached the usage limit for this coupon' });
+        }
+
+        // If the coupon is not restricted, prevent reuse if already used once
+        if (!coupon.restrictToUser && userUsageCount > 0) {
+            return res.status(400).json({ success: false, message: 'You have already used this coupon' });
         }
 
         return res.json({
@@ -1810,7 +1903,7 @@ export const applyCoupon = async (req, res) => {
         });
     } catch (error) {
         console.error('Error applying coupon:', error);
-        res.status(500).redirect('/error')
+        res.status(500).redirect('/error');
     }
 };
 
@@ -2644,5 +2737,1106 @@ export const createContactEnquiry = async (req, res) => {
         req.session.message = 'Error submitting contact enquiry';
         req.session.type = 'error';
         res.redirect('/contact');
+    }
+};
+
+
+
+// Get Product Listing Page4
+export const getProducts = async (req, res) => {
+    try {
+        const userId = req.id;
+        let user = null;
+        req.session = req.session || {};
+
+        if (userId) {
+            user = await userModel.findById(userId);
+            if (!user) {
+                console.log('No such user exists in the database');
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+        }
+
+        const { page = 1, orderby = 'menu_order', minPrice = 0, maxPrice = 1000, search = '', category = '' } = req.query;
+        const limit = 8;
+        const skip = (page - 1) * limit;
+
+        const parsedMinPrice = parseFloat(minPrice);
+        const parsedMaxPrice = parseFloat(maxPrice);
+
+        let match = { status: 'active' };
+        if (search) match.name = { $regex: search, $options: 'i' };
+        if (category) match.categories = { $in: [category] };
+
+        if (!isNaN(parsedMinPrice) && !isNaN(parsedMaxPrice)) {
+            match.$expr = {
+                $and: [
+                    { $gte: [{ $cond: ["$isOnSale", "$discountPrice", "$price"] }, parsedMinPrice] },
+                    { $lte: [{ $cond: ["$isOnSale", "$discountPrice", "$price"] }, parsedMaxPrice] }
+                ]
+            };
+        } else {
+            console.warn('Invalid minPrice or maxPrice provided:', { minPrice, maxPrice });
+        }
+
+        let sort = {};
+        if (orderby === 'price') sort = { effectivePrice: 1 };
+        else if (orderby === 'price-desc') sort = { effectivePrice: -1 };
+        else if (orderby === 'date') sort = { createdAt: -1 };
+        else sort = { createdAt: -1 }; // Default to date
+
+        const aggregatePipeline = [
+            { $match: match },
+            { $addFields: { effectivePrice: { $cond: ["$isOnSale", "$discountPrice", "$price"] } } },
+            { $sort: sort },
+            { $skip: skip },
+            { $limit: limit }
+        ];
+
+        const products = await productSchema.aggregate(aggregatePipeline);
+
+        const totalProductsAggregate = await productSchema.aggregate([
+            { $match: match },
+            { $count: 'total' }
+        ]);
+
+        const totalProducts = totalProductsAggregate[0]?.total || 0;
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        const categories = await productSchema.distinct('categories', { status: 'active' });
+        const categoryCounts = {};
+        for (let cat of categories) {
+            categoryCounts[cat] = await productSchema.countDocuments({ categories: cat, status: 'active' });
+        }
+
+        const recentProducts = await productSchema.aggregate([
+            { $match: { status: 'active' } },
+            { $sort: { createdAt: -1 } },
+            { $limit: 4 }
+        ]);
+
+        const galleryImages = await productSchema.aggregate([
+            { $match: { status: 'active' } },
+            { $unwind: '$images' },
+            { $limit: 6 },
+            { $project: { images: 1 } }
+        ]).then(results => results.map(r => r.images));
+
+        res.render('client/layout/shopProduct', {
+            user,
+            products,
+            totalProducts,
+            page: parseInt(page),
+            totalPages,
+            orderby,
+            minPrice: isNaN(parsedMinPrice) ? 0 : parsedMinPrice,
+            maxPrice: isNaN(parsedMaxPrice) ? 1000 : parsedMaxPrice,
+            search,
+            category,
+            categories,
+            categoryCounts,
+            recentProducts,
+            galleryImages,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error rendering products page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading products page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get Product Detail Page
+export const getProductDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        let user = null;
+        req.session = req.session || {};
+
+        if (userId) {
+            user = await userModel.findById(userId);
+            if (!user) {
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+        }
+
+        const product = await productSchema.findById(req.params.id).lean();
+        if (!product || product.status !== 'active') {
+            req.session.message = 'Product not found';
+            req.session.type = 'error';
+            return res.redirect('/products');
+        }
+
+        const reviews = await productReviewSchema.find({ productId: req.params.id }).lean();
+        const relatedProducts = await productSchema.find({
+            categories: { $in: product.categories },
+            _id: { $ne: product._id },
+            status: 'active'
+        }).limit(2).lean();
+
+        const categories = await productSchema.distinct('categories', { status: 'active' });
+        const categoryCounts = {};
+        for (let cat of categories) {
+            categoryCounts[cat] = await productSchema.countDocuments({ categories: cat, status: 'active' });
+        }
+
+        const recentProducts = await productSchema.find({ status: 'active' })
+            .sort({ createdAt: -1 })
+            .limit(4)
+            .lean();
+
+        const galleryImages = await productSchema.aggregate([
+            { $match: { status: 'active' } },
+            { $unwind: '$images' },
+            { $limit: 6 },
+            { $project: { images: 1 } }
+        ]).then(results => results.map(r => r.images));
+
+        res.render('client/layout/shopProductDetail', {
+            user,
+            product,
+            reviews,
+            relatedProducts,
+            categories,
+            categoryCounts,
+            recentProducts,
+            galleryImages,
+            orderby: req.query.orderby || 'menu_order',
+            minPrice: req.query.minPrice || '',
+            maxPrice: req.query.maxPrice || '',
+            search: req.query.search || '',
+            category: req.query.category || '',
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error rendering product detail page:', error);
+        req.session.message = 'Error loading product details';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// Add Review to Shop Products
+export const addReview = async (req, res) => {
+    try {
+        const { name, email, comment, rating } = req.body;
+        const productId = req.params.id;
+        req.session = req.session || {};
+
+        const userId = req.id;
+
+        if (userId) {
+            const user = await userModel.findById(userId);
+            if (!user) {
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+        }
+        else {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        if (!rating || rating < 1 || rating > 5) {
+            req.session.message = 'Rating must be between 1 and 5';
+            req.session.type = 'error';
+            return res.redirect(`/products/${productId}`);
+        }
+
+        const product = await productSchema.findById(productId).lean();
+        if (!product || product.status !== 'active') {
+            req.session.message = 'Product not found';
+            req.session.type = 'error';
+            return res.redirect('/products');
+        }
+
+        const review = new productReviewSchema({
+            productId,
+            name,
+            email,
+            comment,
+            rating: parseInt(rating)
+        });
+
+        await review.save();
+        req.session.message = 'Review added successfully';
+        req.session.type = 'success';
+        return res.redirect(`/products/${productId}`);
+    } catch (error) {
+        console.error('Error adding review:', error);
+        req.session.message = 'Error adding review';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+// Add Reply to any shop product review
+export const addReply = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (userId) {
+            const user = await userModel.findById(userId);
+            if (!user) {
+                req.session.message = 'No such user exists in the database';
+                req.session.type = 'error';
+                return res.redirect('/loginPage');
+            }
+        }
+        else {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { name, email, comment } = req.body;
+        const reviewId = req.params.reviewId;
+
+        const review = await productReviewSchema.findById(reviewId);
+        if (!review) {
+            req.session.message = 'Review not found';
+            req.session.type = 'error';
+            return res.redirect('/products');
+        }
+
+        review.replies.push({ name, email, comment });
+        await review.save();
+        req.session.message = 'Reply added successfully';
+        req.session.type = 'success';
+        res.redirect(`/products/${review.productId}`);
+    } catch (error) {
+        console.error('Error adding reply:', error);
+        req.session.message = 'Error adding reply';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+
+
+// Get Cart
+export const getProductCart = async (req, res) => {
+    try {
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Please log in to view your cart';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const cart = await productCartSchema.findOne({ userId }).populate('items.productId').lean();
+        res.render('client/layout/shopProductCart', {
+            user,
+            cart,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error rendering cart page:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading cart';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Add to Product Cart
+export const addToProductCart = async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Please log in to add to cart';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let cart = await productCartSchema.findOne({ userId });
+        if (!cart) {
+            cart = new productCartSchema({ userId, items: [] });
+        }
+
+        const product = await productSchema.findById(productId);
+        if (!product || product.status !== 'active') {
+            req.session.message = 'Product not found';
+            req.session.type = 'error';
+            return res.redirect('/products');
+        }
+
+
+        const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
+        if (itemIndex > -1) {
+            cart.items[itemIndex].quantity += parseInt(quantity);
+        } else {
+            cart.items.push({ productId, quantity: parseInt(quantity) });
+        }
+
+        req.session.message = 'Product added in cart successfully';
+        req.session.type = 'success';
+        await cart.save();
+        res.status(200).json({ message: 'Added to cart successfully' });
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error adding to cart';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update Cart
+export const updateProductCart = async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        const userId = req.id;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Please log in to view your cart';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const cart = await productCartSchema.findOne({ userId });
+        if (!cart) {
+            req.session.message = 'No Cart found';
+            req.session.type = 'error';
+            return res.redirect('/product/cart');
+        }
+
+        const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
+        if (itemIndex === -1) {
+            req.session.message = 'Item not found in cart';
+            req.session.type = 'error';
+            return res.redirect('/product/cart');
+        }
+
+        if (quantity < 1) {
+            req.session.message = 'Quantity must be at least 1';
+            req.session.type = 'error';
+            return res.redirect('/product/cart');
+        }
+
+        cart.items[itemIndex].quantity = parseInt(quantity);
+        await cart.save();
+
+        // req.session.message = 'Cart updated successfully';
+        // req.session.type = 'success';
+
+        res.status(200).json({ message: 'Cart updated successfully' });
+    } catch (error) {
+        console.error('Error updating cart:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error updating cart';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Remove Cart Item
+export const removeProductCartItem = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const userId = req.id;
+
+        if (!userId) {
+            req.session.message = 'Please log in to view your cart';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const cart = await productCartSchema.findOne({ userId });
+        if (!cart) {
+            req.session.message = 'No Cart found';
+            req.session.type = 'error';
+            return res.redirect('/product/cart');
+        }
+
+        cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+        await cart.save();
+
+        // req.session.message = 'Item removed from cart';
+        // req.session.type = 'success';
+        res.status(200).json({ message: 'Item removed from cart' });
+    } catch (error) {
+        console.error('Error removing item from cart:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error removing item from cart';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// Get Checkout Page
+export const getProductCheckout = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session.message = 'Please log in to proceed to checkout';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const cart = await productCartSchema.findOne({ userId }).populate('items.productId').lean();
+        if (!cart || !cart.items || cart.items.length === 0) {
+            req.session.message = 'Your cart is empty';
+            req.session.type = 'error';
+            return res.redirect('/products');
+        }
+
+        const coupon = req.session.coupon || null; // Get applied coupon from session
+        res.render('client/layout/shopProductCheckout', {
+            user,
+            cart,
+            stripeKey: process.env.STRIPE_PUBLISHABLE_KEY,
+            coupon,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error rendering checkout page:', error);
+        req.session.message = 'Error loading checkout';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+export const applyProductCoupon = async (req, res) => {
+    try {
+        const { couponCode } = req.body;
+        const userId= req.id;
+
+        if (!userId) {
+            req.session.message = 'Please log in to proceed to checkout';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        if (!couponCode) {
+            return res.status(400).json({ message: 'Coupon code is required' });
+        }
+
+        const cart = await productCartSchema.findOne({ userId }).populate('items.productId');
+        if (!cart || !cart.items || cart.items.length === 0) {
+            return res.status(400).json({ message: 'Your cart is empty' });
+        }
+
+        const coupon = await couponSchema.findOne({ code: couponCode.toUpperCase(), isActive: true });
+        if (!coupon) {
+            return res.status(400).json({ message: 'Invalid or inactive coupon' });
+        }
+
+        if (coupon.expiryDate < new Date()) {
+            return res.status(400).json({ message: 'Coupon has expired' });
+        }
+
+        if (coupon.usedCount >= coupon.usageLimit) {
+            return res.status(400).json({ message: 'Coupon usage limit reached' });
+        }
+
+          // Count how many times the user has used this coupon
+          const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+          // For restricted coupons, allow usage up to the usageLimit
+          if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+              if (userUsageCount >= coupon.usageLimit) {
+                  return res.status(400).json({ message: 'You have reached the usage limit for this coupon' });
+              }
+          } else if (!coupon.restrictToUser && userUsageCount > 0) {
+              // For non-restricted coupons, prevent reuse if already used once
+              return res.status(400).json({ message: 'You have already used this coupon' });
+          }
+          if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
+              return res.status(400).json({ message: 'This coupon is not assigned to you' });
+          }
+
+        const subtotal = cart.items.reduce((total, item) => {
+            const price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+            return total + price * item.quantity;
+        }, 0);
+
+        if (subtotal < coupon.minPurchase) {
+            return res.status(400).json({ message: 'Minimum purchase requirement not met' });
+        }
+
+        let discount = coupon.discountType === 'percentage'
+            ? subtotal * (coupon.discountValue / 100)
+            : coupon.discountValue;
+        if (coupon.maxDiscount > 0) {
+            discount = Math.min(discount, coupon.maxDiscount);
+        }
+        discount = Math.min(discount, subtotal); // Cap at subtotal
+
+        req.session.coupon = { code: coupon.code, discount };
+        res.status(200).json({
+            message: 'Coupon applied successfully',
+            coupon: {
+                discountType: coupon.discountType,
+                discountValue: coupon.discountValue,
+                minPurchase: coupon.minPurchase,
+                maxDiscount: coupon.maxDiscount
+            },
+            discount
+        });
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        res.status(500).redirect('/error');
+    }
+};
+
+
+// Create Payment Intent for Stripe (PayPal option)
+export const createProductPaymentIntent = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Please log in to proceed to checkout';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const { orderData } = req.body;
+        if (!orderData || !orderData.userDetails || !orderData.total) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid order data';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const cart = await productCartSchema.findOne({ userId }).populate('items.productId').lean();
+        if (!cart || !cart.items || cart.items.length === 0) {
+            req.session = req.session || {};
+            req.session.message = 'Your cart is empty';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const items = cart.items.map(item => ({
+            productId: item.productId._id,
+            quantity: item.quantity,
+            price: item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price
+        }));
+
+        let subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+        let discount = 0;
+        let appliedCoupon = null;
+
+        if (orderData.couponCode) {
+            const coupon = await couponSchema.findOne({ code: orderData.couponCode, isActive: true });
+            if (!coupon) {
+                req.session = req.session || {};
+                req.session.message = 'Invalid or inactive coupon';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.expiryDate < new Date()) {
+                req.session = req.session || {};
+                req.session.message = 'Coupon has expired';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.usedCount >= coupon.usageLimit) {
+                req.session = req.session || {};
+                req.session.message = 'Coupon usage limit reached';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
+                req.session = req.session || {};
+                req.session.message = 'You have already used this coupon';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
+                req.session = req.session || {};
+                req.session.message = 'This coupon is not assigned to you';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (subtotal >= coupon.minPurchase) {
+                if (coupon.discountType === 'percentage') {
+                    discount = subtotal * (coupon.discountValue / 100);
+                    if (coupon.maxDiscount > 0) {
+                        discount = Math.min(discount, coupon.maxDiscount);
+                    }
+                } else {
+                    discount = coupon.discountValue;
+                }
+                appliedCoupon = coupon;
+            } else {
+                req.session = req.session || {};
+                req.session.message = 'Minimum purchase requirement not met';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+        }
+
+        const tax = (subtotal - discount) * 0.13;
+        const total = subtotal - discount + tax;
+
+        const paymentIntent = await stripeInstance.paymentIntents.create({
+            amount: Math.round(total * 100), // Convert to cents
+            currency: 'usd',
+            metadata: {
+                userId: userId.toString(),
+                couponCode: orderData.couponCode || 'none'
+            },
+            receipt_email: orderData.userDetails.email || user.email,
+            automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: 'never'
+            }
+        });
+
+        // Save booking with pending status
+        const productBooking = new productBookingSchema({
+            userId,
+            items,
+            userDetails: {
+                firstName: orderData.userDetails.firstName,
+                lastName: orderData.userDetails.lastName,
+                email: orderData.userDetails.email,
+                phone: orderData.userDetails.phone,
+                country: orderData.userDetails.country,
+                streetAddress: orderData.userDetails.streetAddress,
+                streetAddressOptional: orderData.userDetails.streetAddressOptional || '',
+                city: orderData.userDetails.city,
+                province: orderData.userDetails.province,
+                postcode: orderData.userDetails.postcode,
+                notes: orderData.userDetails.notes || ''
+            },
+            payment: {
+                paymentMethod: 'stripe',
+                stripePaymentIntentId: paymentIntent.id,
+                paymentStatus: 'pending',
+                paymentType: 'deposit'
+            },
+            status: 'pending',
+            total,
+            discount,
+            couponCode: orderData.couponCode || null
+        });
+
+        await productBooking.save();
+
+        req.session = req.session || {};
+        req.session.message = 'Payment intent created successfully';
+        req.session.type = 'success';
+        res.json({ success: true, clientSecret: paymentIntent.client_secret, bookingId: productBooking._id });
+    } catch (error) {
+        console.error('Create payment intent error:', error);
+        req.session = req.session || {};
+        req.session.message = 'Failed to create payment intent';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Place Order (non-Stripe and Stripe payment confirmation)
+export const placeProductOrder = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            req.session = req.session || {};
+            req.session.message = 'Please log in to proceed to checkout';
+            req.session.type = 'error';
+            return res.status(401).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const { userDetails, paymentMethod, couponCode, total, clientSecret, bookingId } = req.body;
+        if (!userDetails || !paymentMethod || !total) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid order data';
+            req.session.type = 'error';
+            return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'country', 'streetAddress', 'city', 'province', 'postcode'];
+        if (!requiredFields.every(field => userDetails[field])) {
+            req.session = req.session || {};
+            req.session.message = 'All required fields are required';
+            req.session.type = 'error';
+            return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userDetails.email)) {
+            req.session = req.session || {};
+            req.session.message = 'Invalid email format';
+            req.session.type = 'error';
+            return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const cart = await productCartSchema.findOne({ userId }).populate('items.productId').lean();
+        if (!cart || !cart.items || cart.items.length === 0) {
+            req.session = req.session || {};
+            req.session.message = 'Your cart is empty';
+            req.session.type = 'error';
+            return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+        }
+
+        const items = cart.items.map(item => ({
+            productId: item.productId._id,
+            quantity: item.quantity,
+            price: item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price
+        }));
+
+        let subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+        let discount = 0;
+        let appliedCoupon = null;
+
+        if (couponCode) {
+            const coupon = await couponSchema.findOne({ code: couponCode, isActive: true });
+            if (!coupon) {
+                req.session = req.session || {};
+                req.session.message = 'Invalid or inactive coupon';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.expiryDate < new Date()) {
+                req.session = req.session || {};
+                req.session.message = 'Coupon has expired';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.usedCount >= coupon.usageLimit) {
+                req.session = req.session || {};
+                req.session.message = 'Coupon usage limit reached';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            // Count how many times the user has used this coupon
+            const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+            // For restricted coupons, allow usage up to the usageLimit
+            if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+                if (userUsageCount >= coupon.usageLimit) {
+                    req.session = req.session || {};
+                    req.session.message = 'You have reached the usage limit for this coupon';
+                    req.session.type = 'error';
+                    return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+                }
+            } else if (!coupon.restrictToUser && userUsageCount > 0) {
+                // For non-restricted coupons, prevent reuse if already used once
+                req.session = req.session || {};
+                req.session.message = 'You have already used this coupon';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
+                req.session = req.session || {};
+                req.session.message = 'This coupon is not assigned to you';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+            if (subtotal >= coupon.minPurchase) {
+                if (coupon.discountType === 'percentage') {
+                    discount = subtotal * (coupon.discountValue / 100);
+                    if (coupon.maxDiscount > 0) {
+                        discount = Math.min(discount, coupon.maxDiscount);
+                    }
+                } else {
+                    discount = coupon.discountValue;
+                }
+                appliedCoupon = coupon;
+            } else {
+                req.session = req.session || {};
+                req.session.message = 'Minimum purchase requirement not met';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+        }
+
+        const tax = (subtotal - discount) * 0.13;
+        const expectedTotal = subtotal - discount + tax;
+
+        let productBooking;
+        let paymentDetails;
+        if (paymentMethod === 'stripe') {
+            if (!clientSecret || !bookingId) {
+                req.session = req.session || {};
+                req.session.message = 'Missing payment details';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+
+            const paymentIntent = await stripeInstance.paymentIntents.retrieve(clientSecret.split('_secret_')[0]);
+            if (paymentIntent.status !== 'succeeded') {
+                req.session = req.session || {};
+                req.session.message = 'Payment not completed: ' + paymentIntent.status;
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+
+            if (Math.round(expectedTotal * 100) !== paymentIntent.amount) {
+                req.session = req.session || {};
+                req.session.message = 'Payment amount does not match expected total';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+
+            productBooking = await productBookingSchema.findById(bookingId);
+            if (!productBooking) {
+                req.session = req.session || {};
+                req.session.message = 'Booking not found';
+                req.session.type = 'error';
+                return res.status(400).json({ success: false, message: req.session.message, type: req.session.type });
+            }
+
+            productBooking.payment.paymentStatus = 'succeeded';
+            productBooking.status = 'approved';
+
+            paymentDetails = {
+                cardBrand: (await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method)).card.brand,
+                last4: (await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method)).card.last4
+            };
+        } else {
+            productBooking = new productBookingSchema({
+                userId,
+                items,
+                userDetails,
+                payment: {
+                    paymentMethod,
+                    paymentStatus: 'pending',
+                    paymentType: 'deposit'
+                },
+                status: 'pending',
+                total: expectedTotal,
+                discount,
+                couponCode: couponCode || null
+            });
+
+            paymentDetails = { paymentMethod };
+        }
+
+        // Update coupon usage if applied
+        if (appliedCoupon) {
+            await couponSchema.updateOne({ _id: appliedCoupon._id }, {
+                $inc: { usedCount: 1 },
+                $push: { usedBy: { userId, usedAt: new Date() } }
+            });
+            const couponCheckLimit = await couponSchema.findById(appliedCoupon._id);
+            if (couponCheckLimit.usedCount >= couponCheckLimit.usageLimit) {
+                await couponSchema.updateOne({ _id: couponCheckLimit._id }, { isActive: false });
+            }
+        }
+
+        await productBooking.save();
+
+        await productCartSchema.findOneAndDelete({ userId });
+
+        const populatedBooking = await productBookingSchema.findById(productBooking._id).populate('items.productId');
+
+        req.session = req.session || {};
+        req.session.message = 'Order confirmed successfully';
+        req.session.type = 'success';
+        res.json({ 
+            success: true, 
+            redirect: '/order-confirmation/' + productBooking._id, 
+            booking: populatedBooking, 
+            paymentDetails, 
+            message: req.session.message, 
+            type: req.session.type 
+        });
+    } catch (error) {
+        console.error('Place order error:', error);
+        req.session = req.session || {};
+        req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Error confirming order: ${error.message}`;
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+
+
+
+// Render Product Confirmation Page
+export const renderProductConfirmation = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            req.session = req.session || {};
+            req.session.message = 'Please log in to view order confirmation';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No such User Exists in the Database');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const productBookingId = req.params.id
+        // Fetch the latest approved booking for the user
+        const booking = await productBookingSchema
+            .findOne({ userId, _id :productBookingId })
+            .populate('items.productId')
+            .lean();
+
+        if (!booking) {
+            console.log('No order found for user:', userId);
+            req.session = req.session || {};
+            req.session.message = 'No order found';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        // Fetch payment details for Stripe payments
+        let paymentDetails = { paymentMethod: booking.payment.paymentMethod };
+        if (booking.payment.paymentMethod === 'stripe' && booking.payment.stripePaymentIntentId) {
+            try {
+                const paymentIntent = await stripeInstance.paymentIntents.retrieve(booking.payment.stripePaymentIntentId);
+                if (paymentIntent.status === 'succeeded') {
+                    const paymentMethod = await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method);
+                    paymentDetails = {
+                        cardBrand: paymentMethod.card.brand,
+                        last4: paymentMethod.card.last4
+                    };
+                } else {
+                    console.log('Payment intent not succeeded:', paymentIntent.status);
+                    req.session = req.session || {};
+                    req.session.message = 'Payment not completed: ' + paymentIntent.status;
+                    req.session.type = 'error';
+                    return res.redirect('/error');
+                }
+            } catch (error) {
+                console.error('Error retrieving payment intent:', error);
+                req.session = req.session || {};
+                req.session.message = 'Failed to retrieve payment details';
+                req.session.type = 'error';
+                return res.redirect('/error');
+            }
+        }
+
+        // Fetch coupon details if applied
+        let coupon = null;
+        if (booking.couponCode) {
+            const couponData = await couponSchema.findOne({ code: booking.couponCode }).lean();
+            if (couponData) {
+                coupon = { discount: booking.discount, code: booking.couponCode };
+            }
+        }
+
+        req.session = req.session || {};
+        req.session.message = 'Order confirmed successfully';
+        req.session.type = 'success';
+
+        res.render('client/layout/shopProductConfirmation', {
+            booking,
+            paymentDetails,
+            coupon,
+            user,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+    } catch (error) {
+        console.error('Render product confirmation error:', error);
+        req.session = req.session || {};
+        req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Failed to load order confirmation: ${error.message}`;
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
     }
 };

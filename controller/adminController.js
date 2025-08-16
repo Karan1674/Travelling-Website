@@ -2344,7 +2344,7 @@ export const renderEditCoupon = async (req, res) => {
             ];
         }
 
-        const coupon = await couponSchema.findOne(query).lean();
+        const coupon = await couponSchema.findOne(query).populate('restrictToUser', 'firstName lastName email').lean();
         if (!coupon) {
             req.session.message = 'Coupon not found or you do not have access';
             req.session.type = 'error';

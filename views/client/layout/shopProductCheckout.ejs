@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Checkout</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="checkout-section">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-8 right-sidebar">
+                            <div class="checkout-field-wrap">
+                                <h3>Billing Details</h3>
+                                <div class="coupon-field">
+                                    <label>Have a Coupon?   <a href="#" style="color: rgba(0, 0, 255, 0.61);" id="available-coupons-link">Available Coupons</a></label>
+                                    <div class="form-group" id="coupon-form">
+                                        <input type="text" name="coupon" id="coupon-code" placeholder="Enter coupon code">
+                                        <button type="button" class="button-primary" id="apply-coupon">Apply Coupon</button>
+                                        <button type="button" class="button-primary" id="remove-coupon" style="display: none; background-color: #dc3545;">Remove</button>
+                                    </div>
+                                    <p id="coupon-status" style="margin-top: 10px; color: green; font-weight: bold; display: none;"></p>
+                                    <p id="coupon-error" style="margin-top: 10px; color: red; font-weight: bold; display: none;"></p>
+                                    <input type="hidden" name="appliedCouponCode" id="applied-coupon-code" value="">
+                                </div>
+                                <form id="billing-form" action="/product/checkout/place-order" method="POST">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>First Name *</label>
+                                                <input type="text" value="<%= user.firstName %>" name="firstName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Last Name *</label>
+                                                <input type="text" value="<%= user.lastName %>" name="lastName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="form-group">
+                                                <label>Company Name (optional)</label>
+                                                <input type="text" name="companyName">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="form-group">
+                                                <label>Country *</label>
+                                                <select name="country" required>
+                                                    <option value="">Select a country</option>
+                                                    <option value="France">France</option>
+                                                    <option value="England">England</option>
+                                                    <option value="Brazil">Brazil</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <label>Street Address *</label>
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <input type="text" name="streetAddress" placeholder="Street name" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <input type="text" name="streetAddressOptional" placeholder="Street name (optional)">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Postcode / ZIP *</label>
+                                                <input type="text" name="postcode" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Town / City *</label>
+                                                <input type="text" name="city" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Province *</label>
+                                                <select name="province" required>
+                                                    <option value="">Select a province</option>
+                                                    <option value="Bedfordshire">Bedfordshire</option>
+                                                    <option value="Essex">Essex</option>
+                                                    <option value="Suffolk">Suffolk</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label>Phone *</label>
+                                                <input type="text" name="phone" value="<%= user.phone %>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="form-group">
+                                                <label>Email Address *</label>
+                                                <input type="email" name="email" value="<%= user.email %>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="form-group">
+                                                <label>Additional Information</label>
+                                                <textarea name="notes" rows="6" placeholder="Notes about your order, e.g., special notes for delivery"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <aside class="sidebar">
+                                <div class="widget-bg widget-table-summary">
+                                    <h4 class="bg-title">Your Order</h4>
+                                    <table>
+                                        <tbody>
+                                            <% if (cart && cart.items && cart.items.length > 0) { %>
+                                                <% cart.items.forEach(item => { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= item.productId.name %> X <%= item.quantity %>
+                                                        </td>
+                                                        <td class="text-right">
+                                                            <% let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price; %>
+                                                            $<%= (price * item.quantity).toFixed(2) %>
+                                                        </td>
+                                                    </tr>
+                                                <% }) %>
+                                                <tr>
+                                                    <td><strong>Subtotal</strong></td>
+                                                    <td class="text-right subtotal-amount">
+                                                        $<%= cart.items.reduce((total, item) => {
+                                                            let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                                            return total + price * item.quantity;
+                                                        }, 0).toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Tax</td>
+                                                    <td class="text-right vat-amount">
+                                                        $<%= ((cart.items.reduce((total, item) => {
+                                                            let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                                            return total + price * item.quantity;
+                                                        }, 0) - (coupon ? coupon.discount : 0)) * 0.13).toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                                <tr class="total">
+                                                    <td><strong>Total Cost</strong></td>
+                                                    <td class="text-right grandTotal">
+                                                        $<%= ((cart.items.reduce((total, item) => {
+                                                            let price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
+                                                            return total + price * item.quantity;
+                                                        }, 0) - (coupon ? coupon.discount : 0)) * 1.13).toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="2">Your cart is empty. <a href="/products">Continue shopping</a>.</td>
+                                                </tr>
+                                            <% } %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="widget-bg widget-paymet-bank">
+                                    <div class="payment-wrap">
+                                        <h4 class="bg-title">Payment</h4>
+                                        <div class="form-group">
+                                            <div class="custom-radio-field">
+                                                <label>
+                                                    <input type="radio" name="paymentMethod" value="bank" checked>
+                                                    <span class="radio-field"></span>
+                                                    Direct Bank Transfer
+                                                </label>
+                                            </div>
+                                            <div class="desc">
+                                                Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="custom-radio-field">
+                                                <label>
+                                                    <input type="radio" name="paymentMethod" value="check">
+                                                    <span class="radio-field"></span>
+                                                    Check Payment
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="custom-radio-field">
+                                                <label>
+                                                    <input type="radio" name="paymentMethod" value="cod">
+                                                    <span class="radio-field"></span>
+                                                    Cash on Delivery
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="custom-radio-field">
+                                                <label>
+                                                    <input type="radio" name="paymentMethod" value="paypal">
+                                                    <span class="radio-field"></span>
+                                                    PayPal
+                                                    <img src="/assets/images/cards.png" alt="PayPal Cards">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div id="card-element" class="form-group" style="display: none; margin-top: 20px;">
+                                            <label>Card Details</label>
+                                            <div id="card-input"></div>
+                                            <div id="card-errors" style="color: red; margin-top: 10px;"></div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" form="billing-form" class="button-primary" id="place-order-btn">
+                                        <span class="btn-text">Place Order</span>
+                                        <span class="btn-loader" style="display: none;">
+                                            Ordering... <i class="fas fa-spinner fa-spin"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../../shared/partials/toaster') %>
+        <%- include('../partials/Footer') %>
+    </div>
+    <%- include('../partials/Script') %>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Coupon state
+            let appliedCoupon = null;
+            let originalSubtotal = parseFloat(document.querySelector('.subtotal-amount')?.textContent.replace('$', '') || 0);
+            let originalTax = parseFloat(document.querySelector('.vat-amount')?.textContent.replace('$', '') || 0);
+            let originalTotal = parseFloat(document.querySelector('.grandTotal')?.textContent.replace('$', '') || 0);
+            let currentDiscount = <%= coupon && coupon.discount ? coupon.discount : 0 %>;
+
+            // Stripe setup
+            const stripe = Stripe('<%= stripeKey %>');
+            const elements = stripe.elements();
+            let cardElement = null;
+
+            // Update order summary
+            const updateSummary = (discount = 0, couponCode = '') => {
+                const tbody = document.querySelector('.widget-table-summary tbody');
+                const isCartEmpty = document.querySelector('td[colspan="2"]');
+                if (isCartEmpty || !tbody) {
+                    return;
+                }
+
+                const subtotal = originalSubtotal;
+                const tax = (subtotal - discount) * 0.13;
+                const total = subtotal - discount + tax;
+
+                const subtotalElement = document.querySelector('.subtotal-amount');
+                const taxElement = document.querySelector('.vat-amount');
+                const totalElement = document.querySelector('.grandTotal');
+                if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+                if (taxElement) taxElement.textContent = `$${tax.toFixed(2)}`;
+                if (totalElement) totalElement.textContent = `$${total.toFixed(2)}`;
+
+                document.querySelector('.coupon-discount')?.remove();
+                if (discount > 0) {
+                    const discountRow = document.createElement('tr');
+                    discountRow.className = 'coupon-discount';
+                    discountRow.innerHTML = `<td><strong>Coupon Discount </strong></td><td class="text-right">$${discount.toFixed(2)}</td>`;
+                    const taxRow = document.querySelector('.vat-amount')?.closest('tr');
+                    if (taxRow && tbody.contains(taxRow)) {
+                        tbody.insertBefore(discountRow, taxRow);
+                    } else {
+                        const totalRow = document.querySelector('.total');
+                        if (totalRow && tbody.contains(totalRow)) {
+                            tbody.insertBefore(discountRow, totalRow);
+                        } else {
+                            tbody.appendChild(discountRow);
+                        }
+                    }
+                }
+            };
+
+            // Apply coupon
+            const applyCoupon = async (code) => {
+                try {
+                    const response = await fetch('/product/checkout/apply-coupon', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ couponCode: code })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        appliedCoupon = data.coupon;
+                        currentDiscount = data.discount;
+                        document.getElementById('applied-coupon-code').value = code;
+                        document.getElementById('coupon-code').value = code;
+                        document.getElementById('apply-coupon').style.display = 'none';
+                        document.getElementById('remove-coupon').style.display = 'inline-block';
+                        document.getElementById('coupon-status').textContent = `Coupon applied! Discount: ${currentDiscount.toFixed(2)}`;
+                        document.getElementById('coupon-status').style.display = 'block';
+                        document.getElementById('coupon-error').style.display = 'none';
+                        updateSummary(currentDiscount, code);
+                    } else {
+                        document.getElementById('coupon-error').textContent = data.message || 'Invalid coupon';
+                        document.getElementById('coupon-error').style.display = 'block';
+                        document.getElementById('coupon-status').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.log(error);
+                    document.getElementById('coupon-error').textContent = 'Failed to apply coupon. Please try again.';
+                    document.getElementById('coupon-error').style.display = 'block';
+                    document.getElementById('coupon-status').style.display = 'none';
+                }
+            };
+
+            // Apply coupon button
+            document.getElementById('apply-coupon').addEventListener('click', () => {
+                const code = document.getElementById('coupon-code').value.trim();
+                if (!code) {
+                    document.getElementById('coupon-error').textContent = 'Please enter a coupon code';
+                    document.getElementById('coupon-error').style.display = 'block';
+                    return;
+                }
+                applyCoupon(code);
+            });
+
+            // Remove coupon button
+            document.getElementById('remove-coupon').addEventListener('click', async () => {
+          
+                  
+                        appliedCoupon = null;
+                        currentDiscount = 0;
+                        document.getElementById('applied-coupon-code').value = '';
+                        document.getElementById('coupon-code').value = '';
+                        document.getElementById('apply-coupon').style.display = 'inline-block';
+                        document.getElementById('remove-coupon').style.display = 'none';
+                        document.getElementById('coupon-status').style.display = 'none';
+                        document.getElementById('coupon-error').style.display = 'none';
+                        updateSummary();
+              
+            });
+
+            // Available coupons link
+            document.getElementById('available-coupons-link').addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/available-coupons');
+                    const data = await response.json();
+                    if (data.success) {
+                        const overlay = document.createElement('div');
+                        overlay.id = 'popup-overlay';
+                        document.body.appendChild(overlay);
+
+                        const popup = document.createElement('div');
+                        popup.id = 'available-coupons-popup';
+                        popup.innerHTML = `
+                            <i class="fas fa-times close-icon" onclick="closePopup()"></i>
+                            <h5>Available Coupons</h5>
+                            <ul>
+                                ${data.coupons.map(coupon => `
+                                    <li>
+                                        <div class="coupon-details">
+                                            <div class="coupon-code">
+                                                <i class="fas fa-gift text-secondary"></i>
+                                                <span>${coupon.code}</span>
+                                            </div>
+                                            <span class="coupon-save">Save ${coupon.discountType === 'fixed' ? '$' : ''}${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''}</span>
+                                        </div>
+                                        <span id="${coupon._id}" class="apply" onclick="applyFromPopup('${coupon.code}')">Apply</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        `;
+                        document.body.appendChild(popup);
+
+                        setTimeout(() => {
+                            overlay.classList.add('show');
+                            popup.classList.add('show');
+                        }, 10);
+                    } else {
+                        document.getElementById('coupon-error').textContent = data.message || 'No available coupons';
+                        document.getElementById('coupon-error').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching coupons:', error);
+                    document.getElementById('coupon-error').textContent = 'Failed to load coupons. Please try again.';
+                    document.getElementById('coupon-error').style.display = 'block';
+                }
+            });
+
+            // Global functions for popup
+            window.applyFromPopup = (code) => {
+                document.getElementById('coupon-code').value = code;
+                applyCoupon(code);
+                closePopup();
+            };
+
+            window.closePopup = () => {
+                const popup = document.getElementById('available-coupons-popup');
+                const overlay = document.getElementById('popup-overlay');
+                if (popup && overlay) {
+                    popup.classList.remove('show');
+                    overlay.classList.remove('show');
+                    setTimeout(() => {
+                        popup.remove();
+                        overlay.remove();
+                    }, 500);
+                }
+            };
+
+            // Payment method toggle
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const cardElementDiv = document.getElementById('card-element');
+                    if (radio.value === 'paypal') {
+                        cardElementDiv.style.display = 'block';
+                        if (!cardElement) {
+                            cardElement = elements.create('card', {
+                                style: {
+                                    base: {
+                                        fontSize: '16px',
+                                        color: '#32325d',
+                                        '::placeholder': { color: '#aab7c4' }
+                                    },
+                                    invalid: { color: '#fa755a' }
+                                }
+                            });
+                            cardElement.mount('#card-input');
+                        }
+                    } else {
+                        cardElementDiv.style.display = 'none';
+                        if (cardElement) {
+                            cardElement.unmount();
+                            cardElement = null;
+                        }
+                    }
+                });
+            });
+
+            // Place order functionality
+            const placeOrderBtn = document.getElementById('place-order-btn');
+            const btnText = document.querySelector('.btn-text');
+            const btnLoader = document.querySelector('.btn-loader');
+
+            document.getElementById('billing-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Show loader and disable button
+                btnText.style.display = 'none';
+                btnLoader.style.display = 'inline';
+                placeOrderBtn.disabled = true;
+
+                const form = e.target;
+                const formData = new FormData(form);
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                const orderData = {
+                    userDetails: {
+                        firstName: formData.get('firstName'),
+                        lastName: formData.get('lastName'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        country: formData.get('country'),
+                        streetAddress: formData.get('streetAddress'),
+                        streetAddressOptional: formData.get('streetAddressOptional'),
+                        city: formData.get('city'),
+                        province: formData.get('province'),
+                        postcode: formData.get('postcode'),
+                        notes: formData.get('notes')
+                    },
+                    paymentMethod: paymentMethod === 'paypal' ? 'stripe' : paymentMethod,
+                    couponCode: document.getElementById('applied-coupon-code').value || null,
+                    total: parseFloat(document.querySelector('.grandTotal')?.textContent.replace('$', '') || 0),
+                    discount: currentDiscount
+                };
+
+                const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'postcode', 'city', 'province', 'phone', 'email'];
+                let valid = true;
+                requiredFields.forEach(field => {
+                    if (!orderData.userDetails[field]) {
+                        valid = false;
+                        document.getElementById('coupon-error').textContent = `Please fill out the ${field} field`;
+                        document.getElementById('coupon-error').style.display = 'block';
+                    }
+                });
+
+                if (!valid) {
+                    // Reset button state
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                    placeOrderBtn.disabled = false;
+                    return;
+                }
+
+                try {
+                    if (paymentMethod === 'paypal') {
+                        // Create payment intent
+                        const response = await fetch('/product/checkout/create-payment-intent', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderData })
+                        });
+                        const data = await response.json();
+                        if (!response.ok) {
+                            document.getElementById('coupon-error').textContent = data.message || 'Failed to initiate payment';
+                            document.getElementById('coupon-error').style.display = 'block';
+                            btnText.style.display = 'inline';
+                            btnLoader.style.display = 'none';
+                            placeOrderBtn.disabled = false;
+                            return;
+                        }
+
+                        const { clientSecret, bookingId } = data;
+                        const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                            payment_method: { card: cardElement }
+                        });
+
+                        if (error) {
+                            document.getElementById('coupon-error').textContent = error.message;
+                            document.getElementById('coupon-error').style.display = 'block';
+                            btnText.style.display = 'inline';
+                            btnLoader.style.display = 'none';
+                            placeOrderBtn.disabled = false;
+                            return;
+                        }
+
+                        // Confirm order with payment details
+                        const confirmResponse = await fetch('/product/checkout/place-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...orderData,
+                                clientSecret,
+                                bookingId
+                            })
+                        });
+                        const confirmData = await confirmResponse.json();
+                        if (confirmResponse.ok) {
+                            window.location.href = confirmData.redirect;
+                        } else {
+                            document.getElementById('coupon-error').textContent = confirmData.message || 'Failed to confirm order';
+                            document.getElementById('coupon-error').style.display = 'block';
+                            btnText.style.display = 'inline';
+                            btnLoader.style.display = 'none';
+                            placeOrderBtn.disabled = false;
+                        }
+                    } else {
+                        // Non-Stripe payment
+                        const response = await fetch('/product/checkout/place-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(orderData)
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            window.location.href = data.redirect;
+                        } else {
+                            document.getElementById('coupon-error').textContent = data.message || 'Failed to place order';
+                            document.getElementById('coupon-error').style.display = 'block';
+                            btnText.style.display = 'inline';
+                            btnLoader.style.display = 'none';
+                            placeOrderBtn.disabled = false;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error placing order:', error);
+                    document.getElementById('coupon-error').textContent = 'Failed to place order. Please try again.';
+                    document.getElementById('coupon-error').style.display = 'block';
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                    placeOrderBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+<style>
+    #popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        pointer-events: none;
+    }
+    #popup-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #available-coupons-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        max-width: 500px;
+        max-height: 70vh;
+        overflow-y: auto;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        width: 90%;
+    }
+    #available-coupons-popup.show {
+        opacity: 1;
+    }
+    #available-coupons-popup h5 {
+        margin-bottom: 20px;
+        color: #333;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+    #available-coupons-popup ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #available-coupons-popup li {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        background: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.3s;
+    }
+    #available-coupons-popup li:hover {
+        background: #f1f1f1;
+    }
+    #available-coupons-popup .coupon-details {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    #available-coupons-popup .coupon-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    #available-coupons-popup .coupon-code i {
+        color: #6c757d;
+    }
+    #available-coupons-popup .coupon-code span {
+        font-weight: bold;
+        color: #333;
+    }
+    #available-coupons-popup .coupon-save {
+        font-size: 13px;
+        color: #6c757d;
+    }
+    #available-coupons-popup .apply {
+        padding: 8px 15px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s;
+        font-size: 14px;
+        text-decoration: none;
+    }
+    #available-coupons-popup .apply:hover {
+        background: #0056b3;
+    }
+    #available-coupons-popup .close-icon {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 20px;
+        color: #6c757d;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    #available-coupons-popup .close-icon:hover {
+        color: #333;
+    }
+    #card-element {
+        margin-bottom: 20px;
+    }
+    #card-input {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 10px;
+        background: #fff;
+    }
+    .button-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .fa-spinner {
+        margin-left: 5px;
+    }
+</style>
+</html>

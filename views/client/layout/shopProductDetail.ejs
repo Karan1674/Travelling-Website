@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap inner-banner-gray">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Product Details</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="product-outer-wrap product-wrap">
+                <div class="product-inner-wrap">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-sm-6">
+                                <div class="product-thumbnails">
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <% product.images.forEach(image => { %>
+                                            <div class="single-product-item">
+                                                <figure class="feature-image">
+                                                    <img src="<%= image ? '/Uploads/shopGallery/' + image : '/assets/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                                </figure>
+                                                <div class="image-search-icon">
+                                                    <a href="<%= image ? '/Uploads/shopGallery/' + image : '/assets/images/placeholder.jpg' %>" data-lightbox="lightbox-set">
+                                                        <i class="fas fa-search"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <div class="single-product-item">
+                                            <figure class="feature-image">
+                                                <img src="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '/assets/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                            </figure>
+                                            <div class="image-search-icon">
+                                                <a href="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '/assets/images/placeholder.jpg' %>" data-lightbox="lightbox-set">
+                                                    <i class="fas fa-search"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <div class="product-thumb-nav">
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <% product.images.forEach(image => { %>
+                                            <div class="single-product-item">
+                                                <figure class="feature-image">
+                                                    <img src="<%= image ? '/Uploads/shopGallery/' + image : '/assets/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                                </figure>
+                                            </div>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <div class="single-product-item">
+                                            <figure class="feature-image">
+                                                <img src="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '/assets/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                            </figure>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="product-summary">
+                                    <nav aria-label="breadcrumb" class="breadcrumb-content">
+                                        <ul class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                                            <li class="breadcrumb-item"><a href="/products">Shop</a></li>
+                                            <li class="breadcrumb-item active"><a href="/products/<%= product._id %>"><%= product.name %></a></li>
+                                        </ul>
+                                    </nav>
+                                    <h2><%= product.name %></h2>
+                                    <div class="product-price">
+                                        <% if (product.isOnSale && product.discountPrice < product.price) { %>
+                                            <del>$<%= product.price.toFixed(2) %></del>
+                                            <ins>$<%= product.discountPrice.toFixed(2) %></ins>
+                                        <% } else { %>
+                                            <ins>$<%= product.price.toFixed(2) %></ins>
+                                        <% } %>
+                                    </div>
+                                    <form class="cart-item">
+                                        <input type="number" name="quantity" value="1" min="1">
+                                        <button class="button-primary add-to-cart" data-product-id="<%= product._id %>">Add to cart</button>
+                                    </form>
+                                    <div class="product-meta">
+                                        <div class="cat-detail">
+                                            <strong>Categories:</strong>
+                                            <% if (product.categories && product.categories.length > 0) { %>
+                                                <% product.categories.forEach((cat, index) => { %>
+                                                    <a href="/products?category=<%= encodeURIComponent(cat) %>"><%= cat %></a><% if (index < product.categories.length - 1) { %>, <% } %>
+                                                <% }) %>
+                                            <% } else { %>
+                                                None
+                                            <% } %>
+                                        </div>
+                                        <div class="tag-detail">
+                                            <strong>Tags:</strong>
+                                            <% if (product.tags && product.tags.length > 0) { %>
+                                                <% product.tags.forEach((tag, index) => { %>
+                                                    <a href="/products?tag=<%= encodeURIComponent(tag) %>"><%= tag %></a><% if (index < product.tags.length - 1) { %>, <% } %>
+                                                <% }) %>
+                                            <% } else { %>
+                                                None
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="product-desc">
+                                        <p><%- product.shortDescription || 'No description available.' %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-tab-outer">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="tab-container">
+                                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Description</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="add-info-tab" data-toggle="tab" href="#add-info" role="tab" aria-controls="add-info" aria-selected="false">Additional Information</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="review-tab" data-toggle="tab" href="#review" role="tab" aria-controls="review" aria-selected="false">Reviews</a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content" id="myTabContent">
+                                        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                                            <div class="overview-content">
+                                                <p><%- product.description || 'No detailed description available.' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane" id="add-info" role="tabpanel" aria-labelledby="add-info-tab">
+                                            <div class="accordion" id="accordion">
+                                                <table>
+                                                    <tr>
+                                                        <th>Weight</th>
+                                                        <td><%= product.additionalInfo?.weight || 'N/A' %></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Dimensions</th>
+                                                        <td><%= product.additionalInfo?.dimensions || 'N/A' %></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane" id="review" role="tabpanel" aria-labelledby="review-tab">
+                                            <div class="comment-area">
+                                                <h3 class="comment-title"><%= reviews.length %> Reviews</h3>
+                                                <div class="comment-area-inner">
+                                                    <ol>
+                                                        <% if (reviews && reviews.length > 0) { %>
+                                                            <% reviews.forEach(review => { %>
+                                                                <li>
+                                                                    <div class="comment-content" style="width: 100%; float: none;">
+                                                                        <div class="comment-header">
+                                                                            <h5 class="author-name"><%= review.name %></h5>
+                                                                            <span class="post-on"><%= review.date.toDateString() %></span>
+                                                                            <div class="rating-wrap">
+                                                                                <div class="rating-start" title="Rated <%= review.rating %> out of 5">
+                                                                                    <span style="width: <%= review.rating * 20 %>%"></span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <p><%= review.comment %></p>
+                                                                        <% if (review.replies && review.replies.length > 0) { %>
+                                                                            <% review.replies.forEach(reply => { %>
+                                                                                <div class="reply-content">
+                                                                                    <h6 class="reply-name"><span><%= reply.name %> </span> <span class="post-on reply-date"><%= reply.date.toDateString() %></span></h6>
+                                                                                   
+                                                                                    <p class="reply-comment"><%= reply.comment %></p>
+                                                                                </div>
+                                                                            <% }) %>
+                                                                        <% } %>
+                                                                        <a href="#" class="reply" data-review-id="<%= review._id %>"><i class="fas fa-reply"></i> Reply</a>
+                                                                        <div class="reply-form" style="display: none; margin-top: 20px;">
+                                                                            <form action="/products/review/<%= review._id %>/reply" method="POST">
+                                                                                <div class="d-flex justify-content-between gap-3">
+                                                                                    <p class="d-flex flex-column" style="flex-basis: 45%;">
+                                                                                        <label>Name *</label>
+                                                                                        <input type="text" name="name" required>
+                                                                                    </p>
+                                                                                    <p class="d-flex flex-column" style="flex-basis: 45%;">
+                                                                                        <label>Email *</label>
+                                                                                        <input type="email" name="email" required>
+                                                                                    </p>
+                                                                                </div>
+                                                                                <p>
+                                                                                    <label>Your reply *</label>
+                                                                                    <textarea rows="4" name="comment" required></textarea>
+                                                                                </p>
+                                                                                <p>
+                                                                                    <input type="submit" value="Submit Reply">
+                                                                                </p>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            <% }) %>
+                                                        <% } else { %>
+                                                            <p>No reviews yet.</p>
+                                                        <% } %>
+                                                    </ol>
+                                                </div>
+                                                <div class="comment-form-wrap">
+                                                    <h3 class="comment-title">Leave a Review</h3>
+                                                    <p>Your email address will not be published. Required fields are marked *</p>
+                                                    <form class="comment-form" action="/products/<%= product._id %>/review" method="POST">
+                                                        <div class="rate-wrap">
+                                                            <label>Your rating *</label>
+                                                            <div class="star-rating">
+                                                                <span class="star" data-value="1">&#9733;</span>
+                                                                <span class="star" data-value="2">&#9733;</span>
+                                                                <span class="star" data-value="3">&#9733;</span>
+                                                                <span class="star" data-value="4">&#9733;</span>
+                                                                <span class="star" data-value="5">&#9733;</span>
+                                                                <input type="hidden" name="rating" id="rating" required>
+                                                            </div>
+                                                        </div>
+                                                        <p>
+                                                            <label>Your review *</label>
+                                                            <textarea rows="6" name="comment" required></textarea>
+                                                        </p>
+                                                        <p>
+                                                            <label>Name *</label>
+                                                            <input type="text" name="name" required>
+                                                        </p>
+                                                        <p>
+                                                            <label>Email *</label>
+                                                            <input type="email" name="email" required>
+                                                        </p>
+                                                        <p>
+                                                            <input type="submit" name="submit" value="Submit">
+                                                        </p>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="related-product">
+                                    <div class="related-title">
+                                        <h3>Related Products</h3>
+                                    </div>
+                                    <div class="row">
+                                        <% if (relatedProducts && relatedProducts.length > 0) { %>
+                                            <% relatedProducts.forEach(related => { %>
+                                                <div class="col-sm-6">
+                                                    <div class="product-item text-center">
+                                                        <figure class="product-image">
+                                                            <a href="/products/<%= related._id %>">
+                                                                <img src="<%= related.featureImage ? '/Uploads/shopGallery/' + related.featureImage : '/assets/images/placeholder.jpg' %>" alt="<%= related.name %>">
+                                                            </a>
+                                                            <% if (related.isOnSale) { %>
+                                                                <span class="onsale">Sale</span>
+                                                            <% } %>
+                                                        </figure>
+                                                        <div class="product-content">
+                                                            <h3><%= related.name %></h3>
+                                                            <div class="product-price">
+                                                                <% if (related.isOnSale && related.discountPrice < related.price) { %>
+                                                                    <del>$<%= related.price.toFixed(2) %></del>
+                                                                    <ins>$<%= related.discountPrice.toFixed(2) %></ins>
+                                                                <% } else { %>
+                                                                    <ins>$<%= related.price.toFixed(2) %></ins>
+                                                                <% } %>
+                                                            </div>
+                                                            <a href="#" class="button-primary add-to-cart" data-product-id="<%= related._id %>">Add to cart</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <p>No related products found.</p>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="sidebar">
+                                    <aside class="widget search_widget">
+                                        <form action="/products">
+                                            <input type="text" name="search" placeholder="Search.." value="<%= search || '' %>">
+                                            <button class="search-btn">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                            <input type="hidden" name="orderby" value="<%= orderby || 'menu_order' %>">
+                                            <input type="hidden" name="minPrice" value="<%= minPrice || '' %>">
+                                            <input type="hidden" name="maxPrice" value="<%= maxPrice || '' %>">
+                                            <input type="hidden" name="page" value="1">
+                                            <input type="hidden" name="category" value="<%= category || '' %>">
+                                        </form>
+                                    </aside>
+                                    <aside class="widget widget_category_product_thumb colum-3">
+                                        <ul>
+                                            <% categories.forEach(category => { %>
+                                                <li>
+                                                    <figure class="product-thumb">
+                                                        <a href="/products?category=<%= encodeURIComponent(category) %>&orderby=<%= orderby || 'menu_order' %>&minPrice=<%= minPrice || '' %>&maxPrice=<%= maxPrice || '' %>&search=<%= search || '' %>">
+                                                            <img src="/assets/images/product8.jpg" alt="<%= category %>">
+                                                        </a>
+                                                    </figure>
+                                                    <div class="product-content">
+                                                        <h5><%= category %></h5>
+                                                        <span class="count">(<%= categoryCounts[category] || 0 %>)</span>
+                                                    </div>
+                                                </li>
+                                            <% }) %>
+                                        </ul>
+                                    </aside>
+                                    <aside class="widget widget_product_post widget-product-thumb">
+                                        <h3 class="widget-title">Recent Product</h3>
+                                        <ul>
+                                            <% recentProducts.forEach(product => { %>
+                                                <li>
+                                                    <figure class="product-thumb">
+                                                        <a href="/products/<%= product._id %>"><img src="<%= product.featureImage ? '/Uploads/shopGallery/' + product.featureImage : '/assets/images/placeholder.jpg' %>" alt="<%= product.name %>"></a>
+                                                    </figure>
+                                                    <div class="product-content">
+                                                        <h5><a href="/products/<%= product._id %>"><%= product.name %></a></h5>
+                                                        <div class="entry-meta">
+                                                            <span class="byline"><a href="#">Travele</a></span>
+                                                            <span class="posted-on"><a href="#"><%= product.createdAt.toDateString() %></a></span>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            <% }) %>
+                                        </ul>
+                                    </aside>
+                                    <aside class="widget widget_gallery">
+                                        <h3 class="widget-title">Product Gallery</h3>
+                                        <div class="gallery gallery-colum-3">
+                                            <% galleryImages.forEach(image => { %>
+                                                <figure class="gallery-item">
+                                                    <a href="<%= image ? '/Uploads/shopGallery/' + image : '/assets/images/placeholder.jpg' %>"><img src="<%= image ? '/Uploads/shopGallery/' + image : '/assets/images/placeholder.jpg' %>" alt=""></a>
+                                                </figure>
+                                            <% }) %>
+                                        </div>
+                                    </aside>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../../shared/partials/toaster') %>
+        <%- include('../partials/Footer') %>
+    </div>
+    <%- include('../partials/Script') %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Star Rating System for Input
+            const stars = document.querySelectorAll('.star-rating .star');
+            const ratingInput = document.querySelector('#rating');
+
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const rating = star.getAttribute('data-value');
+                    ratingInput.value = rating;
+                    stars.forEach(s => {
+                        s.classList.remove('selected');
+                        if (s.getAttribute('data-value') <= rating) {
+                            s.classList.add('selected');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseover', () => {
+                    const rating = star.getAttribute('data-value');
+                    stars.forEach(s => {
+                        s.classList.remove('hover');
+                        if (s.getAttribute('data-value') <= rating) {
+                            s.classList.add('hover');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', () => {
+                    stars.forEach(s => s.classList.remove('hover'));
+                });
+            });
+
+            // Add to Cart
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const productId = button.dataset.productId;
+                    const quantity = button.closest('form')?.querySelector('input[name="quantity"]')?.value || 1;
+                    try {
+                        const response = await fetch('/product/cart/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productId, quantity: parseInt(quantity) })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                          window.location.reload()
+                        } else {
+                            console.error(data.message || 'Error adding to cart');
+                        }
+                    } catch (error) {
+                        console.error('Error adding to cart');
+                    }
+                });
+            });
+
+            // Reply to Review
+            document.querySelectorAll('.reply').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const replyForm = button.nextElementSibling;
+                    replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                });
+            });
+        });
+    </script>
+    <style>
+        /* Star Rating for Input Form */
+        .star-rating {
+            display: inline-block;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .star-rating .star {
+            color: #ccc;
+            margin-right: 5px;
+        }
+        .star-rating .star.selected,
+        .star-rating .star.hover {
+            color: #f5c518;
+        }
+
+        /* Star Rating for Displaying Reviews */
+        .rating-wrap {
+            display: block;
+        }
+        .rating-start {
+            display: inline-block;
+            position: relative;
+            font-size: 15px;
+            width: 85px;
+            height: 15px;
+        }
+        .rating-start::before {
+            content: "\f005 \f005 \f005 \f005 \f005";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #ccd6df;
+            display: block;
+            white-space: nowrap;
+        }
+        .rating-start span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .rating-start span::before {
+            content: "\f005 \f005 \f005 \f005 \f005";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #F56960;
+            display: block;
+        }
+
+        /* Reply Styling */
+        .reply-content {
+            margin-left: 30px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-left: 3px solid #ccc;
+            margin-top: 10px;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .reply-name {
+            color: #555;
+            font-weight: 600;
+        }
+        .reply-date {
+            font-size: 0.85em;
+            color: #777;
+        }
+        .reply-comment {
+            color: #333;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title">Order Confirmation</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <div class="step-section cart-section">
+                <div class="container">
+                
+                    <div class="confirmation-outer">
+                        <div class="success-notify">
+                            <div class="success-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="success-content">
+                                <h3>PAYMENT CONFIRMED</h3>
+                                <p>Thank you, your payment has been successful and your order is now confirmed. A confirmation email has been sent to <%= booking && booking.userDetails && booking.userDetails.email ? booking.userDetails.email : 'your email' %>.</p>
+                            </div>
+                        </div>
+                        <div class="confirmation-inner">
+                            <div class="row">
+                                <div class="col-lg-8 right-sidebar">
+                                    <div class="confirmation-details">
+                                        <h3>ORDER DETAILS</h3>
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Order ID:</td>
+                                                    <td><%= booking && booking._id ? booking._id : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>First Name:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.firstName ? booking.userDetails.firstName : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Last Name:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.lastName ? booking.userDetails.lastName : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Email:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.email ? booking.userDetails.email : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Phone:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.phone ? booking.userDetails.phone : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Country:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.country ? booking.userDetails.country : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Postcode:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.postcode ? booking.userDetails.postcode : 'N/A' %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Address:</td>
+                                                    <td>
+                                                        <%= booking && booking.userDetails && booking.userDetails.streetAddress ? booking.userDetails.streetAddress : '' %>
+                                                        <%= booking && booking.userDetails && booking.userDetails.streetAddressOptional ? ', ' + booking.userDetails.streetAddressOptional : '' %>
+                                                        <%= booking && booking.userDetails && booking.userDetails.city ? ', ' + booking.userDetails.city : '' %>
+                                                        <%= booking && booking.userDetails && booking.userDetails.province ? ', ' + booking.userDetails.province : '' %>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Notes:</td>
+                                                    <td><%= booking && booking.userDetails && booking.userDetails.notes ? booking.userDetails.notes : 'None' %></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="details payment-details">
+                                            <h3>PAYMENT</h3>
+                                            <div class="details-desc">
+                                                <% if (booking && booking.payment && booking.payment.paymentStatus) { %>
+                                                    <p>
+                                                        Payment <%= booking.payment.paymentStatus === 'succeeded' ? 'successful' : booking.payment.paymentStatus === 'failed' ? 'failed' : booking.payment.paymentStatus %>
+                                                        <%= booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentMethod === 'stripe' ? 'via ' + (paymentDetails && paymentDetails.cardBrand ? paymentDetails.cardBrand : 'card') + ' ending in ' + (paymentDetails && paymentDetails.last4 ? paymentDetails.last4 : 'N/A') : booking.payment.paymentMethod === 'bank' ? 'via Direct Bank Transfer' : booking.payment.paymentMethod === 'check' ? 'via Check Payment' : booking.payment.paymentMethod === 'cod' ? 'via Cash on Delivery' : '' %>
+                                                    </p>
+                                                <% } else { %>
+                                                    <p>Payment status unknown</p>
+                                                <% } %>
+                                            </div>
+                                            <div class="details-desc">
+                                                <% if (booking && booking.payment && booking.payment.paymentType) { %>
+                                                    <p>
+                                                        Payment <%= booking.payment.paymentType === 'deposit' ? 'deposited successfully' : 'refunded successfully' %>
+                                                    </p>
+                                                <% } else { %>
+                                                    <p>Payment type unknown</p>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="details">
+                                            <h3>VIEW ORDER DETAILS</h3>
+                                            <div class="details-desc">
+                                                <p><a href="/user-booking/<%= booking && booking._id ? booking._id : '#' %>">https://www.travele.com/user-booking/<%= booking && booking._id ? booking._id : 'N/A' %></a></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <aside class="sidebar">
+                                        <div class="widget-bg widget-table-summary">
+                                            <h4 class="bg-title">Summary</h4>
+                                            <table>
+                                                <tbody>
+                                                    <% 
+                                                        let subtotal = 0;
+                                                        let tax = 0;
+                                                        if (booking && booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
+                                                            subtotal = booking.items.reduce((sum, item) => {
+                                                                if (item && item.productId && item.price && item.quantity) {
+                                                                    return sum + item.quantity * item.price;
+                                                                }
+                                                                return sum;
+                                                            }, 0);
+                                                            tax = (subtotal - (booking.discount || 0)) * 0.13;
+                                                            booking.items.forEach(item => { 
+                                                                if (item && item.productId && item.productId.name) { %>
+                                                                    <tr>
+                                                                        <td><strong><%= item.productId.name %></strong></td>
+                                                                        <td class="text-right">
+                                                                            $<%= (item.quantity * item.price).toFixed(2) %>
+                                                                            (x<%= item.quantity %>)
+                                                                        </td>
+                                                                    </tr>
+                                                                <% }
+                                                            });
+                                                        } else { %>
+                                                            <tr>
+                                                                <td colspan="2">No items in order</td>
+                                                            </tr>
+                                                        <% } %>
+                                                    <tr>
+                                                        <td><strong>Tax (13%)</strong></td>
+                                                        <td class="text-right">$<%= tax.toFixed(2) %></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Discount</strong></td>
+                                                        <td class="text-right">$<%= booking && booking.discount ? booking.discount.toFixed(2) : '0.00' %></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Applied Coupon Code</strong></td>
+                                                        <td class="text-right"><%= booking && booking.couponCode ? booking.couponCode : 'None' %></td>
+                                                    </tr>
+                                                    <tr class="total">
+                                                        <td><strong>Total cost</strong></td>
+                                                        <td class="text-right"><strong>$<%= booking && booking.total ? booking.total.toFixed(2) : '0.00' %></strong></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="widget-bg widget-support-wrap">
+                                            <div class="icon">
+                                                <i class="fas fa-phone-volume"></i>
+                                            </div>
+                                            <div class="support-content">
+                                                <h5>HELP AND SUPPORT</h5>
+                                                <a href="tel:+1123488900" class="phone">+11 234 889 00</a>
+                                                <small>Monday to Friday 9.00am - 7.30pm</small>
+                                            </div>
+                                        </div>
+                                    </aside>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../partials/Footer') %>
+    </div>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/Script') %>
+</body>
+</html>
