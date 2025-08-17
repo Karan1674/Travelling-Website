@@ -11,7 +11,7 @@
                 <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
                     <div class="container">
                         <div class="inner-banner-content">
-                            <h1 class="inner-title">My Bookings</h1>
+                            <h1 class="inner-title">My Product Orders</h1>
                         </div>
                     </div>
                 </div>
@@ -22,11 +22,10 @@
             <div class="package-section">
                 <div class="container-xxl px-5 mx-5">
                     <!-- Custom Search Bar -->
-            
-                    <form id="search-form" action="/user-bookings" method="get" style="flex: 1; margin-bottom: 20px;">
+                    <form id="search-form" action="/user-product-bookings" method="get" style="flex: 1; margin-bottom: 20px;">
                         <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                            <input type="text" name="search" id="search-input" placeholder="Search by Booking ID, Package Title, or Payment Status" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
-                            <button type="submit" aria-label="Search packages" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
+                            <input type="text" name="search" id="search-input" placeholder="Search by Booking ID, Product Name, or Payment Status" value="<%= search || '' %>" style="width: 100%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <button type="submit" aria-label="Search orders" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer;">
                                 <i class="fas fa-search" style="color: #007bff;"></i>
                             </button>
                         </div>
@@ -39,7 +38,7 @@
                                         <tr>
                                             <th>S.No</th>
                                             <th>Booking ID</th>
-                                            <th>Package Name</th>
+                                            <th>Product Name</th>
                                             <th>Quantity</th>
                                             <th>Total Cost</th>
                                             <th>Payment Status</th>
@@ -65,32 +64,30 @@
                                                         </td>
                                                     <% } %>
                                                     <td>
-                                                        <a href="/package-detail/<%= item.packageId._id %>" class="package-name">
-                                                            <%= item.packageId.title %>
+                                                        <a href="/products/<%= item.productId._id %>" class="package-name">
+                                                            <%= item.productId.name %>
                                                         </a>
                                                     </td>
                                                     <td><%= item.quantity %></td>
                                                     <% if (itemIndex === 0) { %>
                                                         <td rowspan="<%= booking.items.length %>">$<%= booking.total.toFixed(2) %></td>
-                                                        <td rowspan="<%= booking.items.length %>"><%= booking.payment.paymentStatus %></td>
+                                                        <td rowspan="<%= booking.items.length %>"><%= booking.payment.paymentStatus.charAt(0).toUpperCase() + booking.payment.paymentStatus.slice(1) %></td>
                                                         <td rowspan="<%= booking.items.length %>"><%= new Date(booking.createdAt).toLocaleDateString() %></td>
                                                         <% if (booking.status === 'approved') { %>
                                                             <td rowspan="<%= booking.items.length %>">
-                                                              <span class="badge badge-success">Approve</span>
+                                                                <span class="badge badge-success">Approved</span>
                                                             </td>
-                                                          <% } else if(booking.status === 'rejected'){ %>
+                                                        <% } else if (booking.status === 'rejected') { %>
                                                             <td rowspan="<%= booking.items.length %>">
-                                                                <span class="badge badge-danger">Reject</span>
-                                                              </td>
-                                                            <% } else{ %>
-                                                                <td rowspan="<%= booking.items.length %>">
-                                                                    <span class="badge badge-primary">Pending</span>
-                                                                  </td>
-
-                                                            <%}%>
-                                                          
+                                                                <span class="badge badge-danger">Rejected</span>
+                                                            </td>
+                                                        <% } else { %>
+                                                            <td rowspan="<%= booking.items.length %>">
+                                                                <span class="badge badge-primary">Pending</span>
+                                                            </td>
+                                                        <% } %>
                                                         <td rowspan="<%= booking.items.length %>">
-                                                            <a href="/user-booking/<%= booking._id %>" class=" text-white px-2 py-1" style="background-color: #0791BE;">See Details</a>
+                                                            <a href="/productBooking-detail/<%= booking._id %>" class="text-white px-2 py-1" style="background-color: #0791BE;">See Details</a>
                                                         </td>
                                                     <% } %>
                                                 </tr>
@@ -102,7 +99,7 @@
                             <!-- Enhanced Pagination -->
                             <div class="pagination">
                                 <% if (currentPage > 1) { %>
-                                    <a href="/user-bookings?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-prev">
+                                    <a href="/user-product-bookings?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-prev">
                                         <i class="fas fa-chevron-left"></i>
                                     </a>
                                 <% } else { %>
@@ -119,12 +116,12 @@
                                     }
                                     for (let i = startPage; i <= endPage; i++) { 
                                 %>
-                                    <a href="/user-bookings?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link <%= i === currentPage ? 'active' : '' %>">
+                                    <a href="/user-product-bookings?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link <%= i === currentPage ? 'active' : '' %>">
                                         <%= i %>
                                     </a>
                                 <% } %>
                                 <% if (currentPage < totalPages) { %>
-                                    <a href="/user-bookings?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-next">
+                                    <a href="/user-product-bookings?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="pagination-link pagination-next">
                                         <i class="fas fa-chevron-right"></i>
                                     </a>
                                 <% } else { %>
@@ -135,8 +132,8 @@
                             </div>
                         <% } else { %>
                             <div class="d-flex flex-column align-items-center">
-                                <span class="text-secondary" style="font-size: 17px;">No bookings found</span>
-                                <a class="mt-2" href="/tour-packages"><button class="button-secondary">Explore Tours</button></a>
+                                <span class="text-secondary" style="font-size: 17px;">No orders found</span>
+                                <a class="mt-2" href="/products"><button class="button-secondary">Shop Products</button></a>
                             </div>
                         <% } %>
                     </div>
@@ -144,20 +141,16 @@
             </div>
             <!-- Bookings html end -->
         </main>
+        <%- include('../../shared/partials/toaster') %>
         <%- include('../partials/Footer.ejs') %>
     </div>
-    <%- include('../../shared/partials/toaster') %>
-
     <!-- JavaScript -->
     <%- include('../partials/Script.ejs') %>
     <style>
-    
-
         .table th, .table td {
             padding: 12px 30px;
             text-align: left;
             vertical-align: middle;
-           
         }
         .table th {
             background-color: #f8f9fa;
@@ -176,7 +169,24 @@
         .package-name:hover {
             text-decoration: underline;
         }
-
+        .badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-primary {
+            background-color: #007bff;
+            color: white;
+        }
         .pagination {
             margin-top: 30px;
             display: flex;
@@ -191,7 +201,6 @@
             color: #007bff;
             background: #fff;
             border: 2px solid #007bff;
-           
             text-decoration: none;
             transition: all 0.3s ease;
             min-width: 44px;
@@ -220,19 +229,29 @@
             border-color: #adb5bd;
             background: #f1f3f5;
             cursor: not-allowed;
-
         }
         .pagination-link.pagination-disabled:hover {
             background: #f1f3f5;
             color: #adb5bd;
             transform: none;
-
         }
         .pagination-link.pagination-prev, .pagination-link.pagination-next {
             padding: 12px 16px;
             font-size: 18px;
         }
-
+        .button-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
     </style>
 </body>
 <script>
@@ -244,17 +263,8 @@
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const query = searchInput.value.trim();
-            window.location.href = `?search=${encodeURIComponent(query)}&page=1`;
+            window.location.href = `/user-product-bookings?search=${encodeURIComponent(query)}&page=1`;
         });
     });
 </script>
 </html>
-
-
-
-
-
-
-
-
-

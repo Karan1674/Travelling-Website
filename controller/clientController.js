@@ -1908,7 +1908,7 @@ export const applyCoupon = async (req, res) => {
 };
 
 // Get All Current User Package Bookings
-export const getUserBookings = async (req, res) => {
+export const getUserPackageBookings = async (req, res) => {
     try {
         const userId = req.id;
         if (!userId) {
@@ -1930,7 +1930,7 @@ export const getUserBookings = async (req, res) => {
 
         // Pagination parameters
         const page = parseInt(req.query.page) || 1;
-        const limit = 3; // Number of bookings per page
+        const limit = 5; // Number of bookings per page
         const skip = (page - 1) * limit;
 
         // Search query
@@ -1991,7 +1991,7 @@ export const getUserBookings = async (req, res) => {
 };
 
 // get Package Booking detail
-export const getBookingDetails = async (req, res) => {
+export const getPackageBookingDetails = async (req, res) => {
     try {
         const userId = req.id;
         if (!userId) {
@@ -2408,7 +2408,7 @@ export const getAppliedCareers = async (req, res) => {
     try {
         const userId = req.id;
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
+        const limit = 5;
         const search = req.query.search || '';
 
         // Validate user
@@ -2740,8 +2740,6 @@ export const createContactEnquiry = async (req, res) => {
     }
 };
 
-
-
 // Get Product Listing Page4
 export const getProducts = async (req, res) => {
     try {
@@ -2930,7 +2928,6 @@ export const getProductDetail = async (req, res) => {
     }
 };
 
-
 // Add Review to Shop Products
 export const addReview = async (req, res) => {
     try {
@@ -3029,8 +3026,6 @@ export const addReply = async (req, res) => {
         res.redirect('/error');
     }
 };
-
-
 
 // Get Cart
 export const getProductCart = async (req, res) => {
@@ -3220,7 +3215,6 @@ export const removeProductCartItem = async (req, res) => {
     }
 };
 
-
 // Get Checkout Page
 export const getProductCheckout = async (req, res) => {
     try {
@@ -3265,7 +3259,7 @@ export const getProductCheckout = async (req, res) => {
     }
 };
 
-
+// Apply coupan to the Shop Products purchase
 export const applyProductCoupon = async (req, res) => {
     try {
         const { couponCode } = req.body;
@@ -3354,7 +3348,6 @@ export const applyProductCoupon = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
-
 
 // Create Payment Intent for Stripe (PayPal option)
 export const createProductPaymentIntent = async (req, res) => {
@@ -3696,7 +3689,7 @@ export const placeProductOrder = async (req, res) => {
                 payment: {
                     paymentMethod,
                     paymentStatus: 'pending',
-                    paymentType: 'deposit'
+                    paymentType: 'notReceived'
                 },
                 status: 'pending',
                 total: expectedTotal,
@@ -3744,9 +3737,6 @@ export const placeProductOrder = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
-
-
-
 
 // Render Product Confirmation Page
 export const renderProductConfirmation = async (req, res) => {
@@ -3828,6 +3818,7 @@ export const renderProductConfirmation = async (req, res) => {
             booking,
             paymentDetails,
             coupon,
+            isShow:true,
             user,
             message: req.session.message || '',
             type: req.session.type || ''
@@ -3836,6 +3827,264 @@ export const renderProductConfirmation = async (req, res) => {
         console.error('Render product confirmation error:', error);
         req.session = req.session || {};
         req.session.message = error.type === 'StripeInvalidRequestError' ? `Payment error: ${error.message}` : `Failed to load order confirmation: ${error.message}`;
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get User Product Bookings 
+export const getUserProductBookings = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            req.session = req.session || {};
+            req.session.message = 'Please log in to view your orders';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No such User Exists in the Database');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        // Pagination and search parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
+        const skip = (page - 1) * limit;
+        const search = req.query.search ? req.query.search.trim() : '';
+
+        let query = { userId };
+        if (search) {
+            const queryConditions = [];
+            
+            // Handle _id search if it's a valid ObjectId
+            if (mongoose.isValidObjectId(search)) {
+                queryConditions.push({ _id: new mongoose.Types.ObjectId(search) });
+            }
+
+            // Search payment.paymentStatus
+            queryConditions.push({ 'payment.paymentStatus': { $regex: search, $options: 'i' } });
+
+            // Search product names
+            const matchingProductIds = await productSchema
+                .find({ name: { $regex: search, $options: 'i' } })
+                .distinct('_id');
+            if (matchingProductIds.length > 0) {
+                queryConditions.push({ 'items.productId': { $in: matchingProductIds } });
+            }
+
+            if (queryConditions.length > 0) {
+                query.$or = queryConditions;
+            }
+        }
+
+        // Fetch bookings with pagination
+        const bookings = await productBookingSchema
+            .find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('items.productId')
+            .lean();
+
+        // Count total bookings for pagination
+        const totalBookings = await productBookingSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalBookings / limit);
+
+        req.session = req.session || {};
+        req.session.message = bookings.length > 0 ? 'Your orders are listed below' : 'No orders found';
+        req.session.type = bookings.length > 0 ? 'success' : 'info';
+
+        res.render('client/layout/userProductBookings', {
+            bookings,
+            user,
+            currentPage: page,
+            totalPages,
+            totalBookings,
+            search,
+            limit,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+    } catch (error) {
+        console.error('Get user product bookings error:', error);
+        req.session = req.session || {};
+        req.session.message = 'Failed to load your orders';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Render Product Booking Detail Page
+export const renderProductBookingDetails = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            req.session = req.session || {};
+            req.session.message = 'Please log in to view order confirmation';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No such User Exists in the Database');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        const productBookingId = req.params.id
+        // Fetch the latest approved booking for the user
+        const booking = await productBookingSchema
+            .findOne({ userId, _id :productBookingId })
+            .populate('items.productId')
+            .lean();
+
+        if (!booking) {
+            console.log('No order found for user:', userId);
+            req.session = req.session || {};
+            req.session.message = 'No order found';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        // Fetch payment details for Stripe payments
+        let paymentDetails = { paymentMethod: booking.payment.paymentMethod };
+        if (booking.payment.paymentMethod === 'stripe' && booking.payment.stripePaymentIntentId) {
+            try {
+                const paymentIntent = await stripeInstance.paymentIntents.retrieve(booking.payment.stripePaymentIntentId);
+                if (paymentIntent.status === 'succeeded') {
+                    const paymentMethod = await stripeInstance.paymentMethods.retrieve(paymentIntent.payment_method);
+                    paymentDetails = {
+                        cardBrand: paymentMethod.card.brand,
+                        last4: paymentMethod.card.last4
+                    };
+                } else {
+                    console.log('Payment intent not succeeded:', paymentIntent.status);
+                    req.session = req.session || {};
+                    req.session.message = 'Payment not completed: ' + paymentIntent.status;
+                    req.session.type = 'error';
+                    return res.redirect('/error');
+                }
+            } catch (error) {
+                console.error('Error retrieving payment intent:', error);
+                req.session = req.session || {};
+                req.session.message = 'Failed to retrieve payment details';
+                req.session.type = 'error';
+                return res.redirect('/error');
+            }
+        }
+
+        // Fetch coupon details if applied
+        let coupon = null;
+        if (booking.couponCode) {
+            const couponData = await couponSchema.findOne({ code: booking.couponCode }).lean();
+            if (couponData) {
+                coupon = { discount: booking.discount, code: booking.couponCode };
+            }
+        }
+
+
+        res.render('client/layout/shopProductConfirmation', {
+            booking,
+            paymentDetails,
+            coupon,
+            isShow:false,
+            user,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+    } catch (error) {
+        console.error('Render product Detail error:', error);
+        req.session = req.session || {};
+        req.session.message =   `Failed to load order Detail : ${error.message}`;
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Render Common Bookings Page
+export const renderUserBookings = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            req.session = req.session || {};
+            req.session.message = 'Please log in to view your bookings';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No such User Exists in the Database');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        req.session = req.session || {};
+        req.session.message = 'Select a booking type to view your orders';
+        req.session.type = 'info';
+
+        res.render('client/layout/userBookingPage', {
+            user,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+    } catch (error) {
+        console.error('Render user bookings error:', error);
+        req.session = req.session || {};
+        req.session.message = 'Failed to load bookings page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Render Common Carts Page
+export const renderUserCarts = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No user ID in request');
+            req.session = req.session || {};
+            req.session.message = 'Please log in to view your carts';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            console.log('No such User Exists in the Database');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/error');
+        }
+
+        req.session = req.session || {};
+        req.session.message = 'Select a cart type to view your items';
+        req.session.type = 'info';
+
+        res.render('client/layout/userCartsPage', {
+            user,
+            message: req.session.message || '',
+            type: req.session.type || ''
+        });
+    } catch (error) {
+        console.error('Render user carts error:', error);
+        req.session = req.session || {};
+        req.session.message = 'Failed to load carts page';
         req.session.type = 'error';
         res.status(500).redirect('/error');
     }

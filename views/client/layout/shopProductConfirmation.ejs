@@ -18,17 +18,18 @@
             </section>
             <div class="step-section cart-section">
                 <div class="container">
-                
                     <div class="confirmation-outer">
-                        <div class="success-notify">
-                            <div class="success-icon">
-                                <i class="fas fa-check"></i>
+                        <% if (isShow) { %>
+                            <div class="success-notify">
+                                <div class="success-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="success-content">
+                                    <h3>PAYMENT CONFIRMED</h3>
+                                    <p>Thank you, your payment has been successful and your order is now confirmed. A confirmation email has been sent to <%= booking && booking.userDetails && booking.userDetails.email ? booking.userDetails.email : 'your email' %>.</p>
+                                </div>
                             </div>
-                            <div class="success-content">
-                                <h3>PAYMENT CONFIRMED</h3>
-                                <p>Thank you, your payment has been successful and your order is now confirmed. A confirmation email has been sent to <%= booking && booking.userDetails && booking.userDetails.email ? booking.userDetails.email : 'your email' %>.</p>
-                            </div>
-                        </div>
+                        <% } %>
                         <div class="confirmation-inner">
                             <div class="row">
                                 <div class="col-lg-8 right-sidebar">
@@ -81,30 +82,49 @@
                                         </table>
                                         <div class="details payment-details">
                                             <h3>PAYMENT</h3>
-                                            <div class="details-desc">
-                                                <% if (booking && booking.payment && booking.payment.paymentStatus) { %>
-                                                    <p>
-                                                        Payment <%= booking.payment.paymentStatus === 'succeeded' ? 'successful' : booking.payment.paymentStatus === 'failed' ? 'failed' : booking.payment.paymentStatus %>
-                                                        <%= booking.payment.paymentStatus === 'succeeded' && booking.payment.paymentMethod === 'stripe' ? 'via ' + (paymentDetails && paymentDetails.cardBrand ? paymentDetails.cardBrand : 'card') + ' ending in ' + (paymentDetails && paymentDetails.last4 ? paymentDetails.last4 : 'N/A') : booking.payment.paymentMethod === 'bank' ? 'via Direct Bank Transfer' : booking.payment.paymentMethod === 'check' ? 'via Check Payment' : booking.payment.paymentMethod === 'cod' ? 'via Cash on Delivery' : '' %>
-                                                    </p>
+                                            <div class="">
+                                                <table class="table">
+                                                <tbody>
+                                                <% if (booking && booking.payment) { %>
+                                                    <tr>
+                                                    <td>Payment Method:</td> 
+                                                    <td>
+                                                        <% if (booking.payment.paymentMethod === 'stripe') { %>
+                                                            Online Payment <%= paymentDetails && paymentDetails.cardBrand ? 'via ' + paymentDetails.cardBrand : '' %> <%= paymentDetails && paymentDetails.last4 ? '(ending in ' + paymentDetails.last4 + ')' : '' %>
+                                                        <% } else if (booking.payment.paymentMethod === 'bank') { %>
+                                                            Direct Bank Transfer
+                                                        <% } else if (booking.payment.paymentMethod === 'check') { %>
+                                                            Check Payment
+                                                        <% } else if (booking.payment.paymentMethod === 'cod') { %>
+                                                            Cash on Delivery
+                                                        <% } else { %>
+                                                            Unknown Method
+                                                        <% } %>
+                                                        </td>
+                                                    </tr>
+                                                <tr>
+                                                    <td>Payment Status:</td> 
+                                                    <td>
+                                                        <%= booking.payment.paymentStatus === 'succeeded' ? 'Successful' : booking.payment.paymentStatus === 'failed' ? 'Failed' : booking.payment.paymentStatus.charAt(0).toUpperCase() + booking.payment.paymentStatus.slice(1) %>
+                                                    </td>
+                                                </tr>
+                                                    <tr>
+                                                        <td>Payment Type:</td> 
+                                                    <td>
+                                                        <%= booking.payment.paymentType === 'deposit' ? 'Deposit' : booking.payment.paymentType === 'refund' ? 'Refund' : booking.payment.paymentType === 'notReceived' ? 'Not Received' : 'Unknown' %>
+                                                    </td>
+                                                </tr>
                                                 <% } else { %>
-                                                    <p>Payment status unknown</p>
+                                                    <p>Payment information unavailable</p>
                                                 <% } %>
-                                            </div>
-                                            <div class="details-desc">
-                                                <% if (booking && booking.payment && booking.payment.paymentType) { %>
-                                                    <p>
-                                                        Payment <%= booking.payment.paymentType === 'deposit' ? 'deposited successfully' : 'refunded successfully' %>
-                                                    </p>
-                                                <% } else { %>
-                                                    <p>Payment type unknown</p>
-                                                <% } %>
+                                                </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                         <div class="details">
                                             <h3>VIEW ORDER DETAILS</h3>
                                             <div class="details-desc">
-                                                <p><a href="/user-booking/<%= booking && booking._id ? booking._id : '#' %>">https://www.travele.com/user-booking/<%= booking && booking._id ? booking._id : 'N/A' %></a></p>
+                                                <p><a href="/user-booking/<%= booking && booking._id ? booking._id : '#' %>">https://www.travele.com/productBooking-detail/<%= booking && booking._id ? booking._id : 'N/A' %></a></p>
                                             </div>
                                         </div>
                                     </div>

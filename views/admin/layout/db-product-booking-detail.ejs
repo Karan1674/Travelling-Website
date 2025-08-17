@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 30px;">
+                           
+                           <div class="d-flex justify-content-between gap-5">
+                               <h4 style="margin: 0 0 25px; color: #2c3e50; font-size: 1.8rem; font-weight: 600;">Product Booking Details</h4>
+                               <div class="form-group text-right">
+                                   <a href="/product-bookings" class="btn btn-danger">Back to List</a>
+                               </div> 
+
+                           </div>
+                            <!-- Container 1: Basic Information -->
+
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Basic Information</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Booking ID</label>
+                                                <p class="form-control-static"><%= booking._id %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Total Cost</label>
+                                                <p class="form-control-static">$<%= booking.total.toFixed(2) %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Discount</label>
+                                                <p class="form-control-static">$<%= booking.discount.toFixed(2) %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Coupon Code</label>
+                                                <p class="form-control-static"><%= booking.couponCode || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <p class="form-control-static"><%= booking.status.charAt(0).toUpperCase() + booking.status.slice(1) %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Payment Method</label>
+                                                <p class="form-control-static"><%= booking.payment.paymentMethod.charAt(0).toUpperCase() + booking.payment.paymentMethod.slice(1) %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Payment Status</label>
+                                                <p class="form-control-static"><%= booking.payment.paymentStatus.charAt(0).toUpperCase() + booking.payment.paymentStatus.slice(1) %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Payment Type</label>
+                                                <p class="form-control-static"><%= booking.payment.paymentType.charAt(0).toUpperCase() + booking.payment.paymentType.slice(1) %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 2: Items -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Items</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product Name</th>
+                                                    <th>Quantity</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (booking.items && booking.items.length > 0) { %>
+                                                    <% booking.items.forEach(item => { %>
+                                                        <tr>
+                                                            <td style="cursor: pointer; color: #0056b3;" onclick="window.location.href='/product-detail/<%=item.productId._id%>'"><%= item.productId.name %></td>
+                                                            <td><%= item.quantity %></td>
+                                                            <td>$<%= item.price.toFixed(2) %></td>
+                                                        </tr>
+                                                    <% }) %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="3">No items</td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 3: User Details -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">User Details</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>First Name</label>
+                                                <p class="form-control-static"><%= booking.userDetails.firstName %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Last Name</label>
+                                                <p class="form-control-static"><%= booking.userDetails.lastName %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Email</label>
+                                                <p class="form-control-static"><%= booking.userDetails.email %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Phone</label>
+                                                <p class="form-control-static"><%= booking.userDetails.phone %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Country</label>
+                                                <p class="form-control-static"><%= booking.userDetails.country %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Street Address</label>
+                                                <p class="form-control-static"><%= booking.userDetails.streetAddress %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Street Address Optional</label>
+                                                <p class="form-control-static"><%= booking.userDetails.streetAddressOptional || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>City</label>
+                                                <p class="form-control-static"><%= booking.userDetails.city %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Province</label>
+                                                <p class="form-control-static"><%= booking.userDetails.province %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Postcode</label>
+                                                <p class="form-control-static"><%= booking.userDetails.postcode %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label>Notes</label>
+                                                <p class="form-control-static"><%= booking.userDetails.notes || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Container 4: Audit Information -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Audit Information</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Created At</label>
+                                                <p class="form-control-static"><%= new Date(booking.createdAt).toLocaleString() %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Updated At</label>
+                                                <p class="form-control-static"><%= booking.updatedAt ? new Date(booking.updatedAt).toLocaleString() : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Updated By</label>
+                                                <p class="form-control-static"><%= booking.updatedBy ? `${booking.updatedBy.firstName} ${booking.updatedBy.lastName} (${booking.updatedBy.email})` : 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                                <label>Updated By Model</label>
+                                                <p class="form-control-static"><%= booking.updatedByModel || 'N/A' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Edit Status Form -->
+                            <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Edit Status</div>
+                                <div class="card-body">
+                                    <form action="/product-bookings/update/<%= booking._id %>" method="POST">
+                                        <div class="form-group">
+                                            <label for="status">Status</label>
+                                            <select name="status" id="status" class="form-control">
+                                                <option value="pending" <%= booking.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                                <option value="approved" <%= booking.status === 'approved' ? 'selected' : '' %>>Approved</option>
+                                                <option value="rejected" <%= booking.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group text-right">
+                                            <button type="submit" class="btn btn-primary">Update Status</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/script.ejs') %>
+    <style>
+        .form-group { margin-bottom: 1.75rem; }
+        .form-control-static {
+            padding: 0.6rem;
+            font-size: 1rem;
+            color: #2c3e50;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+ 
+    </style>
+</body>
+</html>

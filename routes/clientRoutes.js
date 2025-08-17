@@ -1,5 +1,5 @@
 const express = require('express');
-const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserBookings, getBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers, getTourGuides, getGallery, getContinueReadingPage, getFaqPage, submitQuestion, testimonialPage, renderContactPage, createContactEnquiry, getProducts, getProductDetail, addReview, addReply, addToProductCart, updateProductCart, removeProductCartItem, getProductCart, getProductCheckout, applyProductCoupon, createProductPaymentIntent, placeProductOrder, renderProductConfirmation } = require('../controller/clientController');
+const { destinationPage, tourPackagesPage, signInUserDashboard, packageDetailPage, submitReview, addToWishlist, removeFromWishlist, getWishlist, packageOfferPage, addToPackageCart, updatePackageCart, removeFromPackageCart, getpackageCart, checkoutPackageCart, confirmPackageBooking, createPackagePaymentIntent, bookSinglePackage, createSinglePackagePaymentIntent, confirmSinglePackageBooking, getUserPackageBookings, getPackageBookingDetails, getUserProfile, updateUserProfile, getAboutPage, getServicePage, getAvailableCoupons, applyCoupon, getCareers, getCareerById, applyForCareer, getAppliedCareers, getTourGuides, getGallery, getContinueReadingPage, getFaqPage, submitQuestion, testimonialPage, renderContactPage, createContactEnquiry, getProducts, getProductDetail, addReview, addReply, addToProductCart, updateProductCart, removeProductCartItem, getProductCart, getProductCheckout, applyProductCoupon, createProductPaymentIntent, placeProductOrder, renderProductConfirmation, getUserProductBookings, renderProductBookingDetails, renderUserBookings, renderUserCarts } = require('../controller/clientController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { uploadProfilePic, uploadCareerCv } = require('../middleware/multer');
 
@@ -33,8 +33,8 @@ router.post('/bookPackage/create-payment-intent', isAuthenticated, createSingleP
 router.post('/bookPackage/confirm', isAuthenticated, confirmSinglePackageBooking);
 
 
-router.get('/user-bookings', isAuthenticated, getUserBookings);
-router.get('/user-booking/:bookingId', isAuthenticated, getBookingDetails);
+router.get('/user-package-bookings', isAuthenticated, getUserPackageBookings);
+router.get('/user-booking/:bookingId', isAuthenticated, getPackageBookingDetails);
 
 
 
@@ -84,7 +84,11 @@ router.post('/product/checkout/apply-coupon',isAuthenticated, applyProductCoupon
 router.post('/product/checkout/create-payment-intent',isAuthenticated, createProductPaymentIntent);
 router.post('/product/checkout/place-order',isAuthenticated, placeProductOrder);
 router.get('/order-confirmation/:id', isAuthenticated, renderProductConfirmation);
+router.get('/user-product-bookings', isAuthenticated, getUserProductBookings);
+router.get('/productBooking-detail/:id', isAuthenticated, renderProductBookingDetails);
 
+router.get('/userBookingPage', isAuthenticated, renderUserBookings);
+router.get('/user-carts', isAuthenticated, renderUserCarts);
 
 
 module.exports = router;

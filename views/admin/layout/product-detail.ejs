@@ -101,7 +101,7 @@
                                         <label>Feature Image</label>
                                         <% if (product.featureImage) { %>
                                             <div class="image-container">
-                                                <img src="/uploads/shopGallery/<%= product.featureImage %>" class="image-preview-img" alt="Feature Image">
+                                                <img src="/Uploads/shopGallery/<%= product.featureImage %>" class="image-preview-img" alt="Feature Image">
                                             </div>
                                         <% } else { %>
                                             <p class="form-control-static">No feature image</p>
@@ -112,7 +112,7 @@
                                         <div id="existing-images" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px;">
                                             <% product.images.forEach((image, index) => { %>
                                                 <div class="image-container" data-image="<%= image %>">
-                                                    <img src="/uploads/shopGallery/<%= image %>" class="image-preview-img" alt="Product Image <%= index + 1 %>">
+                                                    <img src="/Uploads/shopGallery/<%= image %>" class="image-preview-img" alt="Product Image <%= index + 1 %>">
                                                 </div>
                                             <% }) %>
                                             <% if (product.images.length === 0) { %>
@@ -164,9 +164,77 @@
                                     </div>
                                 </div>
                             </div>
+                          4
                             <div class="form-group text-right">
                                 <a href="/product-edit/<%= product._id %>" class="btn btn-primary">Edit Product</a>
                                 <a href="/product-list" class="btn btn-danger">Back to List</a>
+                            </div>
+                        </div>
+
+                          <!-- Container 6: Product Booking Details -->
+                          <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                            <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Product Booking Details</div>
+                            <div class="card-body">
+                                <% if (bookings && bookings.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table" style="white-space: nowrap;">
+                                            <thead>
+                                                <tr>
+                                                    <th>S.No</th>
+                                                    <th>Booking ID</th>
+                                                    <th>User Details</th>
+                                                    <!-- <th>Quantity</th> -->
+                                                    <th>Total Cost</th>
+                                                    <!-- <th>Payment Status</th>
+                                                    <th>Booking Date</th> -->
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% bookings.forEach((booking, index) => { %>
+                                                    <% booking.items.forEach((item, itemIndex) => { %>
+                                                        <% if (item.productId._id.toString() === product._id.toString()) { %>
+                                                            <tr>
+                                                                <% if (itemIndex === 0) { %>
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">
+                                                                        <span><%= index + 1 %>.</span>
+                                                                    </td>
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">
+                                                                        <span class="booking-id"><%= booking._id %></span>
+                                                                    </td>
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">
+                                                                        <span><%= booking.userDetails.firstName %> <%= booking.userDetails.lastName %> (<%= booking.userDetails.email %>)</span>
+                                                                    </td>
+                                                                <% } %>
+                                                                <!-- <td><%= item.quantity %></td> -->
+                                                                <% if (itemIndex === 0) { %>
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">$<%= booking.total.toFixed(2) %></td>
+                                                                    <!-- <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>"><%= booking.payment.paymentStatus.charAt(0).toUpperCase() + booking.payment.paymentStatus.slice(1) %></td> -->
+                                                                    <!-- <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>"><%= new Date(booking.createdAt).toLocaleDateString() %></td> -->
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">
+                                                                        <% if (booking.status === 'approved') { %>
+                                                                            <span class="badge badge-success">Approved</span>
+                                                                        <% } else if (booking.status === 'rejected') { %>
+                                                                            <span class="badge badge-danger">Rejected</span>
+                                                                        <% } else { %>
+                                                                            <span class="badge badge-primary">Pending</span>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td rowspan="<%= booking.items.filter(i => i.productId._id.toString() === product._id.toString()).length %>">
+                                                                        <a href="/user-booking/<%= booking._id %>" class="badge badge-info " style="font-size: 15px;"><i class="far fa-edit"></i></a>
+                                                                    </td>
+                                                                <% } %>
+                                                            </tr>
+                                                        <% } %>
+                                                    <% }) %>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <p class="form-control-static text-center">No bookings found for this product</p>
+                                <% } %>
                             </div>
                         </div>
                     </div>
@@ -191,32 +259,7 @@
             color: #2c3e50;
             font-size: 0.95rem;
         }
-        .btn {
-            padding: 0.6rem 1.2rem;
-            font-size: 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
-            border-color: #c82333;
-        }
-        .text-right {
-            text-align: right;
-        }
+     
         .image-container {
             position: relative;
             padding: 15px;
@@ -253,6 +296,7 @@
         .card-body {
             padding: 1.5rem;
         }
+     
     </style>
 </body>
 </html>

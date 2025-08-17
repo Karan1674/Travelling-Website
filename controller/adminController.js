@@ -19,6 +19,7 @@ import GallerySchema from '../models/GallerySchema.js';
 import faqSchema from '../models/faqSchema.js';
 import contactSchema from '../models/contactSchema.js';
 import productSchema from '../models/productSchema.js';
+import productBookingSchema from '../models/productBookingSchema.js';
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -1666,8 +1667,8 @@ export const updateAdminAgentProfile = async (req, res) => {
     }
 };
 
-// Render Booking list page
-export const getBookings = async (req, res) => {
+// Render package Booking list page
+export const getPackageBookings = async (req, res) => {
     try {
         const userId = req.id;
         const isAdmin = req.isAdmin;
@@ -1743,7 +1744,7 @@ export const getBookings = async (req, res) => {
             searchQuery['items.packageId'] = { $in: packageIds };
         } else if (!search) {
             // If no packages and no search term, return no bookings
-            return res.render('admin/layout/db-booking', {
+            return res.render('admin/layout/db-package-booking', {
                 bookings: [],
                 currentPage: 1,
                 totalPages: 1,
@@ -1767,7 +1768,7 @@ export const getBookings = async (req, res) => {
         const totalBookings = await packageBookingSchema.countDocuments(searchQuery);
         const totalPages = Math.ceil(totalBookings / limit) || 1;
 
-        res.render('admin/layout/db-booking', {
+        res.render('admin/layout/db-package-booking', {
             bookings,
             currentPage: page,
             totalPages,
@@ -1787,8 +1788,8 @@ export const getBookings = async (req, res) => {
     }
 };
 
-// Get Bookig Details And Update Booking status Functionality
-export const getEditBooking = async (req, res) => {
+// Get pacakge Bookig Details And Update package Booking status Functionality
+export const getEditPackageBooking = async (req, res) => {
     try {
         const { bookingId } = req.params;
         const userId = req.id;
@@ -1823,7 +1824,7 @@ export const getEditBooking = async (req, res) => {
         if (!booking) {
             req.session.message = 'Booking not found';
             req.session.type = 'error';
-            return res.status(404).render('admin/layout/edit-booking', {
+            return res.status(404).render('admin/layout/edit-package-booking', {
                 booking: null,
                 user: userData,
                 isAdmin,
@@ -1832,7 +1833,7 @@ export const getEditBooking = async (req, res) => {
             });
         }
 
-        res.render('admin/layout/edit-booking', {
+        res.render('admin/layout/edit-package-booking', {
             booking,
             user: userData,
             isAdmin,
@@ -1848,8 +1849,8 @@ export const getEditBooking = async (req, res) => {
     }
 };
 
-// Update Booking  Status
-export const editBooking = async (req, res) => {
+// Update package Booking Status
+export const editPackageBooking = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
@@ -1867,14 +1868,14 @@ export const editBooking = async (req, res) => {
         if (!['approved', 'pending', 'rejected'].includes(status)) {
             req.session.message = 'Invalid status';
             req.session.type = 'error';
-            return res.status(400).redirect('/admin/bookings');
+            return res.status(400).redirect('/package-booking');
         }
 
         const booking = await packageBookingSchema.findById(bookingId);
         if (!booking) {
             req.session.message = 'Booking not found';
             req.session.type = 'error';
-            return res.status(404).redirect('/admin/bookings');
+            return res.status(404).redirect('/package-booking');
         }
 
         booking.status = status;
@@ -1894,7 +1895,7 @@ export const editBooking = async (req, res) => {
                 console.error('Error processing refund:', refundError);
                 req.session.message = 'Error processing refund';
                 req.session.type = 'error';
-                return res.status(500).redirect('/admin/bookings');
+                return res.status(500).redirect('/package-booking');
             }
         }
 
@@ -1902,7 +1903,7 @@ export const editBooking = async (req, res) => {
 
         req.session.message = 'Booking updated successfully';
         req.session.type = 'success';
-        res.redirect('/admin/bookings');
+        res.redirect('/package-booking');
     } catch (error) {
         console.error('Error editing booking:', error);
         req.session = req.session || {};
@@ -1912,8 +1913,8 @@ export const editBooking = async (req, res) => {
     }
 };
 
-// Delete Booking
-export const deleteBooking = async (req, res) => {
+// Delete package Booking
+export const deletePackageBooking = async (req, res) => {
     try {
         const userId = req.id;
         req.session = req.session || {};
@@ -1930,12 +1931,12 @@ export const deleteBooking = async (req, res) => {
         if (!booking) {
             req.session.message = 'Booking not found';
             req.session.type = 'error';
-            return res.status(404).redirect('/admin/bookings');
+            return res.status(404).redirect('/package-booking');
         }
 
         req.session.message = 'Booking deleted successfully';
         req.session.type = 'success';
-        res.redirect('/admin/bookings');
+        res.redirect('/package-booking');
     } catch (error) {
         console.error('Error deleting booking:', error);
         req.session = req.session || {};
@@ -4285,7 +4286,6 @@ export const deleteContactEnquiry = async (req, res) => {
     }
 };
 
-
 // Render the product list page
 export const getProductList = async (req, res) => {
     try {
@@ -4366,8 +4366,7 @@ export const getProductList = async (req, res) => {
     }
 };
 
-
-
+// Render add Product Page
 export const getAddProduct = async (req, res) => {
     try {
         const userId = req.id;
@@ -4403,13 +4402,7 @@ export const getAddProduct = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
-
+// Add product
 export const postAddProduct = async (req, res) => {  
         try {
             const userId = req.id;
@@ -4466,6 +4459,7 @@ export const postAddProduct = async (req, res) => {
         }
 };
 
+// Render Edit Product Page
 export const getEditProduct = async (req, res) => {
     try {
         const userId = req.id;
@@ -4531,7 +4525,7 @@ export const getEditProduct = async (req, res) => {
     }
 };
 
-
+// Edit Product
 export const postEditProduct = async (req, res) => {
     
         try {
@@ -4650,8 +4644,7 @@ export const postEditProduct = async (req, res) => {
         }
 };
 
-
-
+// Delete Product
 export const deleteProduct = async (req, res) => {
     try {
         const userId = req.id;
@@ -4719,10 +4712,7 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-
-
-
-
+// Get Product Detail with Bookings
 export const getProductDetail = async (req, res) => {
     try {
         const userId = req.id;
@@ -4771,8 +4761,21 @@ export const getProductDetail = async (req, res) => {
             return res.redirect('/product-list');
         }
 
+        // Fetch bookings for this product
+        const bookingQuery = {
+            'items.productId': product._id
+        };
+
+        const bookings = await productBookingSchema
+            .find(bookingQuery)
+            .populate('items.productId')
+            .populate('userId', 'firstName lastName email')
+            .sort({ createdAt: -1 })
+            .lean();
+
         res.render('admin/layout/product-detail', {
             product,
+            bookings,
             user: userData,
             isAdmin,
             message: req.session?.message || null,
@@ -4785,5 +4788,344 @@ export const getProductDetail = async (req, res) => {
         req.session.message = 'Error loading product';
         req.session.type = 'error';
         res.redirect('/error');
+    }
+};
+
+// Get Product Bookings (Admin and Agent)
+export const getProductBookings = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/');
+        }
+
+        let userData;
+        if (isAdmin) {
+            userData = await adminModel.findById(userId);
+        } else {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            console.log("User not found");
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 3;
+        const search = req.query.search || '';
+        const statusFilter = req.query.statusFilter || 'all';
+
+        const searchQuery = {};
+        if (search) {
+            const matchingProductIds = await productSchema.find({
+                name: { $regex: search, $options: 'i' }
+            }).distinct('_id');
+
+            searchQuery.$or = [
+                { 'items.productId': { $in: matchingProductIds } },
+                { status: { $regex: search, $options: 'i' } }
+            ].filter(condition => condition !== null);
+        }
+
+        if (statusFilter !== 'all') {
+            searchQuery.status = statusFilter;
+        }
+
+        // Determine product IDs based on user role
+        let productIds = [];
+        if (isAdmin) {
+            // Admin sees their own products and their agents' products
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            productIds = await productSchema.find({
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            }).distinct('_id');
+        } else {
+            // Agent sees their own products and their admin's products
+            const adminId = userData.admin;
+            productIds = await productSchema.find({
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: adminId, createdByModel: 'Admin' }
+                ]
+            }).distinct('_id');
+        }
+
+        // Only add productId filter if products exist
+        if (productIds.length > 0) {
+            searchQuery['items.productId'] = { $in: productIds };
+        } else if (!search) {
+            // If no products and no search term, return no bookings
+            return res.render('admin/layout/db-product-booking', {
+                bookings: [],
+                currentPage: 1,
+                totalPages: 1,
+                user: userData,
+                isAdmin,
+                search,
+                statusFilter,
+                message: 'No products found for this user',
+                type: 'info'
+            });
+        }
+
+        const bookings = await productBookingSchema.find(searchQuery)
+            .populate('userId', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
+            .populate('items.productId', 'name')
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const totalBookings = await productBookingSchema.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalBookings / limit) || 1;
+
+        res.render('admin/layout/db-product-booking', {
+            bookings,
+            currentPage: page,
+            totalPages,
+            user: userData,
+            isAdmin,
+            search,
+            statusFilter,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });4
+    } catch (error) {
+        console.error('Error fetching product bookings:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error fetching product bookings';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get Bookings Dashboard
+export const getBookingsDashboard = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            console.log("No userId Available");
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData;
+        if (isAdmin) {
+            userData = await adminModel.findById(userId);
+        } else {
+            userData = await agentModel.findById(userId);
+        }
+
+        if (!userData) {
+            console.log("User not found");
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        res.render('admin/layout/db-bookings-dashboard', {
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading bookings dashboard:', error);
+        req.session = req.session || {};
+        req.session.message = 'Error loading bookings dashboard';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get Product Booking Detail
+export const getProductBookingDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const bookingId = req.params.id;
+        const booking = await productBookingSchema.findById(bookingId)
+            .populate('items.productId', 'name price')
+            .populate('userId', 'firstName lastName email')
+            .populate('updatedBy', 'firstName lastName email')
+            .lean();
+
+        if (!booking) {
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.redirect('/admin/product-bookings');
+        }
+
+    
+        res.render('admin/layout/db-product-booking-detail', {
+            booking,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error fetching product booking detail:', error);
+        req.session.message = 'Error fetching booking detail';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update Product Booking Status (with Refund if Rejected)
+export const updateProductBookingStatus = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const bookingId = req.params.id;
+        const { status } = req.body;
+
+        const booking = await productBookingSchema.findById(bookingId);
+
+        if (!booking) {
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.redirect('/product-bookings');
+        }
+
+        
+
+        // Handle refund if status changes to 'rejected' and payment is Stripe
+        if (status === 'rejected' && booking.payment.paymentMethod === 'stripe' && booking.payment.stripePaymentIntentId && booking.payment.paymentStatus === 'succeeded') {
+            try {
+                const refund = await stripeInstance.refunds.create({
+                    payment_intent: booking.payment.stripePaymentIntentId,
+                    amount: Math.round(booking.total * 100) // Refund full amount in cents
+                });
+                if (refund.status === 'succeeded') {
+                    booking.payment.paymentStatus = 'pending';
+                    booking.payment.paymentType = 'refund';
+                } else {
+                    throw new Error('Refund failed');
+                }
+            } catch (error) {
+                console.error('Refund error:', error);
+                req.session.message = 'Error initiating refund';
+                req.session.type = 'error';
+                return res.redirect('/product-bookings/detail/' + bookingId);
+            }
+        }
+
+        // Update status and updatedBy
+        booking.status = status;
+        booking.updatedBy = userId;
+        booking.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        booking.updatedAt = new Date();
+
+       await booking.save();
+
+        req.session.message = 'Booking status updated successfully';
+        req.session.type = 'success';
+        res.redirect('/product-bookings/detail/' + bookingId);
+    } catch (error) {
+        console.error('Error updating product booking status:', error);
+        req.session.message = 'Error updating booking status';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Delete Product Booking
+export const deleteProductBooking = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const bookingId = req.params.id;
+        const booking = await productBookingSchema.findById(bookingId);
+
+        if (!booking) {
+            req.session.message = 'Booking not found';
+            req.session.type = 'error';
+            return res.redirect('/product-bookings');
+        }
+
+        // Check if booking status is 'rejected'
+        if (booking.status !== 'rejected') {
+            req.session.message = 'Only rejected bookings can be deleted';
+            req.session.type = 'error';
+            return res.redirect('/product-bookings');
+        }
+
+        // Delete the booking1
+        await productBookingSchema.deleteOne({ _id: bookingId });
+
+        req.session.message = 'Booking deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/product-bookings');
+    } catch (error) {
+        console.error('Error deleting product booking:', error);
+        req.session.message = 'Error deleting booking';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
     }
 };

@@ -1,5 +1,5 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getBookings, getEditBooking, editBooking, deleteBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry, getContactEnquiries, updateContactEnquiryStatus, deleteContactEnquiry, getProductList, getAddProduct, postAddProduct, getEditProduct, postEditProduct, deleteProduct, getProductDetail } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getPackageBookings, getEditPackageBooking, editPackageBooking, deletePackageBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry, getContactEnquiries, updateContactEnquiryStatus, deleteContactEnquiry, getProductList, getAddProduct, postAddProduct, getEditProduct, postEditProduct, deleteProduct, getProductDetail, getProductBookings, getBookingsDashboard, getProductBookingDetail, updateProductBookingStatus, deleteProductBooking } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
 const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadMediaGalleryImage, uploadShopImages } = require('../middleware/multer');
@@ -44,10 +44,10 @@ router.get('/admin-agent-profile',isAuthenticated, isAdminCheck, getAdminAgentPr
 router.post('/admin-agent-profile/update',isAuthenticated,isAdminCheck, uploadProfilePic.single('profilePic'), updateAdminAgentProfile);
 
 
-router.get('/admin/bookings', isAuthenticated, isAdminCheck, getBookings);
-router.get('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, getEditBooking);
-router.post('/admin/bookings/edit/:bookingId', isAuthenticated, isAdminCheck, editBooking);
-router.get('/admin/bookings/delete/:bookingId', isAuthenticated, isAdminCheck,deleteBooking);
+router.get('/package-booking', isAuthenticated, isAdminCheck, getPackageBookings);
+router.get('/package-booking/edit/:bookingId', isAuthenticated, isAdminCheck, getEditPackageBooking);
+router.post('/package-booking/edit/:bookingId', isAuthenticated, isAdminCheck, editPackageBooking);
+router.get('/package-booking/delete/:bookingId', isAuthenticated, isAdminCheck,deletePackageBooking);
 
 
 
@@ -109,6 +109,14 @@ router.get('/product-edit/:id', isAuthenticated, isAdminCheck, getEditProduct);
 router.post('/product-edit/:id', isAuthenticated, isAdminCheck, uploadShopImages.array('images'), postEditProduct);
 router.get('/delete-product/:id', isAuthenticated, isAdminCheck, deleteProduct);
 router.get('/product-detail/:id', isAuthenticated, isAdminCheck, getProductDetail);
+
+router.get('/db-bookings', isAuthenticated, isAdminCheck, getBookingsDashboard);
+
+router.get('/product-bookings', isAuthenticated, isAdminCheck, getProductBookings);
+router.get('/product-bookings/detail/:id', isAuthenticated, isAdminCheck, getProductBookingDetail);
+router.post('/product-bookings/update/:id', isAuthenticated, isAdminCheck, updateProductBookingStatus);
+router.get('/product-bookings/delete/:id',isAuthenticated, isAdminCheck, deleteProductBooking);
+
 
 
 module.exports = router;

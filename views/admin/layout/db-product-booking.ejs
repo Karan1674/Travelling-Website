@@ -3,21 +3,18 @@
 <%- include('../partials/Header') %>
 <body>
     <div id="container-wrapper">
-        <div id="dashboard" class="dashboard-container">
+        <div id="dashboard">
             <%- include('../partials/Navbar') %>
             <%- include('../partials/Sidebar') %>
-            <div class="db-info-wrap db-booking">
+            <div class="db-info-wrap db-product-booking">
                 <div class="dashboard-box table-opp-color-box">
-                    <h4>Recent Bookings</h4>
-                    <p>Manage bookings and enquiries for travel packages</p>
+                    <h4>Recent Product Bookings</h4>
+                    <p>Manage bookings and enquiries for products</p>
                     <!-- Search Form -->
-                    <div  style="margin-bottom: 20px;">
-              
-
-                        <form id="search-form" action="/admin/bookings" method="get" style="flex: 1; margin-right: 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <form id="search-form" action="/product-bookings" method="get" style="flex: 1; margin-right: 20px;">
                             <div class="form-group" style="display: flex; align-items: center; position: relative;">
-                                <input type="text" name="search" id="search-input" placeholder="Search by package name or status" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
-                                       
+                                <input type="text" name="search" id="search-input" placeholder="Search by product name or status" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
                                 <select name="statusFilter" id="status-filter" style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All</option>
                                     <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pending</option>
@@ -31,16 +28,15 @@
                         </form>
                     </div>
                     <div class="table-responsive">
-                        <table class="table ">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>User</th>
                                     <th>Email</th>
                                     <th>Date</th>
-                                    <!-- <th>Destination</th> -->
                                     <th>Booking ID</th>
                                     <th>Status</th>
-                                    <th>People</th>
+                                    <th>Quantity</th>
                                     <th>Updated By</th>
                                     <th>Action</th>
                                 </tr>
@@ -49,24 +45,16 @@
                                 <% if (bookings && bookings.length > 0) { %>
                                     <% bookings.forEach(booking => { %>
                                         <tr>
-                                            <td>
-                                              
-                                                    <span class="list-img"><img src="<%= user.profilePic ? '/Uploads/profiles/' + user.profilePic : '/assets/images/favicon.png' %>" alt=""></span>
-                                               
+                                            <td style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="list-img"><img src="<%= user.profilePic ? '/Uploads/profiles/' + user.profilePic : '' %>" alt=""></span>
                                                 <span class="list-enq-name">
                                                     <%= booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown User' %>
                                                 </span>
                                             </td>
-  <td>
-                                            
-                                                    <%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %>
-                                            
+                                            <td>
+                                                <%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %>
                                             </td>
-
                                             <td><%= booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></td>
-                                            <!-- <td>
-                                                <%= booking.items && booking.items.length > 0 && booking.items[0].packageId && booking.items[0].packageId.title ? booking.items[0].packageId.title : 'Unknown Destination' %>
-                                            </td> -->
                                             <td><%= booking._id ? booking._id : 'N/A' %></td>
                                             <td>
                                                 <% if (booking.status === 'approved') { %>
@@ -79,27 +67,23 @@
                                                     <span class="badge badge-secondary">Unknown</span>
                                                 <% } %>
                                             </td>
-                                          
                                             <td>
                                                 <span class="badge badge-success">
                                                     <%= booking.items ? booking.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0 %>
                                                 </span>
                                             </td>
                                             <td><%= booking.updatedBy ? `${booking.updatedBy.firstName} ${booking.updatedBy.lastName}` : '' %></td>
-
                                             <td>
-                                                <a href="/admin/bookings/edit/<%= booking._id %>" class="badge badge-success text-white"><i class="far fa-edit"></i></a>
-                                                <!-- <% if( booking && booking.status === 'rejected') { %>
-                                                    <a href="/admin/bookings/delete/<%= booking._id %>" data-itemId="<%= booking._id %>" class="delete-btn badge badge-danger text-white"><i class="far fa-trash-alt"></i></a>
-                              
-                                                    <%} %>
-                                                 -->
+                                                <a href="/product-bookings/detail/<%= booking._id %>" class="badge badge-success text-white"><i class="far fa-edit"></i></a>
+                                                <% if (booking && booking.status === 'rejected') { %>
+                                                    <a href="/product-bookings/delete/<%= booking._id %>" data-itemId="<%= booking._id %>" class="delete-btn badge badge-danger text-white"><i class="far fa-trash-alt"></i></a>
+                                                <% } %>
                                             </td>
                                         </tr>
                                     <% }) %>
                                 <% } else { %>
                                     <tr>
-                                        <td colspan="8" class="text-center">No bookings found</td>
+                                        <td colspan="8" class="text-center">No product bookings found</td>
                                     </tr>
                                 <% } %>
                             </tbody>
@@ -108,11 +92,9 @@
                 </div>
                 <!-- Pagination -->
                 <%- include('../partials/pagination') %>
-
             </div>
-    <%- include('../../shared/partials/toaster') %>
-
-            <%- include('../partials/deletePopup', { entityName: 'Booking', deleteEndpoint: '/admin/bookings/delete', buttonClass: 'delete-btn' }) %>
+            <%- include('../../shared/partials/toaster') %>
+            <%- include('../partials/deletePopup', { entityName: 'Product Booking', deleteEndpoint: '/product-bookings/delete', buttonClass: 'delete-btn' }) %>
             <%- include('../partials/Footer') %>
         </div>
     </div>
@@ -120,7 +102,7 @@
 </body>
 
 <script>
-       document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
         // Handle search form submission
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');

@@ -24,7 +24,7 @@ const productBookingSchema = new mongoose.Schema({
         paymentMethod: { type: String, enum: ['bank', 'check', 'cod', 'stripe'], required: true },
         stripePaymentIntentId: { type: String }, // Only for stripe payments
         paymentStatus: { type: String, enum: ['pending', 'succeeded', 'failed'], default: 'pending' },
-        paymentType: { type: String, enum: ['deposit', 'refund'], default: 'deposit' }
+        paymentType: { type: String, enum: ['deposit', 'refund', 'notReceived'], default: 'notReceived' }
     },
     status: {
         type: String,
