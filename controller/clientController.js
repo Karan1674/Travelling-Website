@@ -24,6 +24,7 @@ import productSchema from '../models/productSchema.js';
 import productReviewSchema from '../models/productReviewSchema.js';
 import productCartSchema from '../models/productCartSchema.js';
 import productBookingSchema from '../models/productBookingSchema.js';
+import blogSchema from '../models/blogSchema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -4085,6 +4086,199 @@ export const renderUserCarts = async (req, res) => {
         console.error('Render user carts error:', error);
         req.session = req.session || {};
         req.session.message = 'Failed to load carts page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Blog List Page on client Side 
+export const getBlogArchives = async (req, res) => {
+    try {
+        const userId = req.id;
+        let userData = null;
+
+        if (!userId) {
+            console.log('No User ID Available');
+            req.session = req.session || {};
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exist in The DataBase');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 6; // 6 posts per page to match 3 rows of 2
+        const skip = (page - 1) * limit;
+
+        const totalBlogs = await blogSchema.countDocuments({ status: 'active' });
+        const blogs = await blogSchema.find({ status: 'active' })
+            .populate('createdBy')
+            .sort({ postedOn: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const recentBlogs = await blogSchema.find({ status: 'active' })
+            .sort({ postedOn: -1 })
+            .limit(5);
+
+        const totalPages = Math.ceil(totalBlogs / limit);
+
+        res.render('client/layout/blog', {
+            user: userData,
+            blogs,
+            recentBlogs,
+            currentPage: page,
+            totalPages,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+    } catch (error) {
+        console.error('Error fetching blog archives:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Blog Detail page on client side 
+export const getBlogDetail = async (req, res) => {
+    try {
+        const userId = req.id;
+        let userData = null;
+
+        if (!userId) {
+            console.log('No User ID Available');
+            req.session = req.session || {};
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exist in The DataBase');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const blogId = req.params.id;
+        const blog = await blogSchema.findOne({ _id: blogId, status: 'active' })
+            .populate('createdBy')
+            .populate('updatedBy');
+
+        if (!blog) {
+            req.session = req.session || {};
+            req.session.message = 'No blog available or the blog is not active';
+            req.session.type = 'error';
+            return res.render('client/layout/blog-detail', {
+                user: userData,
+                blog: null,
+                recentBlogs: [],
+                message: req.session.message,
+                type: req.session.type
+            });
+        }
+
+         // Fetch previous and next blogs
+         const prevBlog = await blogSchema.findOne({ status: 'active', postedOn: { $lt: blog.postedOn } })
+         .sort({ postedOn: -1 })
+         .limit(1);
+     const nextBlog = await blogSchema.findOne({ status: 'active', postedOn: { $gt: blog.postedOn } })
+         .sort({ postedOn: 1 })
+         .limit(1);
+
+     const recentBlogs = await blogSchema.find({ status: 'active' })
+         .sort({ postedOn: -1 })
+         .limit(5);
+
+     res.render('client/layout/blog-detail', {
+         user: userData,
+         blog,
+         recentBlogs,
+         prevBlog,
+         nextBlog,
+         message: req.session?.message || null,
+         type: req.session?.type || null
+     });
+    } catch (error) {
+        console.error('Error fetching blog details:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Functionality to add comments in any blog
+export const addComment = async (req, res) => {
+    try {
+        const userId = req.id;
+        if (!userId) {
+            console.log('No User ID Available');
+            req.session = req.session || {};
+            req.session.message = 'User ID not available';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const userData = await userModel.findById(userId);
+        if (!userData) {
+            console.log('No such User Exist in The DataBase');
+            req.session = req.session || {};
+            req.session.message = 'No such user exists in the database';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { name, email, content } = req.body;
+        const blogId = req.params.id;
+
+        // Validate input
+        if (!name || !email || !content) {
+            req.session = req.session || {};
+            req.session.message = 'Name, email, and comment are required';
+            req.session.type = 'error';
+            return res.status(400).redirect('/blog');
+        }
+
+        const blog = await blogSchema.findOne({ _id: blogId, status: 'active' });
+        if (!blog) {
+            req.session = req.session || {};
+            req.session.message = 'No blog available or the blog is not active';
+            req.session.type = 'error';
+            res.redirect(`/blog/${req.params.id}#comments`);
+        }
+
+        // Create new comment
+        const comment = {
+            name,
+            email,
+            content,
+            postedOn: new Date()
+        };
+
+        blog.comments.push(comment);
+        await blog.save();
+
+        req.session = req.session || {};
+        req.session.message = 'Comment submitted successfully';
+        req.session.type = 'success';
+        res.redirect(`/blog/${req.params.id}#comments`);
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        req.session = req.session || {};
+        req.session.message = 'Server error';
         req.session.type = 'error';
         res.status(500).redirect('/error');
     }

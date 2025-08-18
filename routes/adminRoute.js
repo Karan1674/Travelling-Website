@@ -1,8 +1,8 @@
 const express = require('express');
-const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getPackageBookings, getEditPackageBooking, editPackageBooking, deletePackageBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry, getContactEnquiries, updateContactEnquiryStatus, deleteContactEnquiry, getProductList, getAddProduct, postAddProduct, getEditProduct, postEditProduct, deleteProduct, getProductDetail, getProductBookings, getBookingsDashboard, getProductBookingDetail, updateProductBookingStatus, deleteProductBooking } = require('../controller/adminController');
+const { AdminDashboard, getAllAgents, getNewAgentPage, newAgent, editAgent, editAgentPage, deleteAgent, getAgentDetails, getSignedInUsers, getUserDetails, addPackagePage, addPackage, editPackagePage, editPackage, getAllPackages, deletePackage, getPackagesByStatus, getUserDashboard, getPackageDashboard, getAdminAgentProfile, updateAdminAgentProfile, getPackageBookings, getEditPackageBooking, editPackageBooking, deletePackageBooking, packagePreview, renderCouponList, renderAddCoupon, createCoupon, renderEditCoupon, updateCoupon, deleteCoupon, renderCouponDetails, getAddCareerPage, getCareerList, addCareer, getEditCareerPage, editCareer, getCareerDetail, updateApplicationStatus, getApplicationDetail, deleteCareer, getApplicationList, getTourGuides, getAddTourGuide, addTourGuide, getEditTourGuide, updateTourGuide, deleteTourGuide, getTourGuideDetail, getGalleryDashboard, addGalleryItem, editGalleryItem, deleteGalleryItem, getEnquiryDashboard, getFaqEnquiry, editFaqEnquiry, deleteFaqEnquiry, getContactEnquiries, updateContactEnquiryStatus, deleteContactEnquiry, getProductList, getAddProduct, postAddProduct, getEditProduct, postEditProduct, deleteProduct, getProductDetail, getProductBookings, getBookingsDashboard, getProductBookingDetail, updateProductBookingStatus, deleteProductBooking, getBlogList, getBlogAdd, addBlog, getBlogEdit, updateBlog, deleteBlog, getBlogDetails } = require('../controller/adminController');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
 const { isAdminCheck } = require('../middleware/checkAdmin');
-const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadMediaGalleryImage, uploadShopImages } = require('../middleware/multer');
+const { uploadProfilePic, uploadGallery, uploadCareerPic, uploadTourGuideImage, uploadMediaGalleryImage, uploadShopImages, uploadBlogImage } = require('../middleware/multer');
 const router = express.Router();
 
 
@@ -117,6 +117,14 @@ router.get('/product-bookings/detail/:id', isAuthenticated, isAdminCheck, getPro
 router.post('/product-bookings/update/:id', isAuthenticated, isAdminCheck, updateProductBookingStatus);
 router.get('/product-bookings/delete/:id',isAuthenticated, isAdminCheck, deleteProductBooking);
 
+
+router.get('/blog-list', isAuthenticated, isAdminCheck, getBlogList);
+router.get('/blog-add', isAuthenticated, isAdminCheck, getBlogAdd);
+router.post('/blog-add', isAuthenticated, isAdminCheck, uploadBlogImage.single('featureImage'), addBlog);
+router.get('/blog-edit/:id',  isAuthenticated, isAdminCheck, getBlogEdit);
+router.post('/blog-edit/:id',  isAuthenticated, isAdminCheck, uploadBlogImage.single('featureImage'), updateBlog);
+router.get('/delete-blog/:id', isAuthenticated, isAdminCheck, deleteBlog);
+router.get('/blog-details/:id',  isAuthenticated, isAdminCheck, getBlogDetails);
 
 
 module.exports = router;

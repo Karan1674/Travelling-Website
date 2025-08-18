@@ -20,6 +20,7 @@ import faqSchema from '../models/faqSchema.js';
 import contactSchema from '../models/contactSchema.js';
 import productSchema from '../models/productSchema.js';
 import productBookingSchema from '../models/productBookingSchema.js';
+import blogSchema from '../models/blogSchema.js';
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -4708,7 +4709,7 @@ export const deleteProduct = async (req, res) => {
         console.error('Error deleting product:', error);
         req.session.message = 'Error deleting product';
         req.session.type = 'error';
-        res.redirect('/admin/product-list');
+        res.redirect('/product-list');
     }
 };
 
@@ -4901,7 +4902,7 @@ export const getProductBookings = async (req, res) => {
             statusFilter,
             message: req.session?.message || null,
             type: req.session?.type || null
-        });4
+        });
     } catch (error) {
         console.error('Error fetching product bookings:', error);
         req.session = req.session || {};
@@ -4986,7 +4987,7 @@ export const getProductBookingDetail = async (req, res) => {
         if (!booking) {
             req.session.message = 'Booking not found';
             req.session.type = 'error';
-            return res.redirect('/admin/product-bookings');
+            return res.redirect('/product-bookings');
         }
 
     
@@ -5129,3 +5130,417 @@ export const deleteProductBooking = async (req, res) => {
         res.status(500).redirect('/error');
     }
 };
+
+// Get Blog List
+export const getBlogList = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+        
+        const page = parseInt(req.query.page) || 1;
+        const limit = 3;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const statusFilter = req.query.statusFilter || 'all';
+
+        let query = {};
+        if (search) {
+            query.title = { $regex: search, $options: 'i' };
+        }
+        if (statusFilter !== 'all') {
+            query.status = statusFilter;
+        }
+
+        const blogs = await blogSchema.find(query)
+            .populate('createdBy', 'firstName lastName')
+            .populate('updatedBy', 'firstName lastName')
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalBlogs = await blogSchema.countDocuments(query);
+        const totalPages = Math.ceil(totalBlogs / limit) || 1;
+
+        res.render('admin/layout/blog-list', {
+            blogs,
+            user: userData,
+            isAdmin,
+            search,
+            statusFilter,
+            currentPage: page,
+            totalPages,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading blog list:', error);
+        req.session.message = 'Error loading blog list';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get Blog Add Page
+export const getBlogAdd = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+
+        res.render('admin/layout/blog-add', {
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading blog add page:', error);
+        req.session.message = 'Error loading blog add page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Add Blog
+export const addBlog = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const { title, status, shortDescription, content, tags } = req.body;
+        const blog = new blogSchema({
+            title,
+            status,
+            shortDescription,
+            content,
+            featureImage: req.file ? req.file.filename : '',
+            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            postedOn: new Date(),
+            createdBy: userId,
+            createdByModel: isAdmin ? 'Admin' : 'Agent'
+        });
+
+        await blog.validate();
+        await blog.save();
+        req.session.message = 'Blog added successfully';
+        req.session.type = 'success';
+        res.redirect('/blog-list');
+    } catch (error) {
+        console.error('Error adding blog:', error);
+        req.session.message = 'Error adding blog';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
+};
+
+// Get Blog Edit Page
+export const getBlogEdit = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const blog = await blogSchema.findOne(query)
+            .populate('createdBy', 'firstName lastName')
+            .populate('updatedBy', 'firstName lastName')
+            .lean();
+
+        if (!blog) {
+            req.session.message = 'Blog not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/blog-list');
+        }
+
+        res.render('admin/layout/blog-edit', {
+            blog,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error loading blog edit page:', error);
+        req.session.message = 'Error loading blog edit page';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Update Blog
+export const updateBlog = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+    
+
+        query._id = req.params.id;
+        const blog = await blogSchema.findOne(query);
+        if (!blog) {
+            req.session.message = 'Blog not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/blog-list');
+        }
+
+        const { title, status, shortDescription, content, tags, existingFeatureImage } = req.body;
+        blog.title = title;
+        blog.status = status;
+        blog.shortDescription = shortDescription;
+        blog.content = content;
+        blog.tags = tags ? tags.split(',').map(tag => tag.trim()) : [];
+        blog.updatedBy = userId;
+        blog.updatedByModel = isAdmin ? 'Admin' : 'Agent';
+        if (req.file) {
+            // Delete old image if it exists
+            if (blog.featureImage) {
+                try {
+                    const oldImagePath = join(__dirname, '../Uploads/blogGallery');
+                    await fs.unlink(join(oldImagePath, blog.featureImage));
+                } catch (err) {
+                    console.error(`Error deleting file ${image}:`, err);
+                }
+            }
+            blog.featureImage = req.file.filename;
+        } else if (!existingFeatureImage) {
+            // Delete image if removed
+            if (blog.featureImage) {
+                try {
+                    const oldImagePath = join(__dirname, '../Uploads/blogGallery');
+                    await fs.unlink(join(oldImagePath, blog.featureImage));
+                } catch (err) {
+                    console.error(`Error deleting file ${image}:`, err);
+                }
+            }
+            blog.featureImage = '';
+        }
+
+        await blog.save();
+        req.session.message = 'Blog updated successfully';
+        req.session.type = 'success';
+        res.redirect('/blog-list');
+    } catch (error) {
+        console.error('Error updating blog:', error);
+        req.session.message = 'Error updating blog';
+        req.session.type = 'error';
+        res.redirect(`/error`);
+    }
+};
+
+// Delete Blog
+export const deleteBlog = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        const blogId = req.params.id;
+        let query = {};
+        console.log(blogId)
+      
+
+        query._id = blogId;
+        const blog = await blogSchema.findOne(query);
+
+        if (!blog) {
+            req.session.message = 'Blog not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/blog-list');
+        }
+
+        // Delete associated image
+        if (blog.featureImage) {
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/blogGallery');
+                await fs.unlink(join(oldImagePath, blog.featureImage));
+            } catch (err) {
+                console.error(`Error deleting file ${image}:`, err);
+            }
+        }
+
+        await blogSchema.deleteOne({ _id: blogId });
+        req.session.message = 'Blog deleted successfully';
+        req.session.type = 'success';
+        res.redirect('/blog-list');
+    } catch (error) {
+        console.error('Error deleting blog:', error);
+        req.session.message = 'Error deleting blog';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+
+// Get Blog Details 
+export const getBlogDetails = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
+
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const blog = await blogSchema.findOne(query)
+            .populate('createdBy', 'firstName lastName')
+            .populate('updatedBy', 'firstName lastName')
+            .lean();
+
+        if (!blog) {
+            req.session.message = 'Blog not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/blog-list');
+        }
+
+        res.render('admin/layout/blog-details', {
+            blog,
+            user: userData,
+            isAdmin,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
+        req.session.message = null;
+        req.session.type = null;
+    } catch (error) {
+        console.error('Error fetching admin blog details:', error);
+        req.session.message = 'Error fetching blog details';
+        req.session.type = 'error';
+        res.status(500).redirect('/error');
+    }
+};
+

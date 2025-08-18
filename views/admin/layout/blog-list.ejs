@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap db-package-wrap">
+                <div class="dashboard-box table-opp-color-box">
+                    <div class="header-controls" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                        <h4 style="margin: 0;">Blogs List</h4>
+                        <a href="/blog-add" class="btn btn-primary" style="width: fit-content;" aria-label="Add new blog">Add Blog</a>
+                    </div>
+                    <div class="package-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <form id="search-form" action="/blog-list" method="get" style="flex: 1; margin-right: 20px;">
+                            <div class="form-group" style="display: flex; align-items: center; position: relative;">
+                                <input type="text" name="search" id="search-input" placeholder="Search by blog title" value="<%= search || '' %>" style="width: 70%; padding: 8px 40px 8px 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <select name="statusFilter" id="status-filter" style="width: 30%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All</option>
+                                    <option value="active" <%= statusFilter === 'active' ? 'selected' : '' %>>Active</option>
+                                    <option value="inactive" <%= statusFilter === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                                    <option value="draft" <%= statusFilter === 'draft' ? 'selected' : '' %>>Draft</option>
+                                </select>
+                                <button type="submit" aria-label="Search blogs" style="position: absolute; right: 40px; background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-search" style="color: #007bff;"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Created By</th>
+                                    <th>Posted On</th>
+                                    <th>Updated By</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (blogs && blogs.length > 0) { %>
+                                    <% blogs.forEach(blog => { %>
+                                        <tr>
+                                            <td><span class="blog-title"><%= blog.title %></span></td>
+                                            <td><%= blog.createdBy ? `${blog.createdBy.firstName} ${blog.createdBy.lastName}` : 'Unknown' %></td>
+                                            <td><%= new Date(blog.postedOn).toLocaleDateString() %></td>
+                                            <td><%= blog.updatedBy ? `${blog.updatedBy.firstName} ${blog.updatedBy.lastName}` : '' %></td>
+                                            <td>
+                                                <span class="badge badge-<%= blog.status === 'active' ? 'success' : blog.status === 'inactive' ? 'danger' : 'warning' %>">
+                                                    <%= blog.status.charAt(0).toUpperCase() + blog.status.slice(1) %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="/blog-details/<%= blog._id %>" class="badge badge-info text-white" title="View Blog"><i class="far fa-eye"></i></a>
+                                                <span class="badge badge-success" style="cursor: pointer;" onclick="window.location.href='/blog-edit/<%= blog._id %>'"><i class="far fa-edit"></i></span>
+                                                <span class="badge badge-danger delete-btn" style="cursor: pointer;" data-itemId="<%= blog._id %>"><i class="far fa-trash-alt"></i></span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center;">No blogs found.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <%- include('../partials/pagination') %>
+            </div>
+            <%- include('../../shared/partials/toaster') %>
+            <%- include('../partials/deletePopup', { entityName: 'Blog', deleteEndpoint: '/delete-blog', buttonClass: 'delete-btn' }) %>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/script.ejs') %>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle search form submission
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+            const statusFilterSelect = document.getElementById('status-filter');
+
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nameQuery = searchInput.value.trim();
+                const statusFilter = statusFilterSelect.value;
+                let url = `?page=1`;
+                if (nameQuery) url += `&search=${encodeURIComponent(nameQuery)}`;
+                if (statusFilter !== 'all') url += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+                window.location.href = url;
+            });
+        });
+    </script>
+</body>
+</html>

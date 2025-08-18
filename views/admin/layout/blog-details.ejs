@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+
+    <body>
+        <div id="container-wrapper">
+            <div id="dashboard" class="dashboard-container">
+                <%- include('../partials/Navbar') %>
+                    <%- include('../partials/Sidebar') %>
+                        <div class="db-info-wrap db-package-wrap">
+                            <div class="dashboard-box table-opp-color-box">
+                                <div class="header-controls"
+                                    style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                    <h4 style="margin: 0;">Blog Details</h4>
+                                    <div>
+                                        <a href="/blog-edit/<%= blog._id %>" class="btn btn-primary"
+                                            style="width: fit-content; margin-right: 10px;" aria-label="Edit blog">Edit
+                                            Blog</a>
+                                        <a href="/blog-list" class="btn btn-secondary" style="width: fit-content;"
+                                            aria-label="Back to blog list">Back to List</a>
+                                    </div>
+                                </div>
+                                <!-- Basic Information Card -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header"
+                                        style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Basic Information
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label><strong>Title</strong></label>
+                                            <p>
+                                                <%= blog.title %>
+                                            </p>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><strong>Tags</strong></label>
+                                            <p>
+                                                <%= blog.tags.length> 0 ? blog.tags.join(', ') : 'None' %>
+                                            </p>
+                                        </div>
+                                        
+                                        <div class="row">
+
+                                            <div class="form-group col-lg-6">
+                                                <label><strong>Status</strong></label>
+                                                <p>
+                                                    <span
+                                                        class="badge badge-<%= blog.status === 'active' ? 'success' : blog.status === 'inactive' ? 'danger' : 'warning' %>">
+                                                        <%= blog.status.charAt(0).toUpperCase() + blog.status.slice(1)
+                                                            %>
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div class="form-group col-lg-6">
+                                                <label><strong>Posted On</strong></label>
+                                                <p>
+                                                    <%= new Date(blog.postedOn).toLocaleDateString() %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Description Card -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header"
+                                        style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Description</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label><strong>Short Description</strong></label>
+                                            <p>
+                                                <%= blog.shortDescription || 'N/A' %>
+                                            </p>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><strong>Content</strong></label>
+                                            <div><%- blog.content %> || 'N/A</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Image Card -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header"
+                                        style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Image</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label><strong>Feature Image</strong></label>
+                                            <% if (blog.featureImage) { %>
+                                                <img src="/Uploads/blogGallery/<%= blog.featureImage %>"
+                                                    alt="Feature Image" style="max-width: 200px; border-radius: 8px;">
+                                                <% } else { %>
+                                                    <p>No image</p>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Audit Information Card -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header"
+                                        style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Audit Information
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label><strong>Created By</strong></label>
+                                                    <p>
+                                                        <%= blog.createdBy ? `${blog.createdBy.firstName}
+                                                            ${blog.createdBy.lastName}` : 'Unknown' %>
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label><strong>Created At</strong></label>
+                                                    <p>
+                                                        <%= new Date(blog.createdAt).toLocaleString() %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label><strong>Updated By</strong></label>
+                                                    <p>
+                                                        <%= blog.updatedBy ? `${blog.updatedBy.firstName}
+                                                            ${blog.updatedBy.lastName}` : 'N/A' %>
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label><strong>Updated At</strong></label>
+                                                    <p>
+                                                        <%= new Date(blog.updatedAt).toLocaleString() %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Comments Card -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header"
+                                        style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Comments</div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+
+                                                        <th>Content</th>
+                                                        <th>Posted On</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% if (blog.comments && blog.comments.length> 0) { %>
+                                                        <% blog.comments.forEach(comment=> { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= comment.name %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= comment.email %>
+                                                                </td>
+
+                                                                <td>
+                                                                    <%= comment.content %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= new Date(comment.postedOn).toLocaleDateString()
+                                                                        %>
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                                <% } else { %>
+                                                                    <tr>
+                                                                        <td colspan="5" style="text-align: center;">No
+                                                                            comments found.</td>
+                                                                    </tr>
+                                                                    <% } %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%- include('../../shared/partials/toaster') %>
+                            <%- include('../partials/Footer') %>
+            </div>
+        </div>
+        <%- include('../partials/script.ejs') %>
+    </body>
+
+</html>

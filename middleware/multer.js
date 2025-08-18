@@ -25,6 +25,8 @@ export const uploadProfilePic = multer({
     },
 });
 
+
+
 // Gallery upload (multiple files, max 8)
 const galleryStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -48,7 +50,7 @@ export const uploadGallery = multer({
 
 
 
-
+// Career upload 
 const careerPicStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, join(__dirname, '../Uploads/career'));
@@ -57,7 +59,6 @@ const careerPicStorage = multer.diskStorage({
         cb(null, `${Date.now()}-${file.originalname}`);
     },
 });
-
 
 export const uploadCareerPic = multer({
     storage: careerPicStorage,
@@ -70,6 +71,8 @@ export const uploadCareerPic = multer({
 });
 
 
+
+// Career CV upload 
 const careerCvStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, join(__dirname, '../Uploads/careerCV'));
@@ -156,6 +159,8 @@ export const uploadMediaGalleryImage = multer({
 
 
 
+
+// Multer setup Shop image upload
 const shopImagesStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, join(__dirname, '../Uploads/shopGallery'));
@@ -174,3 +179,31 @@ export const uploadShopImages = multer({
         cb(null, true);
     }
 });
+
+
+
+
+
+
+// Multer setup for Blog image upload
+const blogImageStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, join(__dirname, '../Uploads/blogGallery'));
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+export const uploadBlogImage = multer({ 
+    storage: blogImageStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+    }
+});
+
+
+

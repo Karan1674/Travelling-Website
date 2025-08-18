@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <div id="container-wrapper">
+        <div id="dashboard" class="dashboard-container">
+            <%- include('../partials/Navbar') %>
+            <%- include('../partials/Sidebar') %>
+            <div class="db-info-wrap">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="dashboard-box" style="background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 30px;">
+                            <h4 style="margin: 0 0 25px; color: #2c3e50; font-size: 1.8rem; font-weight: 600;">Edit Blog</h4>
+                            <form action="/blog-edit/<%= blog._id %>" method="POST" enctype="multipart/form-data">
+                                <!-- Container 1: Basic Information -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Basic Information</div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="title">Title <span class="required-star">*</span></label>
+                                                    <input type="text" class="form-control" id="title" name="title" value="<%= blog.title %>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="status">Status <span class="required-star" style="display: none;">*</span></label>
+                                                    <select class="form-control" id="status" name="status">
+                                                        <option value="active" <%= blog.status === 'active' ? 'selected' : '' %>>Active</option>
+                                                        <option value="inactive" <%= blog.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                                                        <option value="draft" <%= blog.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        
+                                        </div>
+                             
+                                       
+                                    </div>
+                                </div>
+                                <!-- Container 2: Content -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Content</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="shortDescription">Short Description <span class="required-star" style="display: none;">*</span></label>
+                                            <textarea class="form-control" id="shortDescription" name="shortDescription"><%= blog.shortDescription || '' %></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="content">Content <span class="required-star" style="display: none;">*</span></label>
+                                            <textarea class="form-control" id="content" name="content"><%= blog.content %></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Container 3: Image and Tags -->
+                                <div class="card mb-4" style="border-radius: 10px; border: 1px solid #e9ecef;">
+                                    <div class="card-header" style="background: #f8f9fa; font-weight: 600; color: #2c3e50;">Image & Tags</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Add New Feature Image <span class="required-star" style="display: none;">*</span></label>
+                                            <div id="drop-area" class="drop-area">
+                                                <p>Drag & Drop image here or click to select</p>
+                                                <input type="file" class="form-control-file" id="featureImage" name="featureImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="image-preview" class="mt-3" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px;"></div>
+                                        </div>
+                                        <% if (blog.featureImage) { %>
+                                            <div class="form-group">
+                                                <label>Existing Feature Image</label>
+                                                <div id="existing-image" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px;">
+                                                    <div class="image-container" data-image="<%= blog.featureImage %>">
+                                                        <img src="/Uploads/blogGallery/<%= blog.featureImage %>" class="image-preview-img">
+                                                        <span class="delete-image">&times;</span>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="existingFeatureImage" id="existingFeatureImage" value="<%= blog.featureImage %>">
+                                            </div>
+                                        <% } %>
+                                        <div class="form-group">
+                                            <label for="tags">Tags (comma-separated) <span class="required-star" style="display: none;">*</span></label>
+                                            <input type="text" class="form-control" id="tags" name="tags" value="<%= blog.tags.join(', ') %>">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group text-right">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="/blog-list" class="btn btn-danger">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/Footer') %>
+        </div>
+    </div>
+    <%- include('../partials/deletePopup', { entityName: 'Blog', deleteEndpoint: '/delete-blog', buttonClass: 'delete-btn' }) %>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/Script') %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jodit@3.24.5/build/jodit.min.js"></script>
+    <style>
+        .drop-area {
+            border: 2px dashed #d1d8e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drop-area.dragover {
+            border-color: #007bff;
+            background: #e7f1ff;
+        }
+        .drop-area p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        .image-container {
+            position: relative;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .image-preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        .image-preview-img:hover {
+            opacity: 0.9;
+        }
+        .delete-image {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease;
+        }
+        .delete-image:hover {
+            background: #c82333;
+        }
+        .card-header {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .required-star {
+            color: #dc3545;
+        }
+        .required-field {
+            border-color: #dc3545 !important;
+        }
+        .valid-field {
+            border-color: #28a745 !important;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clean up stray Ace Editor textareas
+            function cleanAceTextareas() {
+                document.querySelectorAll('textarea.ace_text-input').forEach(textarea => {
+                    textarea.removeAttribute('required');
+                    textarea.removeAttribute('wrap');
+                    textarea.removeAttribute('autocorrect');
+                    textarea.removeAttribute('autocapitalize');
+                    textarea.removeAttribute('spellcheck');
+                    textarea.style.opacity = '';
+                    textarea.classList.remove('ace_text-input');
+                    if (!textarea.name) {
+                        textarea.remove();
+                    }
+                });
+            }
+            cleanAceTextareas();
+        
+            // Initialize Jodit editor for content
+            let contentEditor;
+            function initializeJoditEditor() {
+                const contentTextarea = document.querySelector('#content');
+                if (!contentTextarea) {
+                    console.error('Content textarea not found');
+                    contentTextarea.style.display = 'block';
+                    contentTextarea.removeAttribute('required');
+                    return false;
+                }
+                try {
+                    contentEditor = Jodit.make('#content', {
+                        toolbar: true,
+                        height: 400,
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('Jodit initialization failed:', error);
+                    contentTextarea.style.display = 'block';
+                    contentTextarea.removeAttribute('required');
+                    return false;
+                }
+            }
+        
+            // Retry Jodit initialization
+            let initAttempts = 0;
+            const maxAttempts = 5;
+            function tryInitializeJodit() {
+                cleanAceTextareas();
+                if (initializeJoditEditor()) {
+                    if (contentEditor && contentEditor.textarea) {
+                        const textarea = contentEditor.textarea;
+                        textarea.classList.remove('ace_text-input');
+                        textarea.removeAttribute('wrap');
+                        textarea.removeAttribute('autocorrect');
+                        textarea.removeAttribute('autocapitalize');
+                        textarea.removeAttribute('spellcheck');
+                        textarea.style.opacity = '';
+                    }
+                    return;
+                }
+                if (initAttempts < maxAttempts) {
+                    initAttempts++;
+                    setTimeout(tryInitializeJodit, 100 * initAttempts);
+                } else {
+                    console.error('Jodit initialization failed after', maxAttempts, 'attempts');
+                }
+            }
+        
+            const observer = new MutationObserver(() => {
+                if (document.querySelector('textarea.ace_text-input')) {
+                    cleanAceTextareas();
+                    tryInitializeJodit();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            tryInitializeJodit();
+        
+            const dropArea = document.getElementById('drop-area');
+            const imageInput = document.getElementById('featureImage');
+            const imagePreview = document.getElementById('image-preview');
+            const existingImageInput = document.getElementById('existingFeatureImage');
+            const statusSelect = document.getElementById('status');
+            const form = document.querySelector('form[action^="/blog-edit/"]');
+            let existingImage = existingImageInput ? existingImageInput.value : '';
+        
+            dropArea.addEventListener('click', () => imageInput.click());
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    const dt = new DataTransfer();
+                    if (imageInput.files[0]) dt.items.add(imageInput.files[0]);
+                    if (files[0]) dt.items.add(files[0]);
+                    imageInput.files = dt.files;
+                    updateImagePreview();
+                }
+            });
+            imageInput.addEventListener('change', updateImagePreview);
+        
+            function updateImagePreview() {
+                imagePreview.innerHTML = '';
+                if (imageInput.files[0]) {
+                    const file = imageInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const container = document.createElement('div');
+                        container.className = 'image-container';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview-img';
+                        const deleteBtn = document.createElement('span');
+                        deleteBtn.className = 'delete-image';
+                        deleteBtn.innerHTML = '&times;';
+                        deleteBtn.onclick = () => {
+                            imageInput.value = '';
+                            imagePreview.innerHTML = '';
+                            toggleRequiredFields();
+                        };
+                        container.appendChild(img);
+                        container.appendChild(deleteBtn);
+                        imagePreview.appendChild(container);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                toggleRequiredFields();
+            }
+        
+            document.querySelectorAll('#existing-image .delete-image').forEach(button => {
+                button.addEventListener('click', () => {
+                    existingImage = '';
+                    if (existingImageInput) existingImageInput.value = '';
+                    button.parentElement.remove();
+                    toggleRequiredFields();
+                });
+            });
+        
+            function toggleRequiredFields() {
+                cleanAceTextareas();
+                const isDraft = statusSelect.value === 'draft';
+                const hasImage = imageInput.files.length > 0 || existingImage;
+        
+                // Select only inputs and textareas within the form, excluding specific fields
+                const formFields = form.querySelectorAll('input:not([type="file"]):not([name="existingFeatureImage"]), textarea.form-control');
+        
+                // Handle title field (required in all cases)
+                const titleInput = document.getElementById('title');
+                const titleLabel = titleInput.closest('.form-group').querySelector('label');
+                const titleStar = titleLabel.querySelector('.required-star');
+                titleInput.setAttribute('required', 'required');
+                titleStar.style.display = 'inline';
+                if (titleInput.value.trim() === '') {
+                    titleInput.classList.add('required-field');
+                    titleInput.classList.remove('valid-field');
+                } else {
+                    titleInput.classList.add('valid-field');
+                    titleInput.classList.remove('required-field');
+                }
+        
+                // Handle short description field
+                const shortDescriptionTextarea = document.getElementById('shortDescription');
+                const shortDescriptionLabel = shortDescriptionTextarea.closest('.form-group').querySelector('label');
+                const shortDescriptionStar = shortDescriptionLabel.querySelector('.required-star');
+        
+                // Handle other form fields
+                formFields.forEach(field => {
+                    const label = field.closest('.form-group')?.querySelector('label');
+                    const star = label?.querySelector('.required-star');
+        
+                    // Skip title field (already handled)
+                    if (field.id === 'title') return;
+        
+                    if (isDraft) {
+                        field.removeAttribute('required');
+                        if (star) star.style.display = 'none';
+                        field.classList.remove('required-field', 'valid-field');
+                    } else {
+                        field.setAttribute('required', 'required');
+                        if (star) star.style.display = 'inline';
+                        if (field.id === 'shortDescription') {
+                            if (field.value.trim() === '') {
+                                field.classList.add('required-field');
+                                field.classList.remove('valid-field');
+                            } else {
+                                field.classList.add('valid-field');
+                                field.classList.remove('required-field');
+                            }
+                        } else {
+                            // For other fields like tags and content
+                            if (field.value.trim() === '') {
+                                field.classList.add('required-field');
+                                field.classList.remove('valid-field');
+                            } else {
+                                field.classList.add('valid-field');
+                                field.classList.remove('required-field');
+                            }
+                        }
+                    }
+                });
+        
+                // Handle feature image
+                const imagesLabel = imageInput.closest('.form-group').querySelector('label');
+                const imagesStar = imagesLabel.querySelector('.required-star');
+                if (!isDraft && !hasImage) {
+                    imageInput.setAttribute('required', 'required');
+                    imagesStar.style.display = 'inline';
+                    imageInput.classList.add('required-field');
+                } else {
+                    imageInput.removeAttribute('required');
+                    imagesStar.style.display = 'none';
+                    imageInput.classList.remove('required-field');
+                }
+            }
+        
+            // Update input event listener to only target form inputs
+            form.querySelectorAll('input:not([type="file"]):not([name="existingFeatureImage"]), textarea.form-control').forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.id === 'title' || (input.id === 'shortDescription' && statusSelect.value !== 'draft')) {
+                        if (input.value.trim() !== '') {
+                            input.classList.add('valid-field');
+                            input.classList.remove('required-field');
+                        } else {
+                            input.classList.add('required-field');
+                            input.classList.remove('valid-field');
+                        }
+                    } else {
+                        if (!input.hasAttribute('required')) {
+                            input.classList.remove('required-field', 'valid-field');
+                        } else if (input.value.trim() !== '') {
+                            input.classList.add('valid-field');
+                            input.classList.remove('required-field');
+                        } else {
+                            input.classList.add('required-field');
+                            input.classList.remove('valid-field');
+                        }
+                    }
+                });
+            });
+        
+            if (contentEditor && contentEditor.events) {
+                contentEditor.events.on('change', () => {
+                    if (contentEditor.textarea) {
+                        contentEditor.textarea.value = contentEditor.value.trim();
+                    }
+                    toggleRequiredFields();
+                });
+            }
+        
+            statusSelect.addEventListener('change', toggleRequiredFields);
+        
+            form.addEventListener('submit', (e) => {
+                cleanAceTextareas();
+                const isDraft = statusSelect.value === 'draft';
+                const hasImage = imageInput.files.length > 0 || existingImage;
+        
+                if (contentEditor && contentEditor.textarea) {
+                    contentEditor.textarea.value = contentEditor.value.trim();
+                }
+        
+                const formFields = form.querySelectorAll('input:not([type="file"]):not([name="existingFeatureImage"]), textarea.form-control');
+                formFields.forEach(field => {
+                    if (field.id === 'title') {
+                        field.setAttribute('required', 'required');
+                    } else if (isDraft) {
+                        field.removeAttribute('required');
+                    } else {
+                        field.setAttribute('required', 'required');
+                    }
+                });
+        
+                if (!isDraft && !hasImage) {
+                    imageInput.setAttribute('required', 'required');
+                } else {
+                    imageInput.removeAttribute('required');
+                }
+        
+    
+            });
+        
+            window.addEventListener('unload', () => {
+                observer.disconnect();
+            });
+        
+            // Call toggleRequiredFields on page load to set initial state
+            toggleRequiredFields();
+        });
+        </script>
+</body>
+</html>

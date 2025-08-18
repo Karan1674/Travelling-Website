@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/Header') %>
+<body>
+    <%- include('../partials/Loader') %>
+    <div id="page" class="full-page">
+        <%- include('../partials/Navbar') %>
+        <main id="content" class="site-main">
+            <!-- Inner Banner html start -->
+            <section class="inner-banner-wrap">
+                <div class="inner-baner-container" style="background-image: url(/assets/images/inner-banner.jpg);">
+                    <div class="container">
+                        <div class="inner-banner-content">
+                            <h1 class="inner-title"><%= blog ? blog.title : 'Blog Not Found' %></h1>
+                            <% if (blog) { %>
+                                <div class="entry-meta">
+                                    <span class="byline">
+                                        <a href="#"><%= blog.createdBy ? `${blog.createdBy.firstName} ${blog.createdBy.lastName}` : 'Unknown' %></a>
+                                    </span>
+                                    <span class="posted-on">
+                                        <a href="#"><%= new Date(blog.postedOn).toLocaleDateString() %></a>
+                                    </span>
+                                    <span class="comments-link">
+                                        <a href="#comments"><%= blog.comments ? blog.comments.length : 0 %> Comment<%= blog.comments && blog.comments.length !== 1 ? 's' : '' %></a>
+                                    </span>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-shape"></div>
+            </section>
+            <!-- Inner Banner html end -->
+            <div class="single-post-section">
+                <div class="single-post-inner">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8 primary right-sidebar">
+                                <!-- Blog post item html start -->
+                                <% if (blog) { %>
+                                    <figure class="feature-image">
+                                        <% if (blog.featureImage) { %>
+                                            <img src="/Uploads/blogGallery/<%= blog.featureImage %>" width="100%" alt="<%= blog.title %>">
+                                        <% } else { %>
+                                            <img src="/assets/images/default-blog.jpg" alt="<%= blog.title %>">
+                                        <% } %>
+                                    </figure>
+                                    <article class="single-content-wrap">
+                                        <h3><%= blog.title %></h3>
+                                        <div class="post-content">
+                                            <%- blog.content %>
+                                        </div>
+                                    </article>
+                                    <div class="meta-wrap">
+                                        <div class="tag-links">
+                                            <% if(blog.tags.length > 0) {%>
+
+                                            <% blog.tags.map(tag => {%>
+                                                
+                                                <a href="#"><%= tag %></a> 
+                                                <% })%>
+                                                <%} else{ %>
+                                                    'None'
+                                               <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="post-socail-wrap">
+                                        <div class="social-icon-wrap">
+                                            <div class="social-icon social-facebook">
+                                                <a href="#"><i class="fab fa-facebook-f"></i><span>Facebook</span></a>
+                                            </div>
+                                            <div class="social-icon social-google">
+                                                <a href="#"><i class="fab fa-google-plus-g"></i><span>Google</span></a>
+                                            </div>
+                                            <div class="social-icon social-pinterest">
+                                                <a href="#"><i class="fab fa-pinterest"></i><span>Pinterest</span></a>
+                                            </div>
+                                            <div class="social-icon social-linkedin">
+                                                <a href="#"><i class="fab fa-linkedin"></i><span>Linkedin</span></a>
+                                            </div>
+                                            <div class="social-icon social-twitter">
+                                                <a href="#"><i class="fab fa-twitter"></i><span>Twitter</span></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="author-wrap">
+                                        <div class="author-thumb">
+                                            <img src="/assets/images/user-img.png" alt="Author">
+                                        </div>
+                                        <div class="author-content">
+                                            <h3 class="author-name"><%= blog.createdBy ? `${blog.createdBy.firstName} ${blog.createdBy.lastName}` : 'Unknown' %></h3>
+                                            <p>Explore more posts by this author.</p>
+                                            <a href="#" class="button-text">VIEW ALL POSTS > </a>
+                                        </div>
+                                    </div>
+                                    <!-- Comments section -->
+                                    <div class="comment-area" id="comments">
+                                        <h2 class="comment-title">
+                                            <%= blog.comments ? blog.comments.length : 0 %> Comment<%= blog.comments && blog.comments.length !== 1 ? 's' : '' %>
+                                        </h2>
+                                        <div class="comment-area-inner">
+                                            <% if (blog.comments && blog.comments.length > 0) { %>
+                                                <ol>
+                                                    <% blog.comments.forEach(comment => { %>
+                                                        <li>
+                                                            <!-- <figure class="comment-thumb">
+                                                                <img src="/assets/images/user-img.png" alt="Commenter">
+                                                            </figure> -->
+                                                            <div class="comment-content">
+                                                                <div class="comment-header">
+                                                                    <h5 class="author-name"><%= comment.name %></h5>
+                                                                    <span class="post-on"><%= new Date(comment.postedOn).toLocaleDateString() %></span>
+                                                                </div>
+                                                                <p><%= comment.content %></p>
+                                                                <!-- <a href="#" class="reply"><i class="fas fa-reply"></i>Reply</a> -->
+                                                            </div>
+                                                        </li>
+                                                    <% }) %>
+                                                </ol>
+                                            <% } else { %>
+                                                <p>No comments yet. Be the first to comment!</p>
+                                            <% } %>
+                                        </div>
+                                        <div class="comment-form-wrap">
+                                            <h2 class="comment-title">Leave a Reply</h2>
+                                            <p>Your email address will not be published. Required fields are marked <span class="required-star">*</span></p>
+                                            <form action="/blog/<%= blog._id %>/comment" method="POST" class="comment-form">
+                                                <p class="full-width">
+                                                    <label>Comment <span class="required-star">*</span></label>
+                                                    <textarea rows="9" name="content" required></textarea>
+                                                </p>
+                                                <p>
+                                                    <label>Name <span class="required-star">*</span></label>
+                                                    <input type="text" name="name" required>
+                                                </p>
+                                                <p>
+                                                    <label>Email <span class="required-star">*</span></label>
+                                                    <input type="email" name="email" required>
+                                                </p>
+                                                <p class="full-width">
+                                                    <input type="submit" name="submit" value="Post comment">
+                                                </p>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <!-- Post navigation -->
+                                    <div class="post-navigation">
+                                        <% if (prevBlog) { %>
+                                            <div class="nav-prev">
+                                                <a href="/blog/<%= prevBlog._id %>">
+                                                    <span class="nav-label">Previous Reading</span>
+                                                    <span class="nav-title"><%= prevBlog.title %></span>
+                                                </a>
+                                            </div>
+                                        <% } %>
+                                        <% if (nextBlog) { %>
+                                            <div class="nav-next">
+                                                <a href="/blog/<%= nextBlog._id %>">
+                                                    <span class="nav-label">Next Reading</span>
+                                                    <span class="nav-title"><%= nextBlog.title %></span>
+                                                </a>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% } else { %>
+                                    <p>No blog available or the blog is not active.</p>
+                                <% } %>
+                            </div>
+                            <div class="col-lg-4 secondary">
+                                <div class="sidebar">
+                                    <aside class="widget author_widget">
+                                        <h3 class="widget-title">ABOUT AUTHOR</h3>
+                                        <div class="widget-content text-center">
+                                            <div class="profile">
+                                                <figure class="avatar">
+                                                    <a href="#">
+                                                        <img src="/assets/images/img21.jpg" alt="Author">
+                                                    </a>
+                                                </figure>
+                                                <div class="text-content">
+                                                    <div class="name-title">
+                                                        <h3>
+                                                            <a href="#">James Watson</a>
+                                                        </h3>
+                                                    </div>
+                                                    <p>Accumsan? Aliquet nobis doloremque, aliqua? Inceptos voluptatem, duis tempore optio quae animi viverra distinctio cumque vivamus, earum congue, anim velit</p>
+                                                </div>
+                                                <div class="socialgroup">
+                                                    <ul>
+                                                        <li><a target="_blank" href="#"><i class="fab fa-facebook"></i></a></li>
+                                                        <li><a target="_blank" href="#"><i class="fab fa-google"></i></a></li>
+                                                        <li><a target="_blank" href="#"><i class="fab fa-twitter"></i></a></li>
+                                                        <li><a target="_blank" href="#"><i class="fab fa-instagram"></i></a></li>
+                                                        <li><a target="_blank" href="#"><i class="fab fa-pinterest"></i></a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </aside>
+                                    <aside class="widget widget_latest_post widget-post-thumb">
+                                        <h3 class="widget-title">Recent Posts</h3>
+                                        <ul>
+                                            <% if (recentBlogs && recentBlogs.length > 0) { %>
+                                                <% recentBlogs.forEach(blog => { %>
+                                                    <li>
+                                                        <figure class="post-thumb">
+                                                            <a href="/blog/<%= blog._id %>">
+                                                                <% if (blog.featureImage) { %>
+                                                                    <img src="/Uploads/blogGallery/<%= blog.featureImage %>" alt="<%= blog.title %>">
+                                                                <% } else { %>
+                                                                    <img src="" alt="<%= blog.title %>">
+                                                                <% } %>
+                                                            </a>
+                                                        </figure>
+                                                        <div class="post-content">
+                                                            <h5>
+                                                                <a href="/blog/<%= blog._id %>"><%= blog.title %></a>
+                                                            </h5>
+                                                            <div class="entry-meta">
+                                                                <span class="posted-on">
+                                                                    <a href="#"><%= new Date(blog.postedOn).toLocaleDateString() %></a>
+                                                                </span>
+                                                                <span class="comments-link">
+                                                                    <a href="/blog/<%= blog._id %>"><%= blog.comments ? blog.comments.length : 0 %> Comment<%= blog.comments && blog.comments.length !== 1 ? 's' : '' %></a>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                <% }) %>
+                                            <% } else { %>
+                                                <li>
+                                                    <p>No recent posts available.</p>
+                                                </li>
+                                            <% } %>
+                                        </ul>
+                                    </aside>
+                                    <aside class="widget widget_social">
+                                        <h3 class="widget-title">Social Share</h3>
+                                        <div class="social-icon-wrap">
+                                            <div class="social-icon social-facebook">
+                                                <a href="#"><i class="fab fa-facebook-f"></i><span>Facebook</span></a>
+                                            </div>
+                                            <div class="social-icon social-pinterest">
+                                                <a href="#"><i class="fab fa-pinterest"></i><span>Pinterest</span></a>
+                                            </div>
+                                            <div class="social-icon social-whatsapp">
+                                                <a href="#"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></a>
+                                            </div>
+                                            <div class="social-icon social-linkedin">
+                                                <a href="#"><i class="fab fa-linkedin"></i><span>Linkedin</span></a>
+                                            </div>
+                                            <div class="social-icon social-twitter">
+                                                <a href="#"><i class="fab fa-twitter"></i><span>Twitter</span></a>
+                                            </div>
+                                            <div class="social-icon social-google">
+                                                <a href="#"><i class="fab fa-google-plus-g"></i><span>Google</span></a>
+                                            </div>
+                                        </div>
+                                    </aside>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <%- include('../partials/Footer') %>
+        <a id="backTotop" href="#" class="to-top-icon">
+            <i class="fas fa-chevron-up"></i>
+        </a>
+        <!-- Custom search field html -->
+        <div class="header-search-form">
+            <div class="container">
+                <div class="header-search-container">
+                    <form class="search-form" role="search" method="get">
+                        <input type="text" name="s" placeholder="Enter your text...">
+                    </form>
+                    <a href="#" class="search-close">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('../../shared/partials/toaster') %>
+    <%- include('../partials/Script') %>
+</body>
+</html>
