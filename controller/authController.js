@@ -4,6 +4,12 @@ import adminModel from '../models/adminModel.js';
 import agentModel from '../models/agentModel.js';
 import userModel from '../models/userModel.js';
 import crypto from 'crypto';
+import packageModel from '../models/packageModel.js';
+import reviewSchema from '../models/reviewSchema.js';
+import blogSchema from '../models/blogSchema.js';
+import destinations from '../data/destinations.js';
+import testimonials from '../data/testimonials.js';
+
 
 // Render Home Page
 export const homePage = async (req, res) => {
@@ -32,8 +38,44 @@ export const homePage = async (req, res) => {
             res.clearCookie('authToken');
         }
 
+        // Fetch packages
+        const packages = await packageModel.find({ status: 'Active' }).limit(3);
+        const packageIds = packages.map(pkg => pkg._id);
+        const reviews = await reviewSchema.find({ packageId: { $in: packageIds } }).sort({ date: -1 });
 
-        return res.render('client/layout/Home', { user: null, message: req.session?.message, type: req.session?.type });
+
+        // Attach actual reviews and wishlist status to packages
+        const packagesWithReviews = packages.map(pkg => {
+            const pkgReviews = reviews.filter(review => review.packageId.toString() === pkg._id.toString());
+            const reviewCount = pkgReviews.length;
+            const averageRating = reviewCount > 0
+                ? pkgReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+                : 0;
+            return {
+                ...pkg._doc,
+                reviews: pkgReviews,
+                reviewCount,
+                averageRating: averageRating.toFixed(1),
+                isWishlisted: []
+            };
+        });
+
+        // Fetch recent blogs
+        const blogs = await blogSchema.find({ status: 'active' })
+            .populate('createdBy')
+            .sort({ postedOn: -1 })
+            .limit(3);
+
+
+        res.render('client/layout/Home', {
+            user: null,
+            destinations: destinations.slice(0, 4),
+            packages: packagesWithReviews,
+            blogs,
+            testimonials,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
     } catch (error) {
         console.error("Home page error:", error);
         req.session = req.session || {};
@@ -192,7 +234,7 @@ export const loginUserOrAdmin = async (req, res) => {
         let role = 'admin';
 
         if (!userData) {
-            userData = await agentModel.findOne({ email });
+            userData = await agentModel.findOne({ email, isActive: true });
             role = 'admin';
         }
 

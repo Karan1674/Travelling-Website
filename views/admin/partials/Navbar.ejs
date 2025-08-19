@@ -1,9 +1,9 @@
 <div class="dashboard-header sticky-header">
     <div class="content-left  logo-section pull-left">
-        <h1><a href="../index.html"><img src="/admin/assets/images/logo.png" alt=""></a></h1>
+        <h1><a href="/"><img src="/admin/assets/images/logo.png" alt=""></a></h1>
     </div>
     <div class="heaer-content-right pull-right">
-        <div class="search-field">
+        <!-- <div class="search-field">
             <form>
                 <div class="form-group">
                     <input type="text" class="form-control" name="search-anything" id="search" placeholder="Search Now">
@@ -104,20 +104,24 @@
                 </ul>
                 <a href="#" class="all-button">See all messages</a>
             </div>
-        </div>
+        </div> -->
         <div class="dropdown">
             <a class="dropdown-toggle" data-toggle="dropdown">
                 <div class="dropdown-item profile-sec">
-                    <img src="/admin/assets/images/comment.jpg" alt="">
+
+                    <img src="<%= user && user.profilePic 
+    ? '/uploads/profiles/' + user.profilePic 
+    : '/admin/assets/images/comment.jpg' %>" alt="User Profile Picture" />
+
                     <span>My Account </span>
                     <i class="fas fa-caret-down"></i>
                 </div>
             </a>
             <div class="dropdown-menu account-menu">
                 <ul>
-                    <li><a href="#"><i class="fas fa-cog"></i>Settings</a></li>
+                    <!-- <li><a href="#"><i class="fas fa-cog"></i>Settings</a></li> -->
                     <li><a href="/admin-agent-profile"><i class="fas fa-user-tie"></i>Profile</a></li>
-                    <li><a href="#"><i class="fas fa-key"></i>Password</a></li>
+                    <!-- <li><a href="#"><i class="fas fa-key"></i>Password</a></li> -->
                     <li><a href="/logout"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
                 </ul>
             </div>

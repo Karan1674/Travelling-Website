@@ -1,4 +1,3 @@
-
 import adminModel from '../models/adminModel.js';
 import agentModel from '../models/agentModel.js';
 import packageBookingSchema from '../models/packageBookingSchema.js';
@@ -52,13 +51,155 @@ export const AdminDashboard = async (req, res) => {
             req.session.type = 'error';
             return res.redirect('/loginPage');
         }
+        // Fetch metrics
+        const agentCount = await agentModel.countDocuments({ isActive: true });
+        const usersCount = await userModel.countDocuments();
+
+        // Calculate total earnings for packages
+        const packageEarnings = await packageBookingSchema.aggregate([
+            { $match: { 'payment.paymentStatus': 'succeeded' } },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: '$total' }
+                }
+            }
+        ]).then(result => result[0]?.totalAmount || 0);
+
+        // Calculate total earnings for products
+        const productEarnings = await productBookingSchema.aggregate([
+            { $match: { 'payment.paymentStatus': 'succeeded' } },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: '$total' }
+                }
+            }
+        ]).then(result => result[0]?.totalAmount || 0);
+
+        // Fetch recent bookings (package + product)
+        const packageBookings = await packageBookingSchema
+            .find({ status: { $in: ['approved', 'pending'] } })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate({ path: 'userId', select: 'firstName lastName email' })
+            .populate({ path: 'items.packageId', select: 'title'});
+
+        const productBookings = await productBookingSchema
+            .find({ status: { $in: ['approved', 'pending'] } })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate({ path: 'userId', select: 'firstName lastName email' })
+            .populate({ path: 'items.productId', select: 'name' });
+
+        // Flatten bookings to include all items
+        const bookings = [
+            ...packageBookings.flatMap(booking => 
+                booking.items.map(item => ({
+                    user: {
+                        name: `${booking.userId?.firstName || ''} ${booking.userId?.lastName || ''}`.trim() || 'Unknown User',
+                        email: booking.userId.email
+                    },
+                    bookingDate: booking.createdAt || new Date(),
+                    itemName: item.packageId?.title || 'Unknown Package',
+                    type: 'Package',
+                    status: booking.status || 'Unknown',
+                    quantity: item.quantity || 1
+                }))
+            ),
+            ...productBookings.flatMap(booking => 
+                booking.items.map(item => ({
+                    user: {
+                        name: `${booking.userId?.firstName || ''} ${booking.userId?.lastName || ''}`.trim() || 'Unknown User',
+                        email: booking.userId?.email
+                    },
+                    bookingDate: booking.createdAt || new Date(),
+                    itemName: item.productId?.name || 'Unknown Product',
+                    type: 'Product',
+                    status: booking.status || 'Unknown',
+                    quantity: item.quantity || 1
+                }))
+            )
+        ].sort((a, b) => new Date(b.bookingDate) - new Date(a.bookingDate)).slice(0, 5);
+
+        // Fetch contact enquiries
+        const enquiries = await contactSchema
+            .find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            
+
+
+
+        // Fetch recent packages
+        const packages = await packageModel
+            .find({ status: 'Active' })
+            .sort({ createdAt: -1 })
+            .limit(4)
+            .select('title regularPrice discount featuredImage');
+
+        const formattedPackages = await Promise.all(packages.map(async pkg => {
+            const bookingsCount = await packageBookingSchema.aggregate([
+                { $unwind: '$items' },
+                { $match: { 'items.packageId': pkg._id } },
+                { $group: { _id: null, count: { $sum: '$items.quantity' } } }
+            ]).then(result => result[0]?.count || 0);
+            return {
+                _id: pkg._id,
+                title: pkg.title || 'Untitled Package',
+                regularPrice: pkg.regularPrice || 0,
+                discount: pkg.discount || 0,
+                featuredImage: pkg.featuredImage || null,
+                bookingsCount
+            };
+        }));
+
+        // Fetch recent products
+        const products = await productSchema
+            .find({ status: 'active' })
+            .sort({ createdAt: -1 })
+            .limit(4)
+            .select('name price discountPrice featureImage');
+
+        const formattedProducts = await Promise.all(products.map(async product => {
+            const bookingsCount = await productBookingSchema.aggregate([
+                { $unwind: '$items' },
+                { $match: { 'items.productId': product._id } },
+                { $group: { _id: null, count: { $sum: '$items.quantity' } } }
+            ]).then(result => result[0]?.count || 0);
+            return {
+                _id: product._id,
+                name: product.name || 'Untitled Product',
+                price: product.price || 0,
+                discountPrice: product.discountPrice || product.price || 0,
+                featureImage: product.featureImage || null,
+                bookingsCount
+            };
+        }));
+
+        // Fetch recent FAQs
+        const faqs = await faqSchema
+            .find()
+            .sort({ questionAt: -1 })
+            .limit(4);
+
 
         res.render('admin/layout/AdminDashboard', {
             user: userData,
             isAdmin,
+            agentCount,
+            usersCount,
+            productEarnings,
+            packageEarnings,
+            bookings,
+            enquiries,
+            packages: formattedPackages,
+            products: formattedProducts,
+            faqs,
             message: req.session?.message || null,
             type: req.session?.type || null
         });
+      
     } catch (error) {
         console.error("Error loading admin dashboard:", error);
         req.session = req.session || {};
@@ -5067,6 +5208,11 @@ export const updateProductBookingStatus = async (req, res) => {
         booking.updatedBy = userId;
         booking.updatedByModel = isAdmin ? 'Admin' : 'Agent';
         booking.updatedAt = new Date();
+
+        if(status == 'approved'){
+            booking.payment.paymentType='deposit';
+            booking.payment.paymentStatus='succeeded'
+        }
 
        await booking.save();
 

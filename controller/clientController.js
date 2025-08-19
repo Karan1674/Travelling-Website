@@ -52,13 +52,44 @@ export const signInUserDashboard = async (req, res) => {
             req.session.type = 'error';
             return res.redirect('/loginPage');
         }
+        // Fetch packages
+        const packages = await packageModel.find({ status: 'Active' }).limit(3);
+        const packageIds = packages.map(pkg => pkg._id);
+        const reviews = await reviewSchema.find({ packageId: { $in: packageIds } }).sort({ date: -1 });
+        const wishlist = await wishlistSchema.findOne({ userId });
+        const wishlistPackageIds = wishlist ? wishlist.packages.map(id => id.toString()) : [];
 
-
-        return res.render('client/layout/Home', {
-            user: userData,
-            message: req.session?.message,
-            type: req.session?.type
+        // Attach actual reviews and wishlist status to packages
+        const packagesWithReviews = packages.map(pkg => {
+            const pkgReviews = reviews.filter(review => review.packageId.toString() === pkg._id.toString());
+            const reviewCount = pkgReviews.length;
+            const averageRating = reviewCount > 0
+                ? pkgReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+                : 0;
+            return {
+                ...pkg._doc,
+                reviews: pkgReviews,
+                reviewCount,
+                averageRating: averageRating.toFixed(1),
+                isWishlisted: wishlistPackageIds.includes(pkg._id.toString())
+            };
         });
+
+        // Fetch recent blogs
+        const blogs = await blogSchema.find({ status: 'active' })
+            .populate('createdBy')
+            .sort({ postedOn: -1 })
+            .limit(3);
+
+        res.render('client/layout/Home', {
+            user: userData,
+            destinations: destinations.slice(0, 4),
+            packages: packagesWithReviews,
+            blogs,
+            testimonials,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });;
     } catch (error) {
         console.error('Sign in error:', error);
         req.session = req.session || {};
@@ -3264,7 +3295,7 @@ export const getProductCheckout = async (req, res) => {
 export const applyProductCoupon = async (req, res) => {
     try {
         const { couponCode } = req.body;
-        const userId= req.id;
+        const userId = req.id;
 
         if (!userId) {
             req.session.message = 'Please log in to proceed to checkout';
@@ -3301,20 +3332,20 @@ export const applyProductCoupon = async (req, res) => {
             return res.status(400).json({ message: 'Coupon usage limit reached' });
         }
 
-          // Count how many times the user has used this coupon
-          const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
-          // For restricted coupons, allow usage up to the usageLimit
-          if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
-              if (userUsageCount >= coupon.usageLimit) {
-                  return res.status(400).json({ message: 'You have reached the usage limit for this coupon' });
-              }
-          } else if (!coupon.restrictToUser && userUsageCount > 0) {
-              // For non-restricted coupons, prevent reuse if already used once
-              return res.status(400).json({ message: 'You have already used this coupon' });
-          }
-          if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
-              return res.status(400).json({ message: 'This coupon is not assigned to you' });
-          }
+        // Count how many times the user has used this coupon
+        const userUsageCount = coupon.usedBy ? coupon.usedBy.filter(entry => entry.userId.equals(userId)).length : 0;
+        // For restricted coupons, allow usage up to the usageLimit
+        if (coupon.restrictToUser && coupon.restrictToUser.equals(userId)) {
+            if (userUsageCount >= coupon.usageLimit) {
+                return res.status(400).json({ message: 'You have reached the usage limit for this coupon' });
+            }
+        } else if (!coupon.restrictToUser && userUsageCount > 0) {
+            // For non-restricted coupons, prevent reuse if already used once
+            return res.status(400).json({ message: 'You have already used this coupon' });
+        }
+        if (coupon.restrictToUser && !coupon.restrictToUser.equals(userId)) {
+            return res.status(400).json({ message: 'This coupon is not assigned to you' });
+        }
 
         const subtotal = cart.items.reduce((total, item) => {
             const price = item.productId.isOnSale && item.productId.discountPrice < item.productId.price ? item.productId.discountPrice : item.productId.price;
@@ -3722,13 +3753,13 @@ export const placeProductOrder = async (req, res) => {
         req.session = req.session || {};
         req.session.message = 'Order confirmed successfully';
         req.session.type = 'success';
-        res.json({ 
-            success: true, 
-            redirect: '/order-confirmation/' + productBooking._id, 
-            booking: populatedBooking, 
-            paymentDetails, 
-            message: req.session.message, 
-            type: req.session.type 
+        res.json({
+            success: true,
+            redirect: '/order-confirmation/' + productBooking._id,
+            booking: populatedBooking,
+            paymentDetails,
+            message: req.session.message,
+            type: req.session.type
         });
     } catch (error) {
         console.error('Place order error:', error);
@@ -3763,7 +3794,7 @@ export const renderProductConfirmation = async (req, res) => {
         const productBookingId = req.params.id
         // Fetch the latest approved booking for the user
         const booking = await productBookingSchema
-            .findOne({ userId, _id :productBookingId })
+            .findOne({ userId, _id: productBookingId })
             .populate('items.productId')
             .lean();
 
@@ -3819,7 +3850,7 @@ export const renderProductConfirmation = async (req, res) => {
             booking,
             paymentDetails,
             coupon,
-            isShow:true,
+            isShow: true,
             user,
             message: req.session.message || '',
             type: req.session.type || ''
@@ -3863,7 +3894,7 @@ export const getUserProductBookings = async (req, res) => {
         let query = { userId };
         if (search) {
             const queryConditions = [];
-            
+
             // Handle _id search if it's a valid ObjectId
             if (mongoose.isValidObjectId(search)) {
                 queryConditions.push({ _id: new mongoose.Types.ObjectId(search) });
@@ -3946,7 +3977,7 @@ export const renderProductBookingDetails = async (req, res) => {
         const productBookingId = req.params.id
         // Fetch the latest approved booking for the user
         const booking = await productBookingSchema
-            .findOne({ userId, _id :productBookingId })
+            .findOne({ userId, _id: productBookingId })
             .populate('items.productId')
             .lean();
 
@@ -3999,7 +4030,7 @@ export const renderProductBookingDetails = async (req, res) => {
             booking,
             paymentDetails,
             coupon,
-            isShow:false,
+            isShow: false,
             user,
             message: req.session.message || '',
             type: req.session.type || ''
@@ -4007,7 +4038,7 @@ export const renderProductBookingDetails = async (req, res) => {
     } catch (error) {
         console.error('Render product Detail error:', error);
         req.session = req.session || {};
-        req.session.message =   `Failed to load order Detail : ${error.message}`;
+        req.session.message = `Failed to load order Detail : ${error.message}`;
         req.session.type = 'error';
         res.status(500).redirect('/error');
     }
@@ -4190,27 +4221,27 @@ export const getBlogDetail = async (req, res) => {
             });
         }
 
-         // Fetch previous and next blogs
-         const prevBlog = await blogSchema.findOne({ status: 'active', postedOn: { $lt: blog.postedOn } })
-         .sort({ postedOn: -1 })
-         .limit(1);
-     const nextBlog = await blogSchema.findOne({ status: 'active', postedOn: { $gt: blog.postedOn } })
-         .sort({ postedOn: 1 })
-         .limit(1);
+        // Fetch previous and next blogs
+        const prevBlog = await blogSchema.findOne({ status: 'active', postedOn: { $lt: blog.postedOn } })
+            .sort({ postedOn: -1 })
+            .limit(1);
+        const nextBlog = await blogSchema.findOne({ status: 'active', postedOn: { $gt: blog.postedOn } })
+            .sort({ postedOn: 1 })
+            .limit(1);
 
-     const recentBlogs = await blogSchema.find({ status: 'active' })
-         .sort({ postedOn: -1 })
-         .limit(5);
+        const recentBlogs = await blogSchema.find({ status: 'active' })
+            .sort({ postedOn: -1 })
+            .limit(5);
 
-     res.render('client/layout/blog-detail', {
-         user: userData,
-         blog,
-         recentBlogs,
-         prevBlog,
-         nextBlog,
-         message: req.session?.message || null,
-         type: req.session?.type || null
-     });
+        res.render('client/layout/blog-detail', {
+            user: userData,
+            blog,
+            recentBlogs,
+            prevBlog,
+            nextBlog,
+            message: req.session?.message || null,
+            type: req.session?.type || null
+        });
     } catch (error) {
         console.error('Error fetching blog details:', error);
         req.session = req.session || {};
