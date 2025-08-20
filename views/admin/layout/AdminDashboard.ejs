@@ -139,7 +139,7 @@
                                                         <span class="list-name"><%= pkg.title %></span>
                                                     </a>
                                                 </td>
-                                                <td>$<%= pkg.regularPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                                                <td>$<%= pkg.regularPrice %></td>
                                                 <td><%= pkg.discount %>%</td>
                                                 <td>
                                                     <span class="badge badge-success"><%= pkg.bookingsCount %></span>
@@ -184,8 +184,8 @@
                                                         <span class="list-name"><%= product.name %></span>
                                                     </a>
                                                 </td>
-                                                <td>$<%= product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                                                <td>$<%= product.discountPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                                                <td>$<%= product.price %></td>
+                                                <td>$<%= product.discountPrice %></td>
                                                 <td>
                                                     <span class="badge badge-success"><%= product.bookingsCount %></span>
                                                 </td>
@@ -296,5 +296,6 @@
     <script src="/admin/assets/js/bootstrap.min.js"></script>
     <script src="/admin/assets/js/jquery.slicknav.js"></script>
     <script src="/admin/assets/js/dashboard-custom.js"></script>
+    <script src="/admin/assets/js/counterup.min.js"></script>
 </body>
 </html>

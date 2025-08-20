@@ -83,7 +83,7 @@ export const AdminDashboard = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(5)
             .populate({ path: 'userId', select: 'firstName lastName email' })
-            .populate({ path: 'items.packageId', select: 'title'});
+            .populate({ path: 'items.packageId', select: 'title' });
 
         const productBookings = await productBookingSchema
             .find({ status: { $in: ['approved', 'pending'] } })
@@ -94,7 +94,7 @@ export const AdminDashboard = async (req, res) => {
 
         // Flatten bookings to include all items
         const bookings = [
-            ...packageBookings.flatMap(booking => 
+            ...packageBookings.flatMap(booking =>
                 booking.items.map(item => ({
                     user: {
                         name: `${booking.userId?.firstName || ''} ${booking.userId?.lastName || ''}`.trim() || 'Unknown User',
@@ -107,7 +107,7 @@ export const AdminDashboard = async (req, res) => {
                     quantity: item.quantity || 1
                 }))
             ),
-            ...productBookings.flatMap(booking => 
+            ...productBookings.flatMap(booking =>
                 booking.items.map(item => ({
                     user: {
                         name: `${booking.userId?.firstName || ''} ${booking.userId?.lastName || ''}`.trim() || 'Unknown User',
@@ -127,8 +127,6 @@ export const AdminDashboard = async (req, res) => {
             .find()
             .sort({ createdAt: -1 })
             .limit(5)
-            
-
 
 
         // Fetch recent packages
@@ -138,20 +136,33 @@ export const AdminDashboard = async (req, res) => {
             .limit(4)
             .select('title regularPrice discount featuredImage');
 
-        const formattedPackages = await Promise.all(packages.map(async pkg => {
-            const bookingsCount = await packageBookingSchema.aggregate([
-                { $unwind: '$items' },
-                { $match: { 'items.packageId': pkg._id } },
-                { $group: { _id: null, count: { $sum: '$items.quantity' } } }
-            ]).then(result => result[0]?.count || 0);
-            return {
-                _id: pkg._id,
-                title: pkg.title || 'Untitled Package',
-                regularPrice: pkg.regularPrice || 0,
-                discount: pkg.discount || 0,
-                featuredImage: pkg.featuredImage || null,
-                bookingsCount
-            };
+        // Fetch booking counts for these package IDs in one go
+        const packageIds = packages.map(pkg => pkg._id);
+
+        const packageBookingCounts = await packageBookingSchema.aggregate([
+            { $unwind: '$items' },
+            { $match: { 'items.packageId': { $in: packageIds } } },
+            {
+                $group: {
+                    _id: '$items.packageId',
+                    count: { $sum: '$items.quantity' }
+                }
+            }
+        ]);
+
+        // Convert bookingCounts array into a Map for quick lookup
+        const bookingCountMap = new Map(
+            packageBookingCounts.map(b => [b._id.toString(), b.count])
+        );
+
+        // Format packages with counts
+        const formattedPackages = packages.map(pkg => ({
+            _id: pkg._id,
+            title: pkg.title || 'Untitled Package',
+            regularPrice: pkg.regularPrice || 0,
+            discount: pkg.discount || 0,
+            featuredImage: pkg.featuredImage || null,
+            bookingsCount: bookingCountMap.get(pkg._id.toString()) || 0
         }));
 
         // Fetch recent products
@@ -161,20 +172,23 @@ export const AdminDashboard = async (req, res) => {
             .limit(4)
             .select('name price discountPrice featureImage');
 
-        const formattedProducts = await Promise.all(products.map(async product => {
-            const bookingsCount = await productBookingSchema.aggregate([
-                { $unwind: '$items' },
-                { $match: { 'items.productId': product._id } },
-                { $group: { _id: null, count: { $sum: '$items.quantity' } } }
-            ]).then(result => result[0]?.count || 0);
-            return {
-                _id: product._id,
-                name: product.name || 'Untitled Product',
-                price: product.price || 0,
-                discountPrice: product.discountPrice || product.price || 0,
-                featureImage: product.featureImage || null,
-                bookingsCount
-            };
+        const productBookingCounts = await productBookingSchema.aggregate([
+            { $unwind: "$items" },
+            { $group: { _id: "$items.productId", count: { $sum: "$items.quantity" } } }
+        ]);
+
+        const countMap = productBookingCounts.reduce((map, item) => {
+            map[item._id.toString()] = item.count;
+            return map;
+        }, {});
+
+        const formattedProducts = products.map(product => ({
+            _id: product._id,
+            name: product.name || "Untitled Product",
+            price: product.price || 0,
+            discountPrice: product.discountPrice || 0,
+            featureImage: product.featureImage || null,
+            bookingsCount: countMap[product._id.toString()] || 0
         }));
 
         // Fetch recent FAQs
@@ -199,7 +213,7 @@ export const AdminDashboard = async (req, res) => {
             message: req.session?.message || null,
             type: req.session?.type || null
         });
-      
+
     } catch (error) {
         console.error("Error loading admin dashboard:", error);
         req.session = req.session || {};
@@ -4545,60 +4559,60 @@ export const getAddProduct = async (req, res) => {
 };
 
 // Add product
-export const postAddProduct = async (req, res) => {  
-        try {
-            const userId = req.id;
-            const isAdmin = req.isAdmin;
-            req.session = req.session || {};
+export const postAddProduct = async (req, res) => {
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
-            if (!userId) {
-                req.session.message = 'Unauthorized: Please log in';
-                req.session.type = 'error';
-                return res.redirect('/loginPage');
-            }
-
-            let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
-            if (!userData) {
-                req.session.message = 'User not found';
-                req.session.type = 'error';
-                return res.redirect('/loginPage');
-            }
-
-
-            const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage } = req.body;
-            const images = req.files ? req.files.map(file => file.filename) : [];
-            const selectedFeatureImage = featureImage && images[parseInt(featureImage)] ? images[parseInt(featureImage)] : images[0] || '';
-
-            const productData = {
-                name,
-                shortDescription,
-                price: price ? parseFloat(price) : undefined,
-                discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
-                isOnSale: isOnSale === 'on',
-                status,
-                images,
-                featureImage: selectedFeatureImage,
-                categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
-                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-                description,
-                additionalInfo: { weight, dimensions },
-                createdBy: userId,
-                createdByModel: isAdmin ? 'Admin' : 'Agent'
-            };
-
-            const product = new productSchema(productData);
-            await product.validate();
-            await product.save();
-
-            req.session.message = 'Product created successfully';
-            req.session.type = 'success';
-            res.redirect('/product-list');
-        } catch (error) {
-            console.error('Error creating product:', error);
-            req.session.message ='Error creating product';
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
             req.session.type = 'error';
-            res.redirect('/error');
+            return res.redirect('/loginPage');
         }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+
+        const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage } = req.body;
+        const images = req.files ? req.files.map(file => file.filename) : [];
+        const selectedFeatureImage = featureImage && images[parseInt(featureImage)] ? images[parseInt(featureImage)] : images[0] || '';
+
+        const productData = {
+            name,
+            shortDescription,
+            price: price ? parseFloat(price) : undefined,
+            discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+            isOnSale: isOnSale === 'on',
+            status,
+            images,
+            featureImage: selectedFeatureImage,
+            categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
+            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            description,
+            additionalInfo: { weight, dimensions },
+            createdBy: userId,
+            createdByModel: isAdmin ? 'Admin' : 'Agent'
+        };
+
+        const product = new productSchema(productData);
+        await product.validate();
+        await product.save();
+
+        req.session.message = 'Product created successfully';
+        req.session.type = 'success';
+        res.redirect('/product-list');
+    } catch (error) {
+        console.error('Error creating product:', error);
+        req.session.message = 'Error creating product';
+        req.session.type = 'error';
+        res.redirect('/error');
+    }
 };
 
 // Render Edit Product Page
@@ -4669,121 +4683,121 @@ export const getEditProduct = async (req, res) => {
 
 // Edit Product
 export const postEditProduct = async (req, res) => {
-    
-        try {
-            const userId = req.id;
-            const isAdmin = req.isAdmin;
-            req.session = req.session || {};
 
-            if (!userId) {
-                req.session.message = 'Unauthorized: Please log in';
-                req.session.type = 'error';
-                return res.redirect('/loginPage');
-            }
+    try {
+        const userId = req.id;
+        const isAdmin = req.isAdmin;
+        req.session = req.session || {};
 
-            let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
-            if (!userData) {
-                req.session.message = 'User not found';
-                req.session.type = 'error';
-                return res.redirect('/loginPage');
-            }
-
-  
-
-            let query = {};
-            if (isAdmin) {
-                const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
-                query = {
-                    $or: [
-                        { createdBy: userId, createdByModel: 'Admin' },
-                        { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
-                    ]
-                };
-            } else {
-                query = {
-                    $or: [
-                        { createdBy: userId, createdByModel: 'Agent' },
-                        { createdBy: userData.admin, createdByModel: 'Admin' }
-                    ]
-                };
-            }
-
-            query._id = req.params.id;
-            const existingProduct = await productSchema.findOne(query);
-            if (!existingProduct) {
-                req.session.message = 'Product not found or you lack permission';
-                req.session.type = 'error';
-                return res.redirect('/product-list');
-            }
-
-            const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage, existingImages, newImageFeatureIndex } = req.body;
-            const newImages = req.files ? req.files.map(file => file.filename) : [];
-            const existingImagesArray = existingImages ? (Array.isArray(existingImages) ? existingImages : [existingImages]).filter(img => img && img.trim()) : [];
-
-            // Identify images to delete
-            const imagesToDelete = existingProduct.images.filter(img => !existingImagesArray.includes(img));
-            for (const image of imagesToDelete) {
-                console.log(image)
-                try {
-                    const oldImagePath = join(__dirname, '../Uploads/shopGallery');
-                    await fs.unlink(join(oldImagePath,image));
-                } catch (err) {
-                    console.error(`Error deleting file ${image}:`, err);
-                }
-            }
-
-            // Combine kept existing images and new images
-            const allImages = [...existingImagesArray, ...newImages];
-            let selectedFeatureImage = '';
-            if (featureImage) {
-                if (featureImage.startsWith('new-') && newImageFeatureIndex !== undefined) {
-                    const index = parseInt(newImageFeatureIndex);
-                    selectedFeatureImage = newImages[index] || '';
-                } else if (allImages.includes(featureImage)) {
-                    selectedFeatureImage = featureImage;
-                }
-            }
-            if (!selectedFeatureImage && allImages.length > 0) {
-                selectedFeatureImage = allImages[0];
-            }
-
-            if (price && discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
-                throw new Error('Discount price must be less than regular price');
-            }
-
-            const productData = {
-                name,
-                shortDescription,
-                price: price ? parseFloat(price) : undefined,
-                discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
-                isOnSale: isOnSale === 'on',
-                status,
-                images: allImages,
-                featureImage: selectedFeatureImage,
-                categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
-                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-                description,
-                additionalInfo: { weight, dimensions },
-                updatedBy: userId,
-                updatedByModel: isAdmin ? 'Admin' : 'Agent'
-            };
-
-            const updatedProduct = await productSchema.findOneAndUpdate(query, productData, { runValidators: true, new: true });
-            if (!updatedProduct) {
-                req.session.message = 'Product not found or you lack permission';
-                req.session.type = 'error';
-                return res.redirect('/product-list');
-            }
-
-            req.session.message = 'Product updated successfully';
-            req.session.type = 'success';
-            res.redirect('/product-list');
-        } catch (error) {
-            console.error('Error updating product:', error);
-            req.session.message = error.message || 'Error updating product';
+        if (!userId) {
+            req.session.message = 'Unauthorized: Please log in';
             req.session.type = 'error';
-            res.redirect(`/error`);
+            return res.redirect('/loginPage');
         }
+
+        let userData = isAdmin ? await adminModel.findById(userId) : await agentModel.findById(userId);
+        if (!userData) {
+            req.session.message = 'User not found';
+            req.session.type = 'error';
+            return res.redirect('/loginPage');
+        }
+
+
+
+        let query = {};
+        if (isAdmin) {
+            const agentIds = await agentModel.find({ admin: userId }).distinct('_id');
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Admin' },
+                    { createdBy: { $in: agentIds }, createdByModel: 'Agent' }
+                ]
+            };
+        } else {
+            query = {
+                $or: [
+                    { createdBy: userId, createdByModel: 'Agent' },
+                    { createdBy: userData.admin, createdByModel: 'Admin' }
+                ]
+            };
+        }
+
+        query._id = req.params.id;
+        const existingProduct = await productSchema.findOne(query);
+        if (!existingProduct) {
+            req.session.message = 'Product not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/product-list');
+        }
+
+        const { name, shortDescription, price, discountPrice, isOnSale, status, categories, tags, description, weight, dimensions, featureImage, existingImages, newImageFeatureIndex } = req.body;
+        const newImages = req.files ? req.files.map(file => file.filename) : [];
+        const existingImagesArray = existingImages ? (Array.isArray(existingImages) ? existingImages : [existingImages]).filter(img => img && img.trim()) : [];
+
+        // Identify images to delete
+        const imagesToDelete = existingProduct.images.filter(img => !existingImagesArray.includes(img));
+        for (const image of imagesToDelete) {
+            console.log(image)
+            try {
+                const oldImagePath = join(__dirname, '../Uploads/shopGallery');
+                await fs.unlink(join(oldImagePath, image));
+            } catch (err) {
+                console.error(`Error deleting file ${image}:`, err);
+            }
+        }
+
+        // Combine kept existing images and new images
+        const allImages = [...existingImagesArray, ...newImages];
+        let selectedFeatureImage = '';
+        if (featureImage) {
+            if (featureImage.startsWith('new-') && newImageFeatureIndex !== undefined) {
+                const index = parseInt(newImageFeatureIndex);
+                selectedFeatureImage = newImages[index] || '';
+            } else if (allImages.includes(featureImage)) {
+                selectedFeatureImage = featureImage;
+            }
+        }
+        if (!selectedFeatureImage && allImages.length > 0) {
+            selectedFeatureImage = allImages[0];
+        }
+
+        if (price && discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
+            throw new Error('Discount price must be less than regular price');
+        }
+
+        const productData = {
+            name,
+            shortDescription,
+            price: price ? parseFloat(price) : undefined,
+            discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+            isOnSale: isOnSale === 'on',
+            status,
+            images: allImages,
+            featureImage: selectedFeatureImage,
+            categories: categories ? categories.split(',').map(cat => cat.trim()) : [],
+            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            description,
+            additionalInfo: { weight, dimensions },
+            updatedBy: userId,
+            updatedByModel: isAdmin ? 'Admin' : 'Agent'
+        };
+
+        const updatedProduct = await productSchema.findOneAndUpdate(query, productData, { runValidators: true, new: true });
+        if (!updatedProduct) {
+            req.session.message = 'Product not found or you lack permission';
+            req.session.type = 'error';
+            return res.redirect('/product-list');
+        }
+
+        req.session.message = 'Product updated successfully';
+        req.session.type = 'success';
+        res.redirect('/product-list');
+    } catch (error) {
+        console.error('Error updating product:', error);
+        req.session.message = error.message || 'Error updating product';
+        req.session.type = 'error';
+        res.redirect(`/error`);
+    }
 };
 
 // Delete Product
@@ -4832,7 +4846,7 @@ export const deleteProduct = async (req, res) => {
         } else {
             for (const image of [...product.images]) {
                 if (image) {
-                
+
                     try {
                         const oldImagePath = join(__dirname, '../Uploads/shopGallery');
                         await fs.unlink(join(oldImagePath, image));
@@ -4840,7 +4854,7 @@ export const deleteProduct = async (req, res) => {
                         console.error(`Error deleting file ${image}:`, err);
                     }
                 }
-               
+
             }
             req.session.message = 'Product deleted successfully';
             req.session.type = 'success';
@@ -5131,7 +5145,7 @@ export const getProductBookingDetail = async (req, res) => {
             return res.redirect('/product-bookings');
         }
 
-    
+
         res.render('admin/layout/db-product-booking-detail', {
             booking,
             user: userData,
@@ -5180,7 +5194,7 @@ export const updateProductBookingStatus = async (req, res) => {
             return res.redirect('/product-bookings');
         }
 
-        
+
 
         // Handle refund if status changes to 'rejected' and payment is Stripe
         if (status === 'rejected' && booking.payment.paymentMethod === 'stripe' && booking.payment.stripePaymentIntentId && booking.payment.paymentStatus === 'succeeded') {
@@ -5209,12 +5223,12 @@ export const updateProductBookingStatus = async (req, res) => {
         booking.updatedByModel = isAdmin ? 'Admin' : 'Agent';
         booking.updatedAt = new Date();
 
-        if(status == 'approved'){
-            booking.payment.paymentType='deposit';
-            booking.payment.paymentStatus='succeeded'
+        if (status == 'approved') {
+            booking.payment.paymentType = 'deposit';
+            booking.payment.paymentStatus = 'succeeded'
         }
 
-       await booking.save();
+        await booking.save();
 
         req.session.message = 'Booking status updated successfully';
         req.session.type = 'success';
@@ -5296,7 +5310,7 @@ export const getBlogList = async (req, res) => {
             req.session.type = 'error';
             return res.redirect('/loginPage');
         }
-        
+
         const page = parseInt(req.query.page) || 1;
         const limit = 3;
         const skip = (page - 1) * limit;
@@ -5513,7 +5527,7 @@ export const updateBlog = async (req, res) => {
         }
 
         let query = {};
-    
+
 
         query._id = req.params.id;
         const blog = await blogSchema.findOne(query);
@@ -5590,7 +5604,7 @@ export const deleteBlog = async (req, res) => {
         const blogId = req.params.id;
         let query = {};
         console.log(blogId)
-      
+
 
         query._id = blogId;
         const blog = await blogSchema.findOne(query);
