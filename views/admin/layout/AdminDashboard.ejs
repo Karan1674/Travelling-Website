@@ -42,7 +42,7 @@
                             </div>
                             <div class="dashboard-stat-content">
                                 <h4>Product Earnings</h4>
-                                <h5>$<%= productEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h5>
+                                <h5>$<%= productEarnings.toLocaleString() %></h5>
                             </div>
                         </div>
                     </div>
@@ -54,7 +54,7 @@
                             </div>
                             <div class="dashboard-stat-content">
                                 <h4>Package Earnings</h4>
-                                <h5>$<%= packageEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h5>
+                                <h5>$<%= packageEarnings.toLocaleString() %></h5>
                             </div>
                         </div>
                     </div>
@@ -296,6 +296,7 @@
     <script src="/admin/assets/js/bootstrap.min.js"></script>
     <script src="/admin/assets/js/jquery.slicknav.js"></script>
     <script src="/admin/assets/js/dashboard-custom.js"></script>
-    <script src="/admin/assets/js/counterup.min.js"></script>
+    <!-- <script src="/admin/assets/js/counterup.min.js"></script> -->
+
 </body>
 </html>
