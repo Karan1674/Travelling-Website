@@ -130,11 +130,11 @@
                             <img src="<%= destination.image || '/assets/images/img' + (index + 1) + '.jpg' %>" alt="<%= destination.name %>" />
                           </figure>
                           <div class="meta-cat bg-meta-cat">
-                            <a href="/tour-packages?destination=<%= destination.name %>"><%= destination.name.toUpperCase() %></a>
+                            <a href="/tour-packages?destination=<%= destination.name %>"><%= destination.country.toUpperCase() %></a>
                           </div>
                           <div class="desti-content"  style="bottom: 30px !important;">
                             <h3>
-                              <a href="/tour-packages?destination=<%= destination.name %>"><%= destination.attraction || destination.name %></a>
+                              <a href="/tour-packages?destination=<%= destination.name %>"><%= destination.name %></a>
                             </h3>
                             <div class="rating-start" title="Rated 5 out of <%= index === 0 ? 4 : 5 %>">
                               <span style="width: <%= index === 0 ? 53 : 100 %>%"></span>
