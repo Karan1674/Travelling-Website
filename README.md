@@ -1,4 +1,4 @@
-🌍 Wandervise in EJS
+🌍 Wandervise
 
 
 📋 Overview
