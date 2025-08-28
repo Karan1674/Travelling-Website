@@ -11,12 +11,12 @@ export const isAdminCheck = async (req, res, next) => {
         if (AdminData) {
             req.isAdmin = true
         }
-        // else {
-        //     const userData = await agentModel.findById(userId)
-        //     if (userData) {
-        //         req.isAdmin = false
-        //     }
-        // }
+        else {
+            const userData = await agentModel.findById(userId)
+            if (userData) {
+                req.isAdmin = false
+            }
+        }
     } else {
         req.isAdmin = false;
     }
