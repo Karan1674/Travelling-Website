@@ -267,7 +267,7 @@
                                                 <td><%= new Date(faq.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></td>
 
                                                 <td><%= faq.message.substring(0, 30) + (faq.message.length > 30 ? '...' : '') %></td>
-                                                <td><%= faq.answer.substring(0, 30) + (faq.answer.length > 30 ? '...' : '') %></td>
+                                                <td><%= faq?.answer?.substring(0, 30) + (faq?.answer?.length > 30 ? '...' : '') %></td>
                                             </tr>
                                         <% }) %>
                                         <% if (faqs.length === 0) { %>
