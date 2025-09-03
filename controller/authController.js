@@ -56,7 +56,7 @@ export const homePage = async (req, res) => {
                 reviews: pkgReviews,
                 reviewCount,
                 averageRating: averageRating.toFixed(1),
-                isWishlisted: []
+                isWishlisted: false
             };
         });
 
