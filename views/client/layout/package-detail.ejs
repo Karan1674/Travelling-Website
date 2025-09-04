@@ -7,18 +7,15 @@
     .accordion-item {
         border: none !important;
         border-radius: 8px !important;
-        margin-bottom: 1.2rem;
-        background-color: #ffffff;
+        margin-bottom: 1rem;
+        background-color: #f9f9f9;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
         overflow: hidden;
-        transition: all 0.3s ease;
     }
 
     .accordion-header {
-        cursor: pointer;
-        padding: 1.2rem 1.5rem;
-        background-color: #f8f9fa;
-        border-bottom: none;
-        transition: background-color 0.3s ease;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     .accordion-header:hover {
@@ -33,6 +30,10 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+    }
+
+    .accordion-header[aria-expanded="true"] .toggle-icon {
+        transform: rotate(180deg);
     }
 
     .accordion-header i {
@@ -52,10 +53,10 @@
     }
 
     .accordion-body {
-        padding: 1.5rem;
+        padding: 1.25rem;
         background-color: #ffffff;
-        font-size: 1rem;
-        color: #333333;
+        font-size: 0.9rem;
+        color: #2c2c2c;
         line-height: 1.6;
     }
 
@@ -65,136 +66,57 @@
     }
 
     .timeline {
-        position: relative;
-        padding-left: 2.5rem;
+        padding: 0;
         margin: 0;
     }
 
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 0.75rem;
-        top: 0;
-        bottom: 0;
-        width: 6px;
-        background: linear-gradient(to bottom, #007bff, #6c757d);
-        border-radius: 3px;
-    }
-
     .timeline-item {
-        position: relative;
-        margin-bottom: 2rem;
-        padding-left: 1.75rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 6px;
     }
 
-    .timeline-item::before {
-        content: '';
-        position: absolute;
-        left: -0.85rem;
-        top: 0.6rem;
-        width: 16px;
-        height: 16px;
-        background-color: #007bff;
-        border-radius: 50%;
-        border: 3px solid #ffffff;
-    }
 
     .activity-card {
         background: #ffffff;
         padding: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        transition: box-shadow 0.3s ease;
-    }
-
-    .activity-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;  background: #ffffff;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
     }
 
     .activity-card h5 {
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 500;
         color: #1a1a1a;
-        margin: 0 0 0.75rem;
+        margin: 0 0 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
 
     .activity-subtitle {
-        font-size: 0.95rem;
-        color: #555555;
-        margin: 0 0 0.75rem;
-        font-style: italic;
+        font-size: 0.85rem;
+        color: #4a4a4a;
+        margin: 0 0 0.5rem;
     }
 
-    .activity-time {
-        font-size: 0.9rem;
-        color: #007bff;
-        margin: 0 0 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
 
     .activity-type {
         display: inline-flex;
         align-items: center;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
         color: #ffffff;
         background-color: #007bff;
-        border-radius: 12px;
-        gap: 0.3rem;
+        border-radius: 4px;
+        gap: 0.25rem;
     }
 
-    /* Itinerary Overview Timeline Styling */
-    .itinerary-timeline-wrap ul {
-        list-style: none;
-        padding-left: 2.5rem;
-        position: relative;
-        margin: 0;
-    }
-
-    .itinerary-timeline-wrap ul::before {
-        content: '';
-        position: absolute;
-        left: 0.75rem;
-        top: 0;
-        bottom: 0;
-        width: 6px;
-        background: linear-gradient(to bottom, #007bff, #6c757d);
-        border-radius: 3px;
-    }
-
-    .itinerary-timeline-wrap ul li {
-        position: relative;
-        margin-bottom: 2rem;
-        padding-left: 1.75rem;
-    }
-
-    .itinerary-timeline-wrap ul li::before {
-        content: '';
-        position: absolute;
-        left: -0.85rem;
-        top: 0.6rem;
-        width: 16px;
-        height: 16px;
-        background-color: #007bff;
-        border-radius: 50%;
-        border: 3px solid #ffffff;
-    }
-
-    .timeline-content {
-        background: #ffffff;
-        padding: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        transition: box-shadow 0.3s ease;
-    }
-
-    .timeline-content:hover {
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-
+  
     .day-count {
         font-size: 1rem;
         font-weight: 600;
@@ -395,6 +317,38 @@
     .quote-wrap .button-primary.add-to-cart:hover {
         background-color: #218838;
     }
+
+
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+    }
+
+   .info-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #2c2c2c;
+      padding: 0.5rem;
+      border-left: 3px solid #007bff;
+      background-color: #f1f6ff;
+    }
+      
+    .info-list i {
+        color: #007bff;
+        font-size: 0.95rem;
+    }
+
+    .info-list strong {
+        font-weight: 500;
+        color: #1a1a1a;
+    }
+  
+
 </style>
 </head>
 
@@ -490,7 +444,7 @@
                                         <div class="tab-pane fade" id="program" role="tabpanel"
                                              aria-labelledby="program-tab">
                                             <div class="itinerary-content">
-                                                <h3>Itinerary Overview <span>( <%= package.tripDuration?.days || 4 %> days )</span></h3>
+                                                <h3>Program Overview <span>( <%= package.tripDuration?.days || 4 %> days )</span></h3>
                                                 <p>
                                                     <%= package.programDescription || 'Dolores maiores dicta dolore. Natoque placeat libero sunt sagittis debitis? Egestas non non qui quos, semper aperiam lacinia eum nam! Pede beatae. Soluta, convallis irure accusamus voluptatum ornare saepe cupidatat.' %>
                                                 </p>
@@ -501,7 +455,7 @@
                                                     <ul>
                                                     <% package.programDays.forEach((day, index) => { %>
                                                     <li>
-                                                        <div class="timeline-content">
+                                                        <div class="timeline-content" style="width:100%">
                                                             <div class="day-count">Day <span><%= day.day%></span></div>
                                                             <h4><%= day.title%></h4>
                                                             <p><%= day.description%></p>
