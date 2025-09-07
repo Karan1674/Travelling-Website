@@ -1,4 +1,4 @@
-🌍 Wandervise
+🌍 Wandervise (EJS Version)
 
 
 📋 Overview
