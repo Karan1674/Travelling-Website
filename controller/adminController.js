@@ -465,13 +465,13 @@ export const editAgent = async (req, res) => {
             console.log("User is not authorized to edit");
             req.session.message = 'Unauthorized: Admin access required';
             req.session.type = 'error';
-            return res.redirect('db-admin-created-agents');
+            return res.redirect('/db-admin-created-agents');
         }
 
-        if (!firstName || !lastName || !email || !phone) {
+        if (!firstName || !email || !phone) {
             req.session.message = 'Missing required fields';
             req.session.type = 'error';
-            return res.redirect('db-admin-created-agents');
+            return res.redirect('/db-admin-created-agents');
         }
 
         let dateOfBirth;
@@ -480,7 +480,7 @@ export const editAgent = async (req, res) => {
             if (isNaN(dateOfBirth)) {
                 req.session.message = 'Invalid date of birth';
                 req.session.type = 'error';
-                return res.redirect('db-admin-created-agents');
+                return res.redirect('/db-admin-created-agents');
             }
         }
 
@@ -505,7 +505,7 @@ export const editAgent = async (req, res) => {
             if (!agent) {
                 req.session.message = 'Agent not found';
                 req.session.type = 'error';
-                return res.redirect('db-admin-created-agents');
+                return res.redirect('/db-admin-created-agents');
             }
 
             if (agent.profilePic) {
@@ -528,7 +528,7 @@ export const editAgent = async (req, res) => {
         if (!updatedAgent) {
             req.session.message = 'Agent not found';
             req.session.type = 'error';
-            return res.redirect('db-admin-created-agents');
+            return res.redirect('/db-admin-created-agents');
         }
 
         console.log("Agent updated successfully");
