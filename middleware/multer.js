@@ -18,7 +18,7 @@ const ensureDir = (folder) => {
 // Profile picture upload (single file)
 const profilePicStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("profiles")));
+        cb(null, ensureDir("profiles"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -40,7 +40,7 @@ export const uploadProfilePic = multer({
 // Gallery upload (multiple files, max 8)
 const galleryStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("gallery")));
+        cb(null,ensureDir("gallery"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -63,7 +63,7 @@ export const uploadGallery = multer({
 // Career upload 
 const careerPicStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("career")));
+        cb(null, ensureDir("career"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -85,7 +85,7 @@ export const uploadCareerPic = multer({
 // Career CV upload 
 const careerCvStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("careerCV")));
+        cb(null, ensureDir("careerCV"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -121,7 +121,7 @@ export const uploadCareerCv = multer({
 // Multer setup for tour guide image upload
 const tourGuideStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("tourGuides")));
+        cb(null, ensureDir("tourGuides"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -148,7 +148,7 @@ export const uploadTourGuideImage = multer({
 // Multer setup for tour guide image upload
 const mediaGalleryStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("mediaGallery")));
+        cb(null, ensureDir("mediaGallery"));
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -173,7 +173,7 @@ export const uploadMediaGalleryImage = multer({
 // Multer setup Shop image upload
 const shopImagesStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("shopGallery")));
+        cb(null, ensureDir("shopGallery"));
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
@@ -198,7 +198,7 @@ export const uploadShopImages = multer({
 // Multer setup for Blog image upload
 const blogImageStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, join(__dirname, ensureDir("blogGallery")));
+        cb(null, ensureDir("blogGallery"));
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
