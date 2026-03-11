@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require("fs");
 const bodyParser = require('body-parser');
 const path = require('path');
 const connectDB = require('./config/db');
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000;
 const dotenv = require('dotenv')
 const cookieParser = require("cookie-parser");
 dotenv.config();
@@ -40,7 +41,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(cors()); 
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use("/uploads", express.static("uploads"));
+
+const uploadDir = process.env.UPLOAD_DIR || "uploads";
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+app.use("/uploads", express.static(uploadDir));
 
 app.use(express.static('public'))
 
