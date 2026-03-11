@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const ensureDir = (folder) => {
-    const dirPath = join(__dirname, `../${UPLOAD_DIR}/${folder}`);
+    const dirPath = join(__dirname, `../${process.env.UPLOAD_DIR}/${folder}`);
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
