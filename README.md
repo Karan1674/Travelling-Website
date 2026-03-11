@@ -44,3 +44,12 @@ Wandervise is a full-stack travel agency platform built with Node.js, Express, M
 🖥️ Frontend: EJS, Bootstrap, Font Awesome, Jodit Editor
 🔒 Authentication: Express-session, bcrypt (password hashing)
 💰 Payment Gateway: Stripe
+
+
+🔑 Admin Account
+To explore admin features you can use the following credentials:
+
+Email: admin@example.com
+Password: 123
+
+You may also create your own account and test the system as a regular user.
